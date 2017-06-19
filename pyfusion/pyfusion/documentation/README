@@ -1,0 +1,10 @@
+This folder contains documentation in reStructuredText format. These
+source files are converted to html, pdf, etc using Sphinx
+[http://sphinx.pocoo.org].
+
+Please don't commit built files (html, pdf, etc) to the source
+repository (subversion, git). The .build subdirectory should be
+empty. 
+
+To generate the module documentation from docstrings, run (from this directory):
+python generate_modules.py -f -d modules -s rst ..
