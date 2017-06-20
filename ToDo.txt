@@ -1,0 +1,12 @@
+#### To do ####
+1. GUI Framework
+    a. Help tool for clicking on the varying widgets.
+    b. Make it open to correct size every time
+    c. Make it not resizable
+2. Database
+    a. Creation
+    b. Manipulation
+    c. Statistics
+3. Documentation
+
+#### ####
