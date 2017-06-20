@@ -53,12 +53,13 @@ def read_config(config_files):
             raise LookupError, str('failed to read config files from [%s]' %
                                    (config_files))
 
-    config_database  = pyfusion.config.get('global', 'database')
-
-    if config_database.lower() != existing_database.lower():
-        pyfusion.orm_manager.shutdown_orm() 
-        if config_database.lower() != 'none':
-            pyfusion.orm_manager.load_orm()
+    # print(config_files)
+    # config_database  = pyfusion.config.get('global', 'database')
+    #
+    # if config_database.lower() != existing_database.lower():
+    #     pyfusion.orm_manager.shutdown_orm()
+    #     if config_database.lower() != 'none':
+    #         pyfusion.orm_manager.load_orm()
 
 def clear_config():
     """Clear pyfusion.config."""
