@@ -9,26 +9,29 @@ from pyfusion import DEFAULT_CONFIG_FILE
 import threading
 
 
-
 try:
     import backend  # Python 3
     import tkinter as tk
     from tkinter.filedialog import askopenfilename, asksaveasfilename
     from tkinter.messagebox import showerror
+    from Analysis import analysis, point_analysis
 except ImportError:
     import backend  # Python 2
     import Tkinter as tk
     from tkFileDialog import askopenfilename, asksaveasfilename
     from tkMessageBox import showerror
+    from Analysis import analysis, point_analysis
 font_name = "Arial"
 font = (font_name, 14)
 
 DEFAULT_SETTINGS_DIR = os.path.join(os.path.dirname(__file__), "defaults.txt")
 
+
 class ErrorWindow:
     def __init__(self, master, message):
         showerror(master=master, title="Error!", message=message)
         return
+
 
 class ProcessingWindow:
     def __init__(self, master, message):
@@ -50,7 +53,8 @@ class ProcessingWindow:
         return
 
     def kill(self):
-        self.root.destroy() # :(
+        self.root.destroy()
+
 
 class PromptWindow:
     def __init__(self, master, prompts, func_on_ok):
@@ -60,13 +64,24 @@ class PromptWindow:
         self.tkVars = []
         self.var_strings = []
         self.ok_pressed = False
-        for (n,prompt) in enumerate(prompts):
-            tk.Label(master=self.prompt_frame, text=prompt.capitalize()+":", font=font).grid(row=n, column=0, sticky=tk.NE)
+        for (n, prompt) in enumerate(prompts):
+            tk.Label(master=self.prompt_frame, text=prompt.capitalize()+":",
+                     font=font).grid(row=n, column=0, sticky=tk.NE)
             var = tk.StringVar(master=self.root)
             tk.Entry(master=self.prompt_frame, font=font, textvariable=var).grid(row=n, column=1, sticky=tk.NW)
             self.tkVars.append(var)
-        self.ok_button = tk.Button(master=self.root, text="Ok", font=font, command=func_on_ok)
-        self.ok_button.grid(row=1, column=0, sticky = tk.SE)
+        self.button_frame = tk.Frame(master=self.root)
+        self.button_frame.grid(row=1, column=0, sticky=tk.NW)
+        self.ok_button = tk.Button(master=self.button_frame, text="Ok", font=font, command=func_on_ok)
+        self.ok_button.grid(row=0, column=0, sticky=tk.E)
+        self.cancel_button = tk.Button(master=self.button_frame, text="Cancel", font=font, command=self.cancel)
+        self.cancel_button.grid(row=0, column=1, sticky=tk.E)
+        return
+
+    def cancel(self):
+        for var in self.tkVars:
+            var.set("")
+        self.root.destroy()
         return
 
     def getVars(self):
@@ -328,8 +343,8 @@ class PyFusionWindow:
         self.run_clustering_button.grid(row=3, column=0, sticky=tk.N)
 
         self.run_point_analysis_button = tk.Button(master=self.settings_buttons_frame,
-                                                   text="???",
-                                                   font=(font_name,13), width=14,
+                                                   text="Point Analysis",
+                                                   font=(font_name, 13), width=14,
                                                    command=self.run_point_analysis)
         self.run_point_analysis_button.grid(row=4, column=0, sticky=tk.N)
 
@@ -350,8 +365,6 @@ class PyFusionWindow:
         self.value_dict["filter_items"] = self.filter_item_var
 
         return
-
-
 
     def start(self):
         self.restore_defaults()
@@ -421,10 +434,9 @@ class PyFusionWindow:
         # Checks the contents of "every" cell to ensure the contents are valid.
         return valid
 
-
     def load_values(self, f):
         with open(f) as vals:
-            lines =  vals.readlines()
+            lines = vals.readlines()
             for line in lines:
                 val = line.split(":")[1].strip()
                 if line.startswith("shots"): self.shot_var.set(val)
@@ -443,9 +455,8 @@ class PyFusionWindow:
                 elif line.startswith("filter_item"): self.filter_item_var.set(val)
         return
 
-
     def load_settings(self):
-        fname = askopenfilename(initialdir=os.getcwd(),
+        fname = askopenfilename(initialdir=os.path.dirname(__file__),
                                 filetypes=(("Text File (*.txt)", "*.txt"), ("All Files", "*.*")))
         if fname == "":
             return None
@@ -457,7 +468,7 @@ class PyFusionWindow:
 
     def save_settings(self):
         if self.valid_values():
-            fname = asksaveasfilename(initialdir=os.getcwd(),
+            fname = asksaveasfilename(initialdir=os.path.dirname(__file__),
                                       filetypes=(("Text File (*.txt)", "*.txt"), ("All Files", "*.*")))
             if fname == "":
                 return None
@@ -472,20 +483,19 @@ class PyFusionWindow:
         sv = tk.StringVar(value="Now clustering.\nPlease wait.")
         win = ProcessingWindow(master=self.root, message=sv)
         win.root.grab_set()
+
         def callback():
-            #A = self.settings_to_analysis_object()
-            # A.run_analysis()
-            import time
-            time.sleep(3)
-            pass
+            A = self.settings_to_analysis_object()
+            A.run_analysis()
             try:
                 sv.set("Clustering complete!")
                 win.processing_complete()
             except tk.TclError:
-                ErrorWindow(master=self.root, message="Unexpected TclError."+
+                ErrorWindow(master=self.root, message="Unexpected TclError." +
                                                       "Did you close the window before it was finished processing...?")
                 pass
             return
+
         t = threading.Thread(target=callback)
         t.start()
         return None
@@ -496,19 +506,39 @@ class PyFusionWindow:
         # Can only be done after the analysis has been performed. (Grey out button before that??)
         # but we'll ignore the latter for now.
         def run():
-            freq,time = win.getVars()
-            if not jt.valid_float_from_str(time):
-                ErrorWindow(master=win.root, message="Time entry is not valid.")
-            if not jt.valid_float_from_str(freq):
+            shot, time_window, freq, time = win.getVars()
+            if not jt.valid_int_from_str(shot):
+                ErrorWindow(master=win.root, message="Shot entry is not valid.")
+            elif not jt.in_tkStringVar_array(shot, self.value_dict["shots"]):
+                ErrorWindow(master=win.root, message="Shot entry is not within the analysis range.")
+            elif not jt.valid_window(time_window):
+                ErrorWindow(master=win.root, message="Time window entry is not valid.")
+            elif not jt.window_subset(jt.time_window_parser(time_window),
+                                      jt.time_window_parser(self.value_dict["times"].get())):
+                ErrorWindow(master=win.root, message="Time window must be contained within the analysis time window.")
+            elif not jt.valid_float_from_str(freq):
                 ErrorWindow(master=win.root, message="Frequency entry is not valid.")
+            elif not jt.valid_float_from_str(time):
+                ErrorWindow(master=win.root, message="Time entry is not valid.")
+            elif not jt.t_in_window(time, time_window):
+                ErrorWindow(master=win.root, message="Time entry must be within the time window.")
+            else:
+                win.root.destroy()
             return
-        win = PromptWindow(master=self.root,prompts=["Frequency (khz)", "Time (ms)"], func_on_ok=run)
+        win = PromptWindow(master=self.root,
+                           prompts=["Shot", "Time Window (ms)", "Frequency (khz)", "Time (ms)"],
+                           func_on_ok=run)
         win.root.grab_set()
-
+        self.root.wait_window(win.root)
+        shot, time_window, freq, time = win.getVars()
+        time_window = jt.time_window_parser(time_window)
+        A = self.settings_to_analysis_object()
+        point_analysis.point_analysis(A, shot, time_window, time, freq,
+                                      self.value_dict["probe_array"].get(), clustarr="all")
         return
 
     def settings_to_analysis_object(self):
-        ## Takes the current settings and creates an Analysis object from Analysis/analysis.py
+        # Takes the current settings and creates an Analysis object from Analysis/analysis.py
         # A1 = Analysis(shots=shots, time_windows=time_windows, probes="DIIID_toroidal_mag", markersize=15,
         #               datamining_settings={'n_clusters': 8, 'n_iterations': 20, 'start': 'k_means', 'verbose': 0,
         #                                    'method': 'EM_VMM', "seeds": None})
@@ -525,12 +555,11 @@ class PyFusionWindow:
             datamining_settings = {'n_clusters': n_clusters, 'n_iterations': n_iterations, 'start': start, 'verbose': 0,
                                    'method': method, "seeds": seeds}
             A = analysis.Analysis(shots=shots, time_windows=time_windows, probes=probes, markersize=15,
-                                  datamining_settings=datamining_settings, n_cpus = n_cpus)
+                                  datamining_settings=datamining_settings, n_cpus=n_cpus)
             return A
         return None
 
 if __name__ == '__main__':
     window1 = PyFusionWindow()
     window1.start()
-
     pass
