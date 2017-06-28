@@ -4,6 +4,12 @@ import random
 import os
 from collections import OrderedDict
 from Analysis import analysis
+from Utilities import jtools as jt
+from pyfusion import DEFAULT_CONFIG_FILE
+import threading
+
+
+
 try:
     import backend  # Python 3
     import tkinter as tk
@@ -12,16 +18,59 @@ try:
 except ImportError:
     import backend  # Python 2
     import Tkinter as tk
-    from tkFileDialog import askopenfilename
+    from tkFileDialog import askopenfilename, asksaveasfilename
     from tkMessageBox import showerror
 font_name = "Arial"
 font = (font_name, 14)
 
+DEFAULT_SETTINGS_DIR = os.path.join(os.path.dirname(__file__), "defaults.txt")
 
 class ErrorWindow:
     def __init__(self, master, message):
         showerror(master=master, title="Error!", message=message)
         return
+
+class ProcessingWindow:
+    def __init__(self, master, message):
+
+        self.root = tk.Toplevel(master=master)
+        if type(message) is str:
+            self.message = tk.StringVar(master=self.root, value=message)
+        else:
+            self.message = message
+        self.root.title("Processing.")
+        self.label = tk.Label(master=self.root, textvariable=self.message, font=(font_name, 25))
+        self.label.grid(row=0, column=0, sticky=tk.N)
+        return
+
+    def processing_complete(self):
+        self.message.set("Processing complete!")
+        but = tk.Button(master=self.root, text="Close.", font=font, command=self.kill)
+        but.grid(row=1, column=0, sticky=tk.N)
+        return
+
+    def kill(self):
+        self.root.destroy() # :(
+
+class PromptWindow:
+    def __init__(self, master, prompts, func_on_ok):
+        self.root = tk.Toplevel(master=master)
+        self.prompt_frame = tk.Frame(master=self.root, bd=5, relief=tk.SUNKEN)
+        self.prompt_frame.grid(row=0, column=0, sticky=tk.NW)
+        self.tkVars = []
+        self.var_strings = []
+        self.ok_pressed = False
+        for (n,prompt) in enumerate(prompts):
+            tk.Label(master=self.prompt_frame, text=prompt.capitalize()+":", font=font).grid(row=n, column=0, sticky=tk.NE)
+            var = tk.StringVar(master=self.root)
+            tk.Entry(master=self.prompt_frame, font=font, textvariable=var).grid(row=n, column=1, sticky=tk.NW)
+            self.tkVars.append(var)
+        self.ok_button = tk.Button(master=self.root, text="Ok", font=font, command=func_on_ok)
+        self.ok_button.grid(row=1, column=0, sticky = tk.SE)
+        return
+
+    def getVars(self):
+        return [i.get() for i in self.tkVars]
 
 
 class PyFusionWindow:
@@ -29,7 +78,7 @@ class PyFusionWindow:
         self.root = tk.Tk()
         self.root.resizable(width=False, height=False)
         self.root.title("PyFusion GUI v. 0")
-        self.root.geometry("1050x700")
+        self.root.geometry("1050x500")
         self.value_dict = OrderedDict()
         # Shot Frame (Shots, Times, Probe Arrays)
         self.shot_frame = tk.Frame(master=self.root, bd=5, relief=tk.SUNKEN)
@@ -272,12 +321,37 @@ class PyFusionWindow:
                                                  command=self.restore_defaults)
         self.restore_defaults_button.grid(row=2, column=0, sticky=tk.N)
 
-        self.run_analysis_button = tk.Button(master=self.settings_buttons_frame,
-                                             text="Run Analysis",
-                                             font=(font_name, 13), width=14,
-                                             command=self.run_analysis)
-        self.run_analysis_button.grid(row=3, column=0, sticky=tk.N)
+        self.run_clustering_button = tk.Button(master=self.settings_buttons_frame,
+                                               text="Cluster",
+                                               font=(font_name, 13), width=14,
+                                               command=self.run_clustering)
+        self.run_clustering_button.grid(row=3, column=0, sticky=tk.N)
+
+        self.run_point_analysis_button = tk.Button(master=self.settings_buttons_frame,
+                                                   text="???",
+                                                   font=(font_name,13), width=14,
+                                                   command=self.run_point_analysis)
+        self.run_point_analysis_button.grid(row=4, column=0, sticky=tk.N)
+
+        # Save everything to a dictionary of tkinter StringVar's.
+        self.value_dict["shots"] = self.shot_var
+        self.value_dict["times"] = self.time_var
+        self.value_dict["probe_array"] = self.probe_var
+        self.value_dict["n_cpus"] = self.ncpus_var
+        self.value_dict["n_clusters"] = self.nclusters_var
+        self.value_dict["n_iterations"] = self.niter_var
+        self.value_dict["start"] = self.start_method_var
+        self.value_dict["method"] = self.method_var
+        self.value_dict["freq_range"] = self.freq_range_var
+        self.value_dict["seed"] = self.seed_var
+        self.value_dict["n_peaks"] = self.npeaks_var
+        self.value_dict["cutoff_by"] = self.cutoff_var
+        self.value_dict["cutoff_value"] = self.cutoff_val_var
+        self.value_dict["filter_items"] = self.filter_item_var
+
         return
+
+
 
     def start(self):
         self.restore_defaults()
@@ -305,22 +379,70 @@ class PyFusionWindow:
         self.filter_item_var.set(self.value_dict["filter_items"])
         return None
 
-    def save_values_to_dict(self):
-        self.value_dict["shots"] = self.shot_var.get()
-        self.value_dict["times"] = self.time_var.get()
-        self.value_dict["probe_array"] = self.probe_var.get()
-        self.value_dict["n_cpus"] = self.ncpus_var.get()
-        self.value_dict["n_clusters"] = self.nclusters_var.get()
-        self.value_dict["n_iterations"] = self.niter_var.get()
-        self.value_dict["start"] = self.start_method_var.get()
-        self.value_dict["method"] = self.method_var.get()
-        self.value_dict["freq_range"] = self.freq_range_var.get()
-        self.value_dict["seed"] = self.seed_var.get()
-        self.value_dict["n_peaks"] = self.npeaks_var.get()
-        self.value_dict["cutoff_by"] = self.cutoff_var.get()
-        self.value_dict["cutoff_value"] = self.cutoff_val_var.get()
-        self.value_dict["filter_items"] = self.filter_item_var.get()
-        return None
+    def valid_values(self):
+        valid = True
+        if not jt.valid_shot_str(self.value_dict["shots"].get()):
+            ErrorWindow(self.root, "Shots entry is invalid.")
+            valid = False
+        if not jt.valid_window(self.value_dict["times"].get()):
+            ErrorWindow(self.root, "Time window entry is invalid.")
+            valid = False
+        if not jt.valid_probe_array(self.value_dict["probe_array"].get()):
+            ErrorWindow(self.root, "Probe array is not valid! Please enter a valid" +
+                        " probe array name from:\n{}".format(jt.scan_config(DEFAULT_CONFIG_FILE)))
+            valid = False
+        if not jt.valid_int_from_str(self.value_dict["n_cpus"].get()):
+            ErrorWindow(self.root, "Number of CPUs must be an integer.")
+            valid = False
+        if not jt.valid_int_from_str(self.value_dict["n_clusters"].get()):
+            ErrorWindow(self.root, "Number of clusters must be an integer.")
+            valid = False
+        if not jt.valid_int_from_str(self.value_dict["n_iterations"].get()):
+            ErrorWindow(self.root, "Number of iterations must be an integer.")
+            valid = False
+        if not jt.valid_method(self.value_dict["method"].get()):
+            ErrorWindow(self.root, "Method must be in: {}. To add a new method to this list," +
+                        " edit ""return_methods()"" in Utilities/jtools.py")
+            valid = False
+        if not jt.valid_window(self.value_dict["freq_range"].get()):
+            ErrorWindow(self.root, "Frequency range entry is invalid.")
+            valid = False
+        if not jt.valid_int_from_str(self.value_dict["seed"].get()):
+            ErrorWindow(self.root, "Seed must be an integer.")
+            valid = False
+        if not jt.valid_int_from_str(self.value_dict["n_peaks"].get()):
+            ErrorWindow(self.root, "Number of peaks must be an integer.")
+            valid = False
+        # Not sure how to test cutoff_by...
+        if not jt.valid_int_from_str(self.value_dict["cutoff_value"].get()):
+            ErrorWindow(self.root, "Cutoff value must be an integer.")
+            valid = False
+        # Not sure how to test filter_items... :(
+        # Checks the contents of "every" cell to ensure the contents are valid.
+        return valid
+
+
+    def load_values(self, f):
+        with open(f) as vals:
+            lines =  vals.readlines()
+            for line in lines:
+                val = line.split(":")[1].strip()
+                if line.startswith("shots"): self.shot_var.set(val)
+                elif line.startswith("times"): self.time_var.set(val)
+                elif line.startswith("probe_array"): self.probe_var.set(val)
+                elif line.startswith("n_cpus"): self.ncpus_var.set(val)
+                elif line.startswith("n_clusters"): self.nclusters_var.set(val)
+                elif line.startswith("n_iterations"): self.niter_var.set(val)
+                elif line.startswith("start"): self.start_method_var.set(val)
+                elif line.startswith("method"): self.method_var.set(val)
+                elif line.startswith("freq_range"): self.freq_range_var.set(val)
+                elif line.startswith("seed"): self.seed_var.set(val)
+                elif line.startswith("n_peaks"): self.npeaks_var.set(val)
+                elif line.startswith("cutoff_by"): self.cutoff_var.set(val)
+                elif line.startswith("cutoff_value"): self.cutoff_val_var.set(val)
+                elif line.startswith("filter_item"): self.filter_item_var.set(val)
+        return
+
 
     def load_settings(self):
         fname = askopenfilename(initialdir=os.getcwd(),
@@ -328,28 +450,61 @@ class PyFusionWindow:
         if fname == "":
             return None
         try:
-            self.value_dict = backend.load_values(fname)
-            self.update_values()
+            self.load_values(fname)
         except:
-            ErrorWindow(self.root, "Unable to open file.")
+            ErrorWindow(self.root, "Incorrect file format.")
         return None
 
     def save_settings(self):
-        fname = asksaveasfilename(initialdir=os.getcwd(),
-                                  filetypes=(("Text File (*.txt)", "*.txt"), ("All Files", "*.*")))
-        if fname == "":
+        if self.valid_values():
+            fname = asksaveasfilename(initialdir=os.getcwd(),
+                                      filetypes=(("Text File (*.txt)", "*.txt"), ("All Files", "*.*")))
+            if fname == "":
+                return None
+            backend.save_values(self.value_dict, fname)
             return None
-        self.save_values_to_dict()
-        backend.save_values(self.value_dict, fname)
-        return None
 
     def restore_defaults(self):
-        self.value_dict = backend.load_values("defaults.txt")
-        self.update_values()
+        self.load_values(DEFAULT_SETTINGS_DIR)
         return None
 
-    def run_analysis(self):
-        print("booped.")
+    def run_clustering(self):
+        sv = tk.StringVar(value="Now clustering.\nPlease wait.")
+        win = ProcessingWindow(master=self.root, message=sv)
+        win.root.grab_set()
+        def callback():
+            #A = self.settings_to_analysis_object()
+            # A.run_analysis()
+            import time
+            time.sleep(3)
+            pass
+            try:
+                sv.set("Clustering complete!")
+                win.processing_complete()
+            except tk.TclError:
+                ErrorWindow(master=self.root, message="Unexpected TclError."+
+                                                      "Did you close the window before it was finished processing...?")
+                pass
+            return
+        t = threading.Thread(target=callback)
+        t.start()
+        return None
+
+    def run_point_analysis(self):
+        # A window needs to popup asking the user for a frequency and time.
+        # Verify both frequency and time are within our analysis windows.
+        # Can only be done after the analysis has been performed. (Grey out button before that??)
+        # but we'll ignore the latter for now.
+        def run():
+            freq,time = win.getVars()
+            if not jt.valid_float_from_str(time):
+                ErrorWindow(master=win.root, message="Time entry is not valid.")
+            if not jt.valid_float_from_str(freq):
+                ErrorWindow(master=win.root, message="Frequency entry is not valid.")
+            return
+        win = PromptWindow(master=self.root,prompts=["Frequency (khz)", "Time (ms)"], func_on_ok=run)
+        win.root.grab_set()
+
         return
 
     def settings_to_analysis_object(self):
@@ -357,9 +512,22 @@ class PyFusionWindow:
         # A1 = Analysis(shots=shots, time_windows=time_windows, probes="DIIID_toroidal_mag", markersize=15,
         #               datamining_settings={'n_clusters': 8, 'n_iterations': 20, 'start': 'k_means', 'verbose': 0,
         #                                    'method': 'EM_VMM', "seeds": None})
-        self.save_values_to_dict()
-
-        return
+        if self.valid_values():
+            shots = jt.shot_str_parser(self.value_dict["shots"].get())
+            time_windows = jt.time_window_parser(self.value_dict["times"].get())
+            probes = self.value_dict["probe_array"].get()
+            n_cpus = int(self.value_dict["n_cpus"].get())
+            n_clusters = int(self.value_dict["n_clusters"].get())
+            n_iterations = int(self.value_dict["n_iterations"].get())
+            start = self.value_dict["start"].get()
+            method = self.value_dict["method"].get()
+            seeds = self.value_dict["seed"].get()
+            datamining_settings = {'n_clusters': n_clusters, 'n_iterations': n_iterations, 'start': start, 'verbose': 0,
+                                   'method': method, "seeds": seeds}
+            A = analysis.Analysis(shots=shots, time_windows=time_windows, probes=probes, markersize=15,
+                                  datamining_settings=datamining_settings, n_cpus = n_cpus)
+            return A
+        return None
 
 if __name__ == '__main__':
     window1 = PyFusionWindow()

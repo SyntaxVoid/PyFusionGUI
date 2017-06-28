@@ -1,0 +1,14 @@
+shots: 159243, 159245-159249
+times: 300-1250
+probe_array: DIIID_toroidal_mag
+n_cpus: 2
+n_clusters: 10
+n_iterations: 15
+start: k_means
+method: EM_VMM
+freq_range: 50-250
+seed: 378
+n_peaks: 10
+cutoff_by: sigma_eq
+cutoff_value: 50
+filter_items: EM_VMM_kappas

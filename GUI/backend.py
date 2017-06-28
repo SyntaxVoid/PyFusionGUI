@@ -16,5 +16,5 @@ def save_values(d, f):
     with open(f, "w") as outfile:
         out_str = "{}: {}\n"
         for key, value in d.items():
-            outfile.write(out_str.format(key,value))
+            outfile.write(out_str.format(key, value.get()))
     return None
