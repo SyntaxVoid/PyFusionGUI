@@ -116,7 +116,19 @@ class Analysis:
         self.im = None
         self.pl = None
         self.markersize = markersize
+
+        ## Dont initializing most variables. Grab raw magnitudes and fft
+        self.mags = {}
+        self.raw_ffts = {}
+        self.raw_mirnov_datas = {}
+        self.raw_times = {}
+        for sh in self.shots:
+            self.mags[str(sh)] = self.get_mags(sh, probes=probes)
+            self.raw_ffts[str(sh)] = self.mags[str(sh)].generate_frequency_series(1024, 256)
+            self.raw_mirnov_datas[str(sh)] = self.raw_ffts[str(sh)].signal
+            self.raw_times[str(sh)] = self.raw_ffts[str(sh)].timebase
         return
+
 
     def get_mags(self, shot, probes):
         dev = pf.getDevice(self.device)
@@ -124,18 +136,15 @@ class Analysis:
         return dev.acq.getdata(shot, probes).reduce_time(time_window)
 
     def get_stft(self, shot):
-        mag = self.get_mags(shot, self.probes)
-        data_fft = mag.generate_frequency_series(1024, 256)
-        good_indices = ext.find_peaks(data_fft, **self.fft_settings)
-        rel_data = ext.return_values(data_fft.signal, good_indices)
-        n = len(ext.return_non_freq_dependent(data_fft.frequency_base, good_indices))
-        misc_data_dict = {"time": ext.return_time_values(data_fft.timebase, good_indices),
-                          "freq": ext.return_non_freq_dependent(data_fft.frequency_base, good_indices),
+        magi = self.mags[str(shot)]
+        data_ffti = self.raw_ffts[str(shot)]
+        good_indices = ext.find_peaks(data_ffti, **self.fft_settings)
+        rel_data = ext.return_values(data_ffti.signal, good_indices)
+        n = len(ext.return_non_freq_dependent(data_ffti.frequency_base, good_indices))
+        misc_data_dict = {"time": ext.return_time_values(data_ffti.timebase, good_indices),
+                          "freq": ext.return_non_freq_dependent(data_ffti.frequency_base, good_indices),
                           "shot": np.ones(n, dtype=int) * shot,
                           "mirnov_data": +rel_data}
-        self.raw_fft = data_fft
-        self.raw_mirnov_data = data_fft.signal
-        self.raw_time = data_fft.timebase
         rel_data_angles = np.angle(rel_data)
         diff_angles = (np.diff(rel_data_angles)) % (2. * np.pi)
         diff_angles[diff_angles > np.pi] -= (2. * np.pi)
@@ -144,7 +153,7 @@ class Analysis:
             ext.filter_by_kappa_cutoff(z, ax=None, **self.fft_settings)
         instance_array = np.array(instance_array_cur)
         misc_data_dict = misc_data_dict_cur
-        return instance_array, misc_data_dict, mag.signal, mag.timebase
+        return instance_array, misc_data_dict, magi.signal, magi.timebase
 
     def get_stft_wrapper(self, input_data):
         return copy.deepcopy(self.get_stft(input_data[0]))
@@ -285,12 +294,12 @@ class Analysis:
         self.fig2.show()
         return
 
-    def plot_diagnostics(self, time_window, t0, f0, idx="", doplot=True, dosave=None, clust_arr=None):
+    def plot_diagnostics(self, shot, time_window, t0, f0, idx="", doplot=True, dosave=None, clust_arr=None):
         # Plots amplitude vs. phase graphs with a spectrogram aswell. t0 and f0 are the time and frequency
         # you would like the phases and amplitudes for. If dosave is equal to a filename string, the plot
         # will be saved to that file.
         pi = np.pi
-        fft = self.raw_fft
+        fft = self.raw_ffts[str(shot)]
         raw_mirnov = fft.signal
         raw_times = fft.timebase
         raw_freqs = fft.frequency_base
@@ -373,27 +382,16 @@ class Analysis:
 
     # ECE #
     def get_stft_ece(self, shot):
-        mag = self.get_mags(shot, self.probes)
-        data_fft = mag.generate_frequency_series(1024, 256)
-        # SETTINGS #
-        n_pts = 8
-        lower_freq = 45
-        upper_freq = 150
-        cutoff_by = "sigma_eq"
-        filter_cutoff = 20
-        filter_item = "EM_GMM_variances_sc"
-        # /SETTINGS #
-        good_indices = ext.find_peaks(data_fft, n_pts=n_pts, lower_freq=lower_freq, upper_freq=upper_freq)
-        rel_data = ext.return_values(data_fft.signal, good_indices)
-        tmp = len(ext.return_non_freq_dependent(data_fft.frequency_base, good_indices))
-        misc_data_dict = {"time": ext.return_time_values(data_fft.timebase, good_indices),
-                          "freq": ext.return_non_freq_dependent(data_fft.frequency_base, good_indices),
+        magi = self.mags[str(shot)]
+        data_ffti = self.raw_ffts[str(shot)]
+        good_indices = ext.find_peaks(data_ffti, **self.fft_settings)
+        rel_data = ext.return_values(data_ffti.signal, good_indices)
+        tmp = len(ext.return_non_freq_dependent(data_ffti.frequency_base, good_indices))
+        misc_data_dict = {"time": ext.return_time_values(data_ffti.timebase, good_indices),
+                          "freq": ext.return_non_freq_dependent(data_ffti.frequency_base, good_indices),
                           "shot": np.ones(tmp, dtype=int) * shot,
                           "mirnov_data": +rel_data}
         print("######################" * 50)
-        self.raw_fft = data_fft
-        self.raw_mirnov_data = data_fft.signal
-        self.raw_time = data_fft.timebase
         rel_data_angles = np.angle(rel_data)
         diff_angles = (np.diff(rel_data_angles)) % (2. * np.pi)
         diff_angles[diff_angles > np.pi] -= (2. * np.pi)
@@ -401,11 +399,10 @@ class Analysis:
         # This is where ECE is different. Use magnitudes as clustering instead of angles
         z = ext.perform_data_datamining(diff_amps, misc_data_dict, self.datamining_settings)
         instance_array_cur, misc_data_dict_cur = \
-            ext.filter_by_kappa_cutoff(z, ave_kappa_cutoff=filter_cutoff, ax=None,
-                                       cutoff_by=cutoff_by, filter_item=filter_item)
+            ext.filter_by_kappa_cutoff(z, **self.fft_settings)
         instance_array = np.array(instance_array_cur)
         misc_data_dict = misc_data_dict_cur
-        return instance_array, misc_data_dict, mag.signal, mag.timebase
+        return instance_array, misc_data_dict, magi.signal, magi.timebase
 
     def get_stft_ece_wrapper(self, input_data):
         return copy.deepcopy(self.get_stft_ece(input_data[0]))
