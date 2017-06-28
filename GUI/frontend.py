@@ -3,7 +3,7 @@
 import random
 import os
 from collections import OrderedDict
-from Analysis import analysis
+import Analysis.analysis
 from Utilities import jtools as jt
 from pyfusion import DEFAULT_CONFIG_FILE
 import threading
@@ -545,6 +545,7 @@ class PyFusionWindow:
         if self.valid_values():
             shots = jt.shot_str_parser(self.value_dict["shots"].get())
             time_windows = jt.time_window_parser(self.value_dict["times"].get())
+            print(time_windows)
             probes = self.value_dict["probe_array"].get()
             n_cpus = int(self.value_dict["n_cpus"].get())
             n_clusters = int(self.value_dict["n_clusters"].get())
