@@ -4,6 +4,7 @@ import re
 import numpy as np
 from pyfusion import DEFAULT_CONFIG_FILE
 
+
 def valid_int_from_str(s):
     # Returns true if s can be converted to an integer.
     try:
@@ -25,6 +26,7 @@ def complex_mag(z):
     # Returns the magnitude sqrt(Re(z)^2 + Im(z)^2) of a numpy.complex number, z
     return np.sqrt(z.real**2 + z.imag**2)
 
+
 def complex_mag_list(zz):
     # Takes in an array of complex numbers and returns an array of their magnitudes
     return [complex_mag(z) for z in zz]
@@ -45,6 +47,11 @@ def scan_config(f):
                 temp.remove("]")
                 diagnostics.append("".join(temp).strip())
     return diagnostics
+
+
+def in_tkStringVar_array(s, tksvarr):
+    list_arr = shot_str_parser(tksvarr.get())
+    return int(s) in list_arr
 
 
 def valid_probe_array(s, f = DEFAULT_CONFIG_FILE):
@@ -71,10 +78,24 @@ def valid_window(s):
     return 0
 
 
+
 def time_window_parser(s):
     if valid_window(s):
         return [int(s.split("-")[0].strip()), int(s.split("-")[1].strip())]
     return None
+
+def t_in_window(t, win):
+    win = time_window_parser(win)
+    try:
+        return float(t) < win[1] and float(t) > win[0]
+    except:
+        print("FLAG")
+    return 0
+
+def window_subset(w1, w2):
+    # Returns true if w1 is completely contained within w2.
+    return w1[0] >= w2[0] and w1[1] <= w2[1]
+
 
 def valid_num_or_range(s):
     # Returns true if s is either a number or two numbers separated by a "-"
@@ -90,6 +111,7 @@ def valid_num_or_range(s):
         return 1
     print("No Match: ({})".format(s))
     return 0
+
 
 def valid_shot_str(s):
     segments = s.split(",")
