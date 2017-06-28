@@ -117,7 +117,7 @@ class Analysis:
         self.pl = None
         self.markersize = markersize
 
-        ## Dont initializing most variables. Grab raw magnitudes and fft
+        ## Done initializing most variables. Grab raw magnitudes and fft
         self.mags = {}
         self.raw_ffts = {}
         self.raw_mirnov_datas = {}
