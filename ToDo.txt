@@ -1,0 +1,22 @@
+#### To do ####
+1. GUI Framework
+    a. Will an analysis of a single probe work? I don't think so.
+       Test and remove single channel diagnostics from scan_config(f) if needed.
+    b. Clean up jtools! Too much repeated code.
+    c. Ability to run clustering analysis and plot spectrogram clusters
+    d. Ability to run "by-hand" analysis that pinpoints a frequency and time and
+       plots probe position vs phase and probe position vs amplitude.
+        1. Slightly different for magnetic arrays and ECE.
+        2. Ability to chose the metadata you would like to plot. This would generalize
+           the plotting routines immensely.
+    e: MAJOR. Find out how to close processing windows immediately after
+              processing completes. User must close them manually right now.
+2. Database
+    a. Creation
+    b. Manipulation
+    c. Statistics
+3. Documentation
+4. MAJOR: Changed analysis.py so that it gets the magnitudes and FFT results
+          within __init__ sloppily. Clean up later.
+
+#### ####
