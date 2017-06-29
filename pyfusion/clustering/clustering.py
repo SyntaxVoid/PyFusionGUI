@@ -1745,10 +1745,6 @@ class clusterer_wrapper(clustering_object):
         #replace EM_VMM and EM_VMM_soft with the class.... somehow
         self.settings = default_settings[method]
         self.settings.update(kwargs)
-        import jtools as jt
-        print("Clustering Settings. . .")
-        jt.print_dict(self.settings, "   ")
-        print("\n")
         cluster_func = cluster_funcs[method]
         #print method, self.settings
         if amplitude is False:
