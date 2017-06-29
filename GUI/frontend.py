@@ -19,7 +19,7 @@ except ImportError:
     import backend  # Python 2
     import Tkinter as tk
     from tkFileDialog import askopenfilename, asksaveasfilename
-    from tkMessageBox import showerror
+    from tkMessageBox import showerror, showinfo
     from Analysis import analysis, point_analysis
 font_name = "Arial"
 font = (font_name, 14)
@@ -31,6 +31,36 @@ class ErrorWindow:
     def __init__(self, master, message):
         showerror(master=master, title="Error!", message=message)
         return
+
+class ProcessingWindow2:
+    def __init__(self, master, message, process):
+        self.master = master
+        self.process = process
+        self.root = tk.Toplevel(master=master)
+        self.sv = tk.StringVar(master=self.root, value="Processing... Please wait.")
+        self.lab = tk.Label(master=self.root, textvariable=self.sv, font=(font_name,25))
+        self.lab.grid(row=0, column=0, sticky=tk.N)
+        cancel_button = tk.Button(master=self.root, text="Cancel", command=self.cancel)
+        cancel_button.grid(row=1, column=0, sticky=tk.N)
+        self.root.grab_set()
+        return
+
+    def cancel(self):
+        self.process.terminate()
+        self.root.destroy()
+        showinfo(title="Cancelled", message="Process was terminated.")
+
+    def launch(self):
+        self.process.start()
+        self.root.after(10, self.isAlive)
+
+    def isAlive(self):
+        if self.process.is_alive():
+            self.root.after(100, self.isAlive)
+        elif self:
+            showinfo("Sucessful run", title="Finished")
+            self.root.destroy()
+
 
 
 class ProcessingWindow:
@@ -366,6 +396,10 @@ class PyFusionWindow:
 
         return
 
+    def clustering_complete(self):
+
+        return
+
     def start(self):
         self.restore_defaults()
         self.root.mainloop()
@@ -480,17 +514,23 @@ class PyFusionWindow:
         return None
 
     def run_clustering(self):
-        sv = tk.StringVar(master=self.root, value="Now clustering.\nPlease wait.")
-        win = ProcessingWindow(master=self.root, message=sv)
-        win.root.grab_set()
+
         def callback():
             # A = self.settings_to_analysis_object()
             # A.run_analysis()
             import time
             time.sleep(2)
-            win.processing_complete("Clustering complete!")
+            win.root.event_generate("<<clustering_complete>>", when="tail")
+            #win.processing_complete("Clustering complete!")
             return
 
+        def clustering_complete(e):
+            win.processing_complete("Clustering complete!")
+            return
+        sv = tk.StringVar(master=self.root, value="Now clustering.\nPlease wait.")
+        win = ProcessingWindow(master=self.root, message=sv)
+        win.root.grab_set()
+        win.root.bind("<<clustering_complete>>", clustering_complete)
         t = threading.Thread(target=callback)
         t.start()
         return None
