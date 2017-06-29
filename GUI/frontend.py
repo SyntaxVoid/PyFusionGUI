@@ -519,7 +519,7 @@ class PyFusionWindow:
             # A.run_analysis()
             import time
             time.sleep(2)
-            win.root.event_generate("<<clustering_complete", when="tail")
+            win.root.event_generate("<<clustering_complete>>", when="tail")
             return
 
         def clustering_complete(e):
