@@ -7,7 +7,7 @@ import Analysis.analysis
 from Utilities import jtools as jt
 from pyfusion import DEFAULT_CONFIG_FILE
 import threading
-
+import Queue
 
 try:
     import backend  # Python 3
@@ -65,7 +65,8 @@ class ProcessingWindow2:
 
 class ProcessingWindow:
     def __init__(self, master, message):
-
+        self.queue = Queue.Queue()
+        self.update_me()
         self.root = tk.Toplevel(master=master)
         if type(message) is str:
             self.message = tk.StringVar(master=self.root, value=message)
@@ -80,6 +81,17 @@ class ProcessingWindow:
         self.message.set(message)
         but = tk.Button(master=self.root, text="Close.", font=font, command=self.kill)
         but.grid(row=1, column=0, sticky=tk.N)
+        return
+
+
+    def update_me(self):
+        try:
+            while True:
+
+
+        except Queue.Empty:
+            pass
+        self.root.after(100, self.update_me)
         return
 
     def kill(self):
@@ -518,22 +530,19 @@ class PyFusionWindow:
         def callback():
             # A = self.settings_to_analysis_object()
             # A.run_analysis()
-            root = tk.Tk()
-            sv = tk.StringVar(master=root, value="Now clustering.\nPlease wait.")
-            label = tk.Label(master=root, textvariable=sv, font=font)
-            label.grid(row=0, column=0)
             import time
             time.sleep(2)
-            #window.processing_complete("Clustering complete!")
-            sv.set("Clustering complete!")
-            button = tk.Button(master=root, text="Close", command=root.destroy)
-            button.grid(row=1, column=0)
+            win.root.event_generate("<<clustering_complete", when="tail")
             return
 
+        def clustering_complete(e):
+            win.processing_complete("Clustering complete!")
+            return
 
-        #sv = tk.StringVar(master=self.root, value="Now clustering.\nPlease wait.")
-        #win = ProcessingWindow(master=self.root, message=sv)
-        #win.root.grab_set()
+        sv = tk.StringVar(master=self.root, value="Now clustering.\nPlease wait.")
+        win = ProcessingWindow(master=self.root, message=sv)
+        win.root.bind("<<clustering_complete>>", clustering_complete)
+        win.root.grab_set()
 
         t = threading.Thread(target=callback)
         t.start()
