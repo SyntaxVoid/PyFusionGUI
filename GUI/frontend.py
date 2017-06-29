@@ -483,7 +483,7 @@ class PyFusionWindow:
 
 
         def callback():
-            sv = tk.StringVar(value="Now clustering.\nPlease wait.")
+            sv = tk.StringVar(master=self.root, value="Now clustering.\nPlease wait.")
             win = ProcessingWindow(master=self.root, message=sv)
             win.root.grab_set()
             A = self.settings_to_analysis_object()
