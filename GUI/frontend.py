@@ -488,7 +488,7 @@ class PyFusionWindow:
             A = self.settings_to_analysis_object()
             A.run_analysis()
             try:
-                win.root.destroy()
+                #win.root.destroy()
                 #sv = tk.StringVar(value="Clustering complete!")
                 #win2 = ProcessingWindow(master=self.root, message=sv)
                 pass
