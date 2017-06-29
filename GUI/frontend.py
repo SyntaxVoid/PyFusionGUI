@@ -83,17 +83,6 @@ class ProcessingWindow:
         but.grid(row=1, column=0, sticky=tk.N)
         return
 
-
-    def update_me(self):
-        try:
-            while True:
-
-
-        except Queue.Empty:
-            pass
-        self.root.after(100, self.update_me)
-        return
-
     def kill(self):
         self.root.destroy()
 
