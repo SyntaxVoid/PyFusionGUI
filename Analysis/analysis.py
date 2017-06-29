@@ -133,7 +133,7 @@ class Analysis:
     def get_mags(self, shot, probes):
         dev = pf.getDevice(self.device)
         time_window = self.time_windows[self.shots.index(shot)]
-        print(shot, probes)
+        print("DEBUG2:", shot, probes, time_window)
         return dev.acq.getdata(shot, probes).reduce_time(time_window)
 
     def get_stft(self, shot):
