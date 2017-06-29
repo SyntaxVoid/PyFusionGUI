@@ -66,6 +66,7 @@ class ProcessingWindow2:
 class ProcessingWindow:
     def __init__(self, master, message):
         self.root = tk.Toplevel(master=master)
+        self.root.resizable(height=False, width=False)
         if type(message) is str:
             self.message = tk.StringVar(master=self.root, value=message)
         else:
@@ -74,6 +75,7 @@ class ProcessingWindow:
         self.label = tk.Label(master=self.root, textvariable=self.message, font=(font_name, 25))
         self.label.grid(row=0, column=0, sticky=tk.N)
         self.root.grab_set()
+        self.root.focus()
         return
 
     def processing_complete(self, message="Processing complete!"):
