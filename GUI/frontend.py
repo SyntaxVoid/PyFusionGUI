@@ -73,6 +73,7 @@ class ProcessingWindow:
         self.root.title("Processing.")
         self.label = tk.Label(master=self.root, textvariable=self.message, font=(font_name, 25))
         self.label.grid(row=0, column=0, sticky=tk.N)
+        self.root.grab_set()
         return
 
     def processing_complete(self, message="Processing complete!"):
@@ -511,9 +512,11 @@ class PyFusionWindow:
     def run_clustering(self):
 
         def callback():
-            A = self.settings_to_analysis_object()
-            A.run_analysis()
-            A.plot_clusters()
+            #A = self.settings_to_analysis_object()
+            #A.run_analysis()
+            #A.plot_clusters()
+            import time
+            time.sleep(3)
             win.root.event_generate("<<clustering_complete>>", when="tail")
             return
 
@@ -523,8 +526,9 @@ class PyFusionWindow:
 
         sv = tk.StringVar(master=self.root, value="Now clustering.\nPlease wait.")
         win = ProcessingWindow(master=self.root, message=sv)
+        #win.root.grab_set()
         win.root.bind("<<clustering_complete>>", clustering_complete)
-        win.root.grab_set()
+
 
         t = threading.Thread(target=callback)
         t.start()
