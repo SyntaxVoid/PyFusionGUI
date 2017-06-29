@@ -552,7 +552,7 @@ class PyFusionWindow:
             n_iterations = int(self.value_dict["n_iterations"].get())
             start = self.value_dict["start"].get()
             method = self.value_dict["method"].get()
-            seeds = self.value_dict["seed"].get()
+            seeds = int(self.value_dict["seed"].get())
             datamining_settings = {'n_clusters': n_clusters, 'n_iterations': n_iterations, 'start': start, 'verbose': 0,
                                    'method': method, "seeds": seeds}
             A = analysis.Analysis(shots=shots, time_windows=time_windows, probes=probes, markersize=15,
