@@ -65,8 +65,6 @@ class ProcessingWindow2:
 
 class ProcessingWindow:
     def __init__(self, master, message):
-        self.queue = Queue.Queue()
-        self.update_me()
         self.root = tk.Toplevel(master=master)
         if type(message) is str:
             self.message = tk.StringVar(master=self.root, value=message)
