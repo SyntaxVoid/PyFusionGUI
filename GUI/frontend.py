@@ -48,8 +48,8 @@ class ProcessingWindow:
 
     def processing_complete(self):
         self.message.set("Processing complete!")
-        but = tk.Button(master=self.root, text="Close.", font=font, command=self.kill)
-        but.grid(row=1, column=0, sticky=tk.N)
+        # but = tk.Button(master=self.root, text="Close.", font=font, command=self.kill)
+        # but.grid(row=1, column=0, sticky=tk.N)
         return
 
     def kill(self):
