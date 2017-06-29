@@ -9,6 +9,9 @@ from pyfusion import DEFAULT_CONFIG_FILE
 import threading
 
 
+import matplotlib.pyplot as plt
+import numpy as np
+
 try:
     import backend  # Python 3
     import tkinter as tk
@@ -25,6 +28,17 @@ font_name = "Arial"
 font = (font_name, 14)
 
 DEFAULT_SETTINGS_DIR = os.path.join(os.path.dirname(__file__), "defaults.txt")
+
+
+def TEST_PLOTTER():
+    x = np.linspace(0,5*np.pi,1000)
+    y1 = np.sin(x)
+    y2 = np.cos(x)
+    a1 = plt.plot(x, y1)
+    a2 = plt.plot(x, y2)
+    return a1, a2
+
+
 
 
 class ErrorWindow:
@@ -519,6 +533,9 @@ class PyFusionWindow:
             #A.plot_clusters()
             import time
             time.sleep(3)
+            fig1, fig2 = TEST_PLOTTER()
+            test = tk.Label(master=win.root, text="Test multithread?")
+            test.grid(row=3, column=0)
             win.root.event_generate("<<clustering_complete>>", when="tail")
             return
 

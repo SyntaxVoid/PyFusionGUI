@@ -191,6 +191,109 @@ class Analysis:
             self.feature_object.dump_data(savefile)
         return
 
+    def return_cluster_plot(self):
+        # Returns a matplotlib plot object for use in tkinter
+        fontsize = 35
+        plot_colors = {1: "#ff0000", 2: "#ff9400", 3: "#ffe100", 4: "#bfff00", 5: "#2aff00",
+                       6: "#00ffa9", 7: "#00f6ff", 8: "#0090ff", 9: "#0033ff", 10: "#8700ff",
+                       11: "#cb00ff", 12: "#ff00f2", 13: "#ff006a"}
+        mpl.rcParams["axes.linewidth"] = 4.0
+        markersize = self.markersize
+        nshots = len(self.shots)
+        if nshots > 2:
+            nrows, ncols = jt.squareish_grid(nshots, swapxy=True)
+            self.fig, self.ax = plt.subplots(nrows=nrows, ncols=ncols, sharex=True, sharey=True)
+            self.axf = self.ax.flatten()
+            self.fig2, self.ax2 = plt.subplots(nrows=nrows, ncols=ncols, sharex=True, sharey=True)
+            self.axf2 = self.ax2.flatten()
+            for cur_ax, cur_ax2, shot, tmp in zip(self.axf, self.axf2, self.shots, self.results):
+                assign = self.z.cluster_assignments
+                details = self.z.cluster_details["EM_VMM_kappas"]
+                shot_details = self.z.feature_obj.misc_data_dict["shot"]
+                time_base = tmp[3]
+                sig = tmp[2]
+                dt = np.mean(np.diff(time_base))
+                tmp_sig = sig[0, :]
+                self.im = cur_ax.specgram(tmp_sig, NFFT=1024, Fs=1. / dt,
+                                          noverlap=128, xextent=[time_base[0], time_base[-1]])
+                self.im = cur_ax2.specgram(tmp_sig, NFFT=1024, Fs=1. / dt,
+                                           noverlap=128, xextent=[time_base[0], time_base[-1]])
+                for i in np.unique(assign):
+                    mask = (assign == i) * (shot_details == shot)
+                    if np.sum(mask) > 1 and np.mean(details[i, :]) > 5:
+                        if i not in plot_colors:
+                            self.pl = cur_ax.plot(self.z.feature_obj.misc_data_dict['time'][mask],
+                                                  self.z.feature_obj.misc_data_dict['freq'][mask],
+                                                  'o', markersize=markersize)
+                            plot_colors[i] = self.pl[0].get_color()
+                        else:
+                            self.pl = cur_ax.plot(self.z.feature_obj.misc_data_dict['time'][mask],
+                                                  self.z.feature_obj.misc_data_dict['freq'][mask],
+                                                  'o', markersize=markersize, color=plot_colors[i])
+            print(plot_colors)
+            tmp = len(self.time_windows)
+            for _ in range(tmp):
+                shot = str(self.shots[_])
+                self.axf[_].set_xlim(self.time_windows[_])
+                self.axf2[_].set_xlim(self.time_windows[_])
+                self.axf[_].set_ylim([0, 250])
+                self.axf2[_].set_ylim([0, 250])
+                self.axf[_].text(680, 200, shot, bbox=dict(facecolor="green", alpha=0.90), fontsize=fontsize)
+                self.axf2[_].text(680, 200, shot, bbox=dict(facecolor="green", alpha=0.90), fontsize=fontsize)
+        elif nshots == 1:
+            # No subplots. Just a single plot.
+            self.fig = plt.figure(1)
+            self.fig2 = plt.figure(2)
+            assign = self.z.cluster_assignments
+            details = self.z.cluster_details["EM_VMM_kappas"]
+            shot_details = self.z.feature_obj.misc_data_dict["shot"]
+            shot = self.shots[0]
+            res = self.results[0]
+            time_base = res[3]
+            sig = res[2]
+            dt = np.mean(np.diff(time_base))
+            tmp_sig = sig[0, :]
+            plt.figure(1)
+            self.im = plt.specgram(tmp_sig, NFFT=1024, Fs=1. / dt,
+                                   noverlap=128, xextent=[time_base[0], time_base[-1]])
+            plt.figure(2)
+            self.im = plt.specgram(tmp_sig, NFFT=1024, Fs=1. / dt,
+                                   noverlap=128, xextent=[time_base[0], time_base[-1]])
+            for i in np.unique(assign):
+                plt.figure(2)
+                mask = (assign == i) * (shot_details == shot)
+                if np.sum(mask) > 1 and np.mean(details[i, :]) > 5:
+                    if i not in plot_colors:
+                        self.pl = plt.plot(self.z.feature_obj.misc_data_dict['time'][mask],
+                                           self.z.feature_obj.misc_data_dict['freq'][mask],
+                                           'o', markersize=markersize)
+                        plot_colors[i] = self.pl[0].get_color()
+                    else:
+                        self.pl = plt.plot(self.z.feature_obj.misc_data_dict['time'][mask],
+                                           self.z.feature_obj.misc_data_dict['freq'][mask],
+                                           'o', markersize=markersize, color=plot_colors[i])
+            plt.figure(1)
+            plt.xlim(self.time_windows[0])
+            plt.ylim([50, 150])
+            plt.yticks(np.arange(50, 150, 5.0))
+            x0 = self.time_windows[0][0] + 0.35 * (self.time_windows[0][1] - self.time_windows[0][0])
+            y0 = 50 + 0.9 * (150 - 50)
+            plt.text(x0, y0, str(shot) + ": " + self.probes, bbox=dict(facecolor="green", alpha=0.9), fontsize=fontsize)
+            plt.figure(2)
+            plt.xlim(self.time_windows[0])
+            plt.ylim([50, 150])
+            plt.yticks(np.arange(50, 150, 5.0))
+            plt.text(x0, y0, str(shot) + ": " + self.probes, bbox=dict(facecolor="green", alpha=0.9), fontsize=fontsize)
+        self.fig.subplots_adjust(hspace=0, wspace=0)
+        self.fig2.subplots_adjust(hspace=0, wspace=0)
+        self.fig.text(0.5, 0.065, "Time (ms)", ha="center", fontsize=fontsize - 10)
+        self.fig.text(0.1, 0.5, "Freq (kHz)", va="center", rotation="vertical", fontsize=fontsize - 10)
+        self.fig2.text(0.5, 0.065, "Time (ms)", ha="center", fontsize=fontsize - 10)
+        self.fig2.text(0.1, 0.5, "Freq (kHz)", va="center", rotation="vertical", fontsize=fontsize - 10)
+        return self.fig, self.fig2
+
+
+
     def plot_clusters(self):
         fontsize = 35
         plot_colors = {1: "#ff0000", 2: "#ff9400", 3: "#ffe100", 4: "#bfff00", 5: "#2aff00",
