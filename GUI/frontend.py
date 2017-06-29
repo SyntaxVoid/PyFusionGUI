@@ -395,10 +395,6 @@ class PyFusionWindow:
 
         return
 
-    def clustering_complete(self):
-
-        return
-
     def start(self):
         self.restore_defaults()
         self.root.mainloop()
@@ -515,10 +511,8 @@ class PyFusionWindow:
     def run_clustering(self):
 
         def callback():
-            # A = self.settings_to_analysis_object()
-            # A.run_analysis()
-            import time
-            time.sleep(2)
+            A = self.settings_to_analysis_object()
+            A.run_analysis()
             win.root.event_generate("<<clustering_complete>>", when="tail")
             return
 
