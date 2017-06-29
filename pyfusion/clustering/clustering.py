@@ -2546,20 +2546,24 @@ def EM_VMM_clustering_wrapper2(input_data):
 
 def EM_VMM_clustering_wrapper(instance_array, n_clusters = 9, n_iterations = 20, n_cpus=1, start='random', kappa_calc='approx', hard_assignments = 0, kappa_converged = 0.1, mu_converged = 0.01, min_iterations=10, LL_converged = 1.e-4, verbose = 0, number_of_starts = 1, seeds = None):
     cluster_list = [n_clusters for i in range(number_of_starts)]
+    seed_list = []
+
+    ###
     if seeds == None:
         seed_list = [int(np.random.rand()*10000) for i in range(number_of_starts)]# )[None]*number_of_starts
         print 'Seeds: ', seed_list
     elif (seeds.__class__ == int) and (number_of_starts==1):
-        seed_list = [seed_list]
+        seed_list = [seeds]
     elif (seeds.__class__ == int) and (number_of_starts!=1):
         raise Exception('Only one seed given for more than one start - This will give duplicate results, fix and try again!!!')
     ## Added by JG
     else:
         seed_list = seeds
     ##
+    print(seed_list, number_of_starts)
     if len(seed_list)!=number_of_starts:
         raise Exception('The length of the seed list is different to the number of starts - fix and try again!!!')
-
+    ###
     #seed_list = [i for i in range(number_of_starts)]
     rep = itertools.repeat
     from multiprocessing import Pool
