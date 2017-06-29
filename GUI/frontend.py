@@ -482,14 +482,15 @@ class PyFusionWindow:
     def run_clustering(self):
         sv = tk.StringVar(value="Now clustering.\nPlease wait.")
         win = ProcessingWindow(master=self.root, message=sv)
-        #win.root.grab_set()
+        win.root.grab_set()
 
         def callback():
             A = self.settings_to_analysis_object()
             A.run_analysis()
             try:
-                #sv.set("Clustering complete!")
-                win.processing_complete()
+                win.root.destroy()
+                sv = tk.StringVar(value="Clustering complete!")
+                win2 = ProcessingWindow(master=self.root, message=sv)
                 pass
             except tk.TclError:
                 ErrorWindow(master=self.root, message="Unexpected TclError." +
