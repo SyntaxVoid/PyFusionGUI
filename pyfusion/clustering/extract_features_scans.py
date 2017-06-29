@@ -695,10 +695,6 @@ def extract_data_by_picking_peaks(current_shot, array_names,NFFT=1024, hop=256,n
 
 #generate the datamining object, and perform the datamining
 def perform_data_datamining(mirnov_angles, misc_data_dict, datamining_settings):# n_clusters = 16, n_iterations = 60):
-    import jtools as jt
-    print("Performing Datamining. . .")
-    jt.print_dict(datamining_settings,"   ")
-    print("\n")
     feat_obj = clust.feature_object(instance_array = mirnov_angles, instance_array_amps = misc_data_dict['mirnov_data'], misc_data_dict = misc_data_dict)
     #z = feat_obj.cluster(method="EM_VMM",n_clusters=n_clusters,n_iterations = n_iterations,start='k_means',verbose=0)
     #print 'perform datamining', datamining_settings
