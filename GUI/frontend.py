@@ -520,7 +520,7 @@ class PyFusionWindow:
             # A.run_analysis()
             import time
             time.sleep(2)
-            window.processing_complete("Clustering complete!")
+            win.processing_complete("Clustering complete!")
             return
 
 
