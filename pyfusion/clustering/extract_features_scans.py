@@ -527,7 +527,8 @@ def get_array_data(current_shot, array_name, time_window=None,new_timebase=None)
         data = data.reduce_time(time_window)
     return data
 
-def find_peaks(data_fft, n_pts=20, lower_freq = 1500, by_average=True, moving_ave=5, peak_cutoff = 0, upper_freq = 500000):
+def find_peaks(data_fft, n_pts=20, lower_freq = 1500, by_average=True,
+               moving_ave=5, peak_cutoff = 0, upper_freq = 500000, **kwargs):
     time_pts, n_dims, freqs = data_fft.signal.shape
     good_indices = []
     for i in range(time_pts):
