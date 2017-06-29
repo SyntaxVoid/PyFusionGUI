@@ -515,23 +515,20 @@ class PyFusionWindow:
 
     def run_clustering(self):
 
-        def callback():
+        def callback(window):
             # A = self.settings_to_analysis_object()
             # A.run_analysis()
             import time
             time.sleep(2)
-            win.root.event_generate("<<clustering_complete>>", when="tail")
-            #win.processing_complete("Clustering complete!")
+            window.processing_complete("Clustering complete!")
             return
 
-        def clustering_complete(e):
-            win.processing_complete("Clustering complete!")
-            return
+
         sv = tk.StringVar(master=self.root, value="Now clustering.\nPlease wait.")
         win = ProcessingWindow(master=self.root, message=sv)
         win.root.grab_set()
-        win.root.bind("<<clustering_complete>>", clustering_complete)
-        t = threading.Thread(target=callback)
+
+        t = threading.Thread(target=callback, args=[win])
         t.start()
         return None
 
