@@ -489,12 +489,13 @@ class PyFusionWindow:
             A.run_analysis()
             try:
                 win.root.destroy()
-                sv = tk.StringVar(value="Clustering complete!")
-                win2 = ProcessingWindow(master=self.root, message=sv)
+                #sv = tk.StringVar(value="Clustering complete!")
+                #win2 = ProcessingWindow(master=self.root, message=sv)
                 pass
             except tk.TclError:
-                ErrorWindow(master=self.root, message="Unexpected TclError." +
-                                                      "Did you close the window before it was finished processing...?")
+                #ErrorWindow(master=self.root, message="Unexpected TclError." +
+                #                                      "Did you close the window before it was finished processing...?")
+                pass
             return
 
         t = threading.Thread(target=callback)
