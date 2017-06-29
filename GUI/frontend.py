@@ -48,8 +48,8 @@ class ProcessingWindow:
 
     def processing_complete(self, message="Processing complete!"):
         self.message.set(message)
-        # but = tk.Button(master=self.root, text="Close.", font=font, command=self.kill)
-        # but.grid(row=1, column=0, sticky=tk.N)
+        but = tk.Button(master=self.root, text="Close.", font=font, command=self.kill)
+        but.grid(row=1, column=0, sticky=tk.N)
         return
 
     def kill(self):
@@ -480,20 +480,15 @@ class PyFusionWindow:
         return None
 
     def run_clustering(self):
-
-
+        sv = tk.StringVar(master=self.root, value="Now clustering.\nPlease wait.")
+        win = ProcessingWindow(master=self.root, message=sv)
+        win.root.grab_set()
         def callback():
-            sv = tk.StringVar(master=self.root, value="Now clustering.\nPlease wait.")
-            win = ProcessingWindow(master=self.root, message=sv)
-            win.root.grab_set()
-            A = self.settings_to_analysis_object()
-            A.run_analysis()
-            try:
-                win.processing_complete("Clustering complete!")
-            except tk.TclError:
-                ErrorWindow(master=self.root, message="Unexpected TclError." +
-                                                      "Did you close the window before it was finished processing...?")
-                pass
+            # A = self.settings_to_analysis_object()
+            # A.run_analysis()
+            import time
+            time.sleep(2)
+            win.processing_complete("Clustering complete!")
             return
 
         t = threading.Thread(target=callback)
