@@ -3,11 +3,11 @@
 import random
 import os
 from collections import OrderedDict
-import Analysis.analysis
+
 from Utilities import jtools as jt
 from pyfusion import DEFAULT_CONFIG_FILE
 import threading
-import Queue
+
 
 try:
     import backend  # Python 3
