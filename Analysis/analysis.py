@@ -89,10 +89,12 @@ class Analysis:
         self.shots = shots
         if time_windows is None:
             time_windows = list(itertools.repeat([300, 1400], len(shots)))
+            print("DEBUG3:", time_windows)
         elif type(time_windows[0]) is not list:
-            time_windows = list(itertools.repeat(time_windows[0], len(shots)))
+            time_windows = list(itertools.repeat(time_windows, len(shots)))
+            print("DEBUG4:", time_windows)
         self.time_windows = time_windows
-        print("DEBUG3:", self.time_windows)
+
         self.input_data_iter = itertools.izip(self.shots, self.time_windows)
         self.device = device
         self.probes = probes
