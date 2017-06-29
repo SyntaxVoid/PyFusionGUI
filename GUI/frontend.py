@@ -488,8 +488,8 @@ class PyFusionWindow:
             A = self.settings_to_analysis_object()
             A.run_analysis()
             try:
-                sv.set("Clustering complete!")
-                #win.processing_complete()
+                #sv.set("Clustering complete!")
+                win.processing_complete()
             except tk.TclError:
                 ErrorWindow(master=self.root, message="Unexpected TclError." +
                                                       "Did you close the window before it was finished processing...?")
