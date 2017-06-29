@@ -705,7 +705,8 @@ def perform_data_datamining(mirnov_angles, misc_data_dict, datamining_settings):
     #z.fit_vonMises()
     return z
 
-def filter_by_kappa_cutoff(z, ave_kappa_cutoff=25, ax = None, prob_cutoff = None, cutoff_by='sigma_eq', filter_item = 'EM_VMM_kappas'):
+def filter_by_kappa_cutoff(z, ave_kappa_cutoff=25, ax = None, prob_cutoff = None,
+                           cutoff_by='sigma_eq', filter_item = 'EM_VMM_kappas', **kwargs):
     total_passes = 0; start = 1
     misc_data_dict2 = {}
     n_clusters, n_dims = z.cluster_details[filter_item].shape
