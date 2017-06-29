@@ -513,6 +513,7 @@ class PyFusionWindow:
         def callback():
             A = self.settings_to_analysis_object()
             A.run_analysis()
+            A.plot_clusters()
             win.root.event_generate("<<clustering_complete>>", when="tail")
             return
 
