@@ -1,7 +1,7 @@
 shots: 159243
 times: 300-1400
 probe_array: DIIID_toroidal_mag
-n_cpus: 4
+n_cpus: 1
 n_clusters: 16
 n_iterations: 20
 start: k_means
