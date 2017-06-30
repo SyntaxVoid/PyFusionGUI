@@ -17,10 +17,12 @@ import pickle
 class OutOfOrderError(Exception):
     pass
 
+class AnalysisError(Exception):
+    pass
 
 def stft_pickle_workaround(input_data):
     # This looks a little funny. Because of how python treats multiprocessing, any function
-    # using mp must be at the highest level (not within a class) to operate correctly.
+    # using mp must be at the highest scope level (not inside a class) to operate correctly.
     return copy.deepcopy(input_data[0].get_stft(input_data[1]))
 
 
@@ -85,12 +87,89 @@ def plot_seperate_clusters(A, clust_arr, ax=None, doplot=True, dosave=None):
                     markersize=A.markersize)
     return
 
-
 class Analysis2:
+    # Updated Analysis object. These methods were separated from the DataMining object
+    # so that there could be a clear intermediary step between the datamining step and
+    # the analysis step. The keywords _from_pickle and _pickle_data should be used very
+    # carefuly. As far as I know, python is unable to have separate constructors for the
+    # same class, which is why I use the if-else blocks and the _from_pickle keyword.
+    def __init__(self, DM, _from_pickle=False, _pickle_data=None):
+        if not _from_pickle:
+            self.DM = DM
+            self.results, self.feature_object, self.z = self.run_analysis()
+        else:
+            self.results = _pickle_data["self"]["results"]
+            self.feature_object = _pickle_data["self"]["feature_object"]
+            self.z = _pickle_data["self"]["z"]
+            self.DM = DataMining(_from_pickle=True, _pickle_data=_pickle_data["DM"])
+        return
+
+    def run_analysis(self):
+        # Returns analysis
+        func = stft_pickle_workaround
+        tmp_data_iter = itertools.izip(itertools.repeat(self.DM),
+                                       self.DM.shot_info["shots"],
+                                       self.DM.shot_info["time_windows"])
+        if self.DM.n_cpus > 1:
+            # We can process each shot separately using different processing cores.
+            pool = Pool(processes=self.DM.n_cpus, maxtasksperchild=3)
+            results = pool.map(func, tmp_data_iter)
+            pool.close()
+            pool.join()
+        else:
+            results = map(func, tmp_data_iter)
+        start = True
+        instance_array = 0
+        misc_data_dict = 0
+        for n, res in enumerate(results):
+            if res[0] is not None:
+                if start:
+                    instance_array = copy.deepcopy(res[0])
+                    misc_data_dict = copy.deepcopy(res[1])
+                    start = False
+                else:
+                    instance_array = np.append(instance_array, res[0], axis=0)
+                    for i in misc_data_dict.keys():
+                        misc_data_dict[i] = np.append(misc_data_dict[i], res[1][i], axis=0)
+            else:
+                raise AnalysisError("Shot {} has failed!".format(self.DM.shot_info["shots"][n]))
+        feature_object = clust.feature_object(instance_array=instance_array, misc_data_dict=misc_data_dict,
+                                              instance_array_amps=+misc_data_dict["mirnov_data"])
+        z = feature_object.cluster(**self.DM.datamining_settings)
+        return results, feature_object, z
+
+    @classmethod
+    def restore(cls, filename):
+        if not os.path.exists(filename):
+            raise OSError("File ({}) does not exist!".format(filename))
+        with open(filename, "rb") as pick:
+            data = pickle.load(pick)
+        return cls(_from_pickle=True, _pickle_data=data)
+
+    def save(self, filename):
+        # Saves the current instance variables as a pickled object to "filename".
+        # Since there are several different data structures within an analysis object,
+        # they will be compressed into a single dictionary object and then pickled.
+        with open(filename, "wb") as pick:
+            pickle.dump({"self": {"results": self.results,
+                                  "feature_object": self.feature_object,
+                                  "z": self.z}, "DM": self.DM.__dict__}, pick)
+        return
+
+class DataMining:
+    # Updated version of original Analysis class, renamed to Datamining since all it does is
+    # fetch data about the probes. All of the Analysis features have been ported over the the
+    # NEW Analysis class in an attempt to separate the code and make it more transparent.
+    # New features include ability to save and load DataMining objects from previous run cycles.
+    # This saves CPU time by not having to perform datamining every time. Also faster, more
+    # pythonic, and a lower memory usage. The keywords '_from_pickle' and '_pickle_data' should
+    # be used very carefully. As far as I know, python is unable to have separate constructors
+    # for the same class, which is why I use the if-else blocks and the _from_pickle keyword.
     def __init__(self, shots=159243, time_windows=None, device="DIIID", probes="DIIID_toroidal_mag",
                  fft_settings=None, datamining_settings=None, n_cpus=1,
                  _from_pickle=False, _pickle_data=None):
         if not _from_pickle:
+            # This executes the 'normal' construction of an Analysis object.
             if type(shots) == int:
                 shots = [shots]
             if time_windows is None:
@@ -112,18 +191,24 @@ class Analysis2:
             self.raw_mirnov_datas = self.return_raw_mirnov_datas()
             self.raw_times = self.return_raw_times()
         else:
-            self.shot_info = _pickle_data["shot_info"]
-            self.fft_settings = _pickle_data["fft_settings"]
-            self.datamining_settings = _pickle_data["datamining_settings"]
-            self.n_cpus = _pickle_data["n_cpus"]
-            self.mags = _pickle_data["mags"]
-            self.raw_ffts = _pickle_data["raw_ffts"]
-            self.raw_mirnov_datas = _pickle_data["raw_mirnov_datas"]
-            self.raw_times = _pickle_data["raw_times"]
+            # This executes the construction of an Analysis object from a previously saved
+            # pickle file. That file must have been saved using the save method.
+            try:
+                self.shot_info = _pickle_data["shot_info"]
+                self.fft_settings = _pickle_data["fft_settings"]
+                self.datamining_settings = _pickle_data["datamining_settings"]
+                self.n_cpus = _pickle_data["n_cpus"]
+                self.mags = _pickle_data["mags"]
+                self.raw_ffts = _pickle_data["raw_ffts"]
+                self.raw_mirnov_datas = _pickle_data["raw_mirnov_datas"]
+                self.raw_times = _pickle_data["raw_times"]
+            except:
+                raise pickle.PickleError("Incorrect pickle file format.")
         return
 
     def __repr__(self):
-        return "Analysis object for shots {}".format(sorted(self.shot_info["shots"]))
+        # Used to display something user friendly when executing print(<analysis_object>)
+        return "<<Analysis object for shots {}>>".format(sorted(self.shot_info["shots"]))
 
     @classmethod
     def restore(cls, filename):
@@ -136,15 +221,16 @@ class Analysis2:
         return cls(_from_pickle=True, _pickle_data=data)
 
     def save(self, filename):
-        # Saves the current attributes of self as a pickled object to "filename".
+        # Saves the current instance variables as a pickled object to "filename".
         # Since there are several different data structures within an analysis object,
         # they will be compressed into a single dictionary object and then pickled.
-        data = {"shot_info": self.shot_info, "fft_settings": self.fft_settings,
-                "datamining_settings": self.datamining_settings, "n_cpus": self.n_cpus,
-                "mags": self.mags, "raw_ffts": self.raw_ffts,
-                "raw_mirnov_datas": self.raw_mirnov_datas, "raw_times": self.raw_times}
+        # FixMe: Remove the comment below if program works fine.
+        # data = {"shot_info": self.shot_info, "fft_settings": self.fft_settings,
+        #         "datamining_settings": self.datamining_settings, "n_cpus": self.n_cpus,
+        #         "mags": self.mags, "raw_ffts": self.raw_ffts,
+        #         "raw_mirnov_datas": self.raw_mirnov_datas, "raw_times": self.raw_times}
         with open(filename, "wb") as pick:
-            pickle.dump(data, pick)
+            pickle.dump(self.__dict__, pick)
         return
 
     def return_mags(self):
@@ -194,18 +280,75 @@ class Analysis2:
             out[str(sh)] = self.raw_ffts[str(sh)].timebase
         return out
 
-    def get_mags(self, shot):
-        # Returns the probe magnitude
-        dev = pf.getDevice(self.shot_info["device"])
-        time_window = self.shot_info["time_windows"][self.shot_info["shots"].index(shot)]
-        return dev.acq.getdata(shot, self.shot_info["probes"]).reduce_time(time_window)
+    def get_stft(self, shot):
+        # Calculates the short time fourier transform (STFT) of a given shot in the current
+        # analysis object. This function must be dependent on shot since we use map and
+        # multiprocessing at a later point in the script since each shot can be processed
+        # independently.
+        magi = self.mags[str(shot)]
+        data_ffti = self.raw_ffts[str(shot)]
+        good_indices = ext.find_peaks(data_ffti, **self.fft_settings)
+        rel_data = ext.return_values(data_ffti.signal, good_indices)
+        n = len(ext.return_non_freq_dependent(data_ffti.frequency_base, good_indices))
+        misc_data_dict = {"time": ext.return_time_values(data_ffti.timebase, good_indices),
+                          "freq": ext.return_non_freq_dependent(data_ffti.frequency_base, good_indices),
+                          "shot": np.ones(n, dtype=int) * shot,
+                          "mirnov_data": +rel_data}
+        rel_data_angles = np.angle(rel_data)
+        diff_angles = (np.diff(rel_data_angles)) % (2. * np.pi)
+        diff_angles[diff_angles > np.pi] -= (2. * np.pi)
+        z = ext.perform_data_datamining(diff_angles, misc_data_dict, self.datamining_settings)
+        instance_array_cur, misc_data_dict_cur = \
+            ext.filter_by_kappa_cutoff(z, ax=None, **self.fft_settings)
+        instance_array = np.array(instance_array_cur)
+        misc_data_dict = misc_data_dict_cur
+        return instance_array, misc_data_dict, magi.signal, magi.timebase
 
+    def get_stft_wrapper(self, input_data):
+        # We have to use a wrapper like this in order for multiprocessing to function correctly
+        return copy.deepcopy(self.get_stft(input_data[0]))
 
+    def run_analysis(self, savefile=None):
+        func = stft_pickle_workaround
+        tmp_data_iter = itertools.izip(itertools.repeat(self),
+                                       self.shot_info["shots"],
+                                       self.shot_info["time_windows"])
+        if self.n_cpus > 1:
+            # We can process each shot separately using different processing cores.
+            pool = Pool(processes=self.n_cpus, maxtasksperchild=3)
+            self.results = pool.map(func, tmp_data_iter)
+            pool.close()
+            pool.join()
+        else:
+            self.results = map(func, tmp_data_iter)
+        start = True
+        instance_array = 0
+        misc_data_dict = 0
+        for n, res in enumerate(self.results):
+            if res[0] is not None:
+                if start:
+                    instance_array = copy.deepcopy(res[0])
+                    misc_data_dict = copy.deepcopy(res[1])
+                    start = False
+                else:
+                    instance_array = np.append(instance_array, res[0], axis=0)
+                    for i in misc_data_dict.keys():
+                        misc_data_dict[i] = np.append(misc_data_dict[i], res[1][i], axis=0)
+            else:
+                raise AnalysisError("Shot {} has failed!".format(self.shot_info["shots"][n]))
+        # FixMe: I don't like creating a new class variables outside of __init__
+        self.feature_object = clust.feature_object(instance_array=instance_array, misc_data_dict=misc_data_dict,
+                                                   instance_array_amps=+misc_data_dict["mirnov_data"])
+        self.z = self.feature_object.cluster(**self.datamining_settings)
+        if savefile is not None:
+            self.feature_object.dump_data(savefile)
+        return
 
 
 class Analysis:
     def __init__(self, shots, time_windows=None, device="DIIID", probes="DIIID_toroidal_mag",
                  fft_settings=None, datamining_settings=None, n_cpus=1, markersize=14):
+        ## DONE ##
         if type(shots) == int:
             shots = [shots]
         self.shots = shots
@@ -254,11 +397,13 @@ class Analysis:
 
 
     def get_mags(self, shot, probes):
+        ## DONE ##
         dev = pf.getDevice(self.device)
         time_window = self.time_windows[self.shots.index(shot)]
         return dev.acq.getdata(shot, probes).reduce_time(time_window)
 
     def get_stft(self, shot):
+        ## DONE ##
         magi = self.mags[str(shot)]
         data_ffti = self.raw_ffts[str(shot)]
         good_indices = ext.find_peaks(data_ffti, **self.fft_settings)
@@ -312,12 +457,6 @@ class Analysis:
         if savefile is not None:
             self.feature_object.dump_data(savefile)
         return
-
-    def save_analysis(self, f):
-        print(self.__dict__.keys())
-
-        return
-
 
     def return_cluster_plot(self):
         # Returns a matplotlib plot object for use in tkinter
