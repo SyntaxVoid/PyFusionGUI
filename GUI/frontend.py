@@ -27,7 +27,8 @@ except ImportError:
 font_name = "Arial"
 font = (font_name, 14)
 
-DEFAULT_SETTINGS_DIR = os.path.join(os.path.dirname(__file__), "defaults.txt")
+FRONTEND_FILE_NAME = os.path.dirname(__file__)
+DEFAULT_SETTINGS_DIR = os.path.join(FRONTEND_FILE_NAME, "defaults.txt")
 
 
 def TEST_PLOTTER():
@@ -46,36 +47,6 @@ class ErrorWindow:
         showerror(master=master, title="Error!", message=message)
         return
 
-class ProcessingWindow2:
-    def __init__(self, master, message, process):
-        self.master = master
-        self.process = process
-        self.root = tk.Toplevel(master=master)
-        self.sv = tk.StringVar(master=self.root, value="Processing... Please wait.")
-        self.lab = tk.Label(master=self.root, textvariable=self.sv, font=(font_name,25))
-        self.lab.grid(row=0, column=0, sticky=tk.N)
-        cancel_button = tk.Button(master=self.root, text="Cancel", command=self.cancel)
-        cancel_button.grid(row=1, column=0, sticky=tk.N)
-        self.root.grab_set()
-        return
-
-    def cancel(self):
-        self.process.terminate()
-        self.root.destroy()
-        showinfo(title="Cancelled", message="Process was terminated.")
-
-    def launch(self):
-        self.process.start()
-        self.root.after(10, self.isAlive)
-
-    def isAlive(self):
-        if self.process.is_alive():
-            self.root.after(100, self.isAlive)
-        elif self:
-            showinfo("Sucessful run", title="Finished")
-            self.root.destroy()
-
-
 
 class ProcessingWindow:
     def __init__(self, master, message):
@@ -89,7 +60,6 @@ class ProcessingWindow:
         self.label = tk.Label(master=self.root, textvariable=self.message, font=(font_name, 25))
         self.label.grid(row=0, column=0, sticky=tk.N)
         self.root.grab_set()
-        self.root.focus()
         return
 
     def processing_complete(self, message="Processing complete!"):
@@ -531,19 +501,24 @@ class PyFusionWindow:
             #A = self.settings_to_analysis_object()
             #A.run_analysis()
             #A.plot_clusters()
+            if not os.path.exists(os.path.join(FRONTEND_FILE_NAME,"temp")):
+                print("Making directory!")
+                os.makedirs(os.path.join(FRONTEND_FILE_NAME, "temp"))
+            else:
+                print("Directory already made!")
             import time
             time.sleep(3)
             fig1, fig2 = TEST_PLOTTER()
-            test = tk.Label(master=win.root, text="Test multithread?")
-            test.grid(row=3, column=0)
+
             win.root.event_generate("<<clustering_complete>>", when="tail")
             return
 
         def clustering_complete(e):
+
             win.processing_complete("Clustering complete!")
             return
 
-        sv = tk.StringVar(master=self.root, value="Now clustering.\nPlease wait.")
+        sv = "Now clustering.\nPlease wait."
         win = ProcessingWindow(master=self.root, message=sv)
         #win.root.grab_set()
         win.root.bind("<<clustering_complete>>", clustering_complete)

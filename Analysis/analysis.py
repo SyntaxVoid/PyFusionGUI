@@ -2,6 +2,7 @@
 # John Gresl 6/20/2017 #
 
 import copy
+import os
 import itertools
 from multiprocessing import Pool
 import numpy as np
@@ -11,6 +12,10 @@ import pyfusion as pf
 import pyfusion.clustering as clust
 import pyfusion.clustering.extract_features_scans as ext
 from Utilities import jtools as jt
+import pickle
+
+class OutOfOrderError(Exception):
+    pass
 
 
 def stft_pickle_workaround(input_data):
@@ -79,6 +84,119 @@ def plot_seperate_clusters(A, clust_arr, ax=None, doplot=True, dosave=None):
                     color=plot_colors[cl], marker="o", linestyle="None",
                     markersize=A.markersize)
     return
+
+
+class Analysis2:
+    def __init__(self, shots=159243, time_windows=None, device="DIIID", probes="DIIID_toroidal_mag",
+                 fft_settings=None, datamining_settings=None, n_cpus=1,
+                 _from_pickle=False, _pickle_data=None):
+        if not _from_pickle:
+            if type(shots) == int:
+                shots = [shots]
+            if time_windows is None:
+                time_windows = list(itertools.repeat([300, 1400], len(shots)))
+            elif type(time_windows) is not list:
+                time_windows = list(itertools.repeat(time_windows, len(shots)))
+            self.shot_info = {"shots": shots, "time_windows": time_windows, "device": device, "probes": probes}
+            self.fft_settings = fft_settings if fft_settings is not None else \
+                {"n_pts": 8, "lower_freq": 10, "upper_freq": 250, "cutoff_by": "sigma_eq",
+                 "ave_kappa_cutoff": 25, "filter_item": "EM_VMM_kappas"}
+            self.datamining_settings = datamining_settings if datamining_settings is not None else \
+                {'n_clusters': 16, 'n_iterations': 20, 'start': 'k_means', 'verbose': 0, 'method': 'EM_VMM', "seeds": None}
+            self.n_cpus = n_cpus
+            self.mags = self.return_mags()
+            self.raw_ffts = self.return_raw_ffts()
+            self.raw_mirnov_datas = self.return_raw_mirnov_datas()
+            self.raw_times = self.return_raw_times()
+        else:
+            self.shot_info = _pickle_data["shot_info"]
+            self.fft_settings = _pickle_data["fft_settings"]
+            self.datamining_settings = _pickle_data["datamining_settings"]
+            self.n_cpus = _pickle_data["n_cpus"]
+            self.mags = _pickle_data["mags"]
+            self.raw_ffts = _pickle_data["raw_ffts"]
+            self.raw_mirnov_datas = _pickle_data["raw_mirnov_datas"]
+            self.raw_times = _pickle_data["raw_times"]
+        return
+
+    def __repr__(self):
+        return "Analysis object for shots {}".format(sorted(self.shot_info["shots"]))
+
+    @classmethod
+    def restore(cls, filename):
+        # Creates and returns an analysis object from a pickled file created
+        # using the class' save method.
+        if not os.path.exists(filename):
+            raise OSError("File ({}) does not exist!".format(filename))
+        with open(filename, "rb") as pick:
+            data = pickle.load(pick)
+        return cls(_from_pickle=True, _pickle_data=data)
+
+    def save(self, filename):
+        # Saves the current attributes of self as a pickled object to "filename".
+        # Since there are several different data structures within an analysis object,
+        # they will be compressed into a single dictionary object and then pickled.
+        data = {"shot_info": self.shot_info, "fft_settings": self.fft_settings,
+                "datamining_settings": self.datamining_settings, "n_cpus": self.n_cpus,
+                "mags": self.mags, "raw_ffts": self.raw_ffts,
+                "raw_mirnov_datas": self.raw_mirnov_datas, "raw_times": self.raw_times}
+        with open(filename, "wb") as pick:
+            pickle.dump(data, pick)
+        return
+
+    def return_mags(self):
+        # Returns the magnitudes of every shot and time window in the form of a dictionary.
+        # Output is formatted like: {"159243": magnitudes, "159244": magnitudes, ... }
+        out = {}
+        dev = pf.getDevice(self.shot_info["device"])
+        for sh,tw in zip(self.shot_info["shots"], self.shot_info["time_windows"]):
+            out[str(sh)] = dev.acq.getdata(sh, self.shot_info["probes"]).reduce_time(tw)
+        return out
+
+    def return_raw_ffts(self):
+        # Returns the FFT's of every shot and in the form of a dictionary
+        # Output is formatted like: {"159243": FFT, "159244": FFT, ... }
+        # Requires that magnitudes have already been stored within self.mags!!!!
+        if len(self.mags.keys()) == 0:
+            raise OutOfOrderError("Magnitudes must be calculated before FFTs!\n"+
+                                  "Run self.mags = self.return_mags().")
+        out = {}
+        for sh in self.shot_info["shots"]:
+            mag = self.mags[str(sh)]
+            out[str(sh)] = mag.generate_frequency_series(1024, 256)
+        return out
+
+    def return_raw_mirnov_datas(self):
+        # Returns the raw mirnov data of every shot in the form of a dictionary
+        # Output is formatted like: {"159243": mirnov, "159244": mirnov, ... }
+        # Requires that FFTs have already been stored within self.raw_ffts!!!!
+        if len(self.raw_ffts.keys()) == 0:
+            raise OutOfOrderError("Raw FFTs must be calculated before raw mirnov data!\n"+
+                                  "Run self.raw_ffts = self.return_raw_ffts().")
+        out = {}
+        for sh in self.shot_info["shots"]:
+            out[str(sh)] = self.raw_ffts[str(sh)].signal
+        return out
+
+    def return_raw_times(self):
+        # Returns the raw times of every shot in the form of a dictionary
+        # Output is formatted like: {"159243": mirnov, "159244": mirnov, ... }
+        # Requires that FFTs have already been stored within self.raw_ffts!!!!
+        if len(self.raw_ffts.keys()) == 0:
+            raise OutOfOrderError("Raw FFTs must be calculated before raw mirnov data!\n"+
+                                  "Run self.raw_ffts = self.return_raw_ffts().")
+        out = {}
+        for sh in self.shot_info["shots"]:
+            out[str(sh)] = self.raw_ffts[str(sh)].timebase
+        return out
+
+    def get_mags(self, shot):
+        # Returns the probe magnitude
+        dev = pf.getDevice(self.shot_info["device"])
+        time_window = self.shot_info["time_windows"][self.shot_info["shots"].index(shot)]
+        return dev.acq.getdata(shot, self.shot_info["probes"]).reduce_time(time_window)
+
+
 
 
 class Analysis:
@@ -190,6 +308,12 @@ class Analysis:
         if savefile is not None:
             self.feature_object.dump_data(savefile)
         return
+
+    def save_analysis(self, f):
+        print(self.__dict__.keys())
+
+        return
+
 
     def return_cluster_plot(self):
         # Returns a matplotlib plot object for use in tkinter
