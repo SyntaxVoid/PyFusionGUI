@@ -77,7 +77,11 @@ def valid_window(s):
         return 1
     return 0
 
-
+def remove_key(d, k):
+    # Creates a copy of the dict, d, and returns a that copy with the key, k, removed.
+    r = dict(d)
+    del r[k]
+    return r
 
 def time_window_parser(s):
     if valid_window(s):
