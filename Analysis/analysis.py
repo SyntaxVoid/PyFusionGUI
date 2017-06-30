@@ -97,6 +97,8 @@ class Analysis2:
                 time_windows = list(itertools.repeat([300, 1400], len(shots)))
             elif type(time_windows) is not list:
                 time_windows = list(itertools.repeat(time_windows, len(shots)))
+            elif type(time_windows[0]) is not list:
+                time_windows = [time_windows]
             print(type(time_windows), time_windows)
             self.shot_info = {"shots": shots, "time_windows": time_windows, "device": device, "probes": probes}
             self.fft_settings = fft_settings if fft_settings is not None else \
