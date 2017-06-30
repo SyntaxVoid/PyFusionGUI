@@ -1,36 +1,41 @@
 # GUI/main.py #
 # John Gresl 6/19/2017 #
+
+# Python
 import random
 import os
 from collections import OrderedDict
-
-from Utilities import jtools as jt
-from pyfusion import DEFAULT_CONFIG_FILE
 import threading
+import backend
 
-
+# Anaconda
 import matplotlib.pyplot as plt
 import numpy as np
 
+# PyFusion
+from pyfusion import DEFAULT_CONFIG_FILE
+
+# My Additions
+from Utilities import jtools as jt
+from Analysis import analysis, point_analysis
+
+# tkinter
 try:
-    import backend  # Python 3
-    import tkinter as tk
+    import tkinter as tk # Will work with python 3
     from tkinter.filedialog import askopenfilename, asksaveasfilename
     from tkinter.messagebox import showerror
-    from Analysis import analysis, point_analysis
 except ImportError:
-    import backend  # Python 2
-    import Tkinter as tk
+    import Tkinter as tk # Will work with python 2
     from tkFileDialog import askopenfilename, asksaveasfilename
     from tkMessageBox import showerror, showinfo
-    from Analysis import analysis, point_analysis
+    1
 font_name = "Arial"
 font = (font_name, 14)
 
 FRONTEND_FILE_NAME = os.path.dirname(__file__)
 DEFAULT_SETTINGS_DIR = os.path.join(FRONTEND_FILE_NAME, "defaults.txt")
 
-
+print(FRONTEND_FILE_NAME)
 def TEST_PLOTTER():
     x = np.linspace(0,5*np.pi,1000)
     y1 = np.sin(x)
