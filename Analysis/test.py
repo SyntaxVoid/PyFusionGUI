@@ -6,4 +6,4 @@ if __name__ == '__main__':
     B = analysis.Analysis2.restore("TEST_PICKLE.PICKLE")
     print(A)
     print(B)
-    
+
