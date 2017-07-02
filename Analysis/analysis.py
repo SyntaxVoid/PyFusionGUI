@@ -183,17 +183,32 @@ class Analysis2:
     def return_plots(self):
         fontsize   = 35  # FixMe: More robust definition of fontsize... Not sure what to do now.
         markersize = 15  # FixMe: More robust definition of markersize
-        plot_colors = ["#ff0000", "#ff9400", "#ffe100", "#bfff00",
-                       "#2aff00", "#00ffa9", "#00f6ff", "#0090ff",
-                       "#0033ff", "#8700ff", "#cb00ff", "#ff00f2",
-                       "#ff006a", "#631247", "#a312f7", "#a3f2f7"]
-        plot_colors = jt.CycledList(plot_colors)
+        plot_colors = jt.CycledList(["#ff0000", "#ff9400", "#ffe100", "#bfff00",
+                                     "#2aff00", "#00ffa9", "#00f6ff", "#0090ff",
+                                     "#0033ff", "#8700ff", "#cb00ff", "#ff00f2",
+                                     "#ff006a", "#631247", "#a312f7", "#a3f2f7"])
         n_shots = len(self.DM.shot_info["shots"])
         nrows, ncols = jt.squareish_grid(n_shots, swapxy=True)
         figure1, axes1 = plt.subplots(nrows=nrows, ncols=ncols, sharex=True, sharey=True)
         figure2, axes2 = plt.subplots(nrows=nrows, ncols=ncols, sharex=True, sharey=True)
         axesf1 = axes1.flatten() if n_shots > 1 else np.array([axes1], dtype=object)
         axesf2 = axes2.flatten() if n_shots > 1 else np.array([axes2], dtype=object)
+        big_axes1 = figure1.add_subplot(111, frameon=False)
+        big_axes2 = figure2.add_subplot(111, frameon=False)
+        big_axes1.spines["top"].set_color("none")
+        big_axes1.spines["left"].set_color("none")
+        big_axes1.spines["right"].set_color("none")
+        big_axes1.spines["bottom"].set_color("none")
+        big_axes1.tick_params(labelcolor="w", top="off", bottom="off", left="off", right="off")
+        big_axes2.spines["top"].set_color("none")
+        big_axes2.spines["left"].set_color("none")
+        big_axes2.spines["right"].set_color("none")
+        big_axes2.spines["bottom"].set_color("none")
+        big_axes2.tick_params(labelcolor="w", top="off", bottom="off", left="off", right="off")
+        big_axes1.set_xlabel("Time (ms)")
+        big_axes1.set_ylabel("Freq (kHz)")
+        big_axes2.set_xlabel("Time (ms)")
+        big_axes2.set_ylabel("Freq (kHz)")
         for current_axes1, current_axes2, shot, result in \
                 zip(axesf1, axesf2, self.DM.shot_info["shots"], self.results):
             assignments = self.z.cluster_assignments
