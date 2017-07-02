@@ -833,25 +833,22 @@ if __name__ == '__main__':
     ## DataMining
     # Create the datamining object. Creating it will automatically perform the datamining,
     # however it will take a little bit of time (on the order of minutes).
-    DM1 = DataMining(shots=shots, time_windows=time_windows, probes=probes)
+    #DM1 = DataMining(shots=shots, time_windows=time_windows, probes=probes)
     # Saving to a default directory, no keyword filename required.
     #DM1.save()
     # Saving to a custom directory.
     #DM1.save(filename="TESTDMSAVE.DMobj")
     # Restoring
-    #DM2 = DataMining.restore(filename="TESTDMSAVE.DMobj")
+    DM2 = DataMining.restore(filename="TESTDMSAVE.DMobj")
 
     ## Analysis
     # Create the analysis object from the previously defined DataMining object. Creating it will
     # automatically perform the analysis, however it will take a little bit of time (on the order
     # of minutes).
-    AN1 = Analysis2(DM=DM1)
+    AN1 = Analysis2(DM=DM2)
     # Saving to a default directory, no keyword filename required.
     AN1.save()
     # Saving to a custom directory.
     AN1.save(filename="TESTANSAVE.ANobj")
     # Restoring
     AN2 = Analysis2.restore(filename="TESTANSAVE.ANobj")
-
-
-
