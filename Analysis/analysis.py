@@ -247,7 +247,7 @@ class DataMining:
             else:
                 pr = probes
             local_filename = str(self.shot_info["shots"][0]) + "_" + \
-                             str(self.shot_info["time_windows"][0]) + "_" + \
+                             jt.time_window_to_filelike_str(self.shot_info["time_windows"][0]) + "_" + \
                              pr + ".DMobj"
             filename = os.path.join(PICKLE_SAVE_DIR, local_filename)
             print(filename)
