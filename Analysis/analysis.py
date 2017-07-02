@@ -105,6 +105,9 @@ class Analysis2:
             self.DM = DataMining(_from_pickle=True, _pickle_data=_pickle_data["DM"])
         return
 
+    def __repr__(self):
+        return "<<Analysis object for {}>>".format(self.DM.__repr__())
+    
     def run_analysis(self):
         # Returns analysis
         func = stft_pickle_workaround
@@ -147,15 +150,33 @@ class Analysis2:
             data = pickle.load(pick)
         return cls(_from_pickle=True, _pickle_data=data)
 
-    def save(self, filename):
+    def save(self, filename=None):
         # Saves the current instance variables as a pickled object to "filename".
         # Since there are several different data structures within an analysis object,
         # they will be compressed into a single dictionary object and then pickled.
+        if filename is None:
+            probes = self.DM.shot_info["probes"]
+            if probes == "DIIID_toroidal_mag":
+                pr = "TOR"
+            elif probes == "DIIID_poloidal322_mag":
+                pr = "POL"
+            elif probes == "ECEF_array":
+                pr = "ECE"
+            elif probes == "ECEF_array_red":
+                pr = "ECE_REDUCED"
+            else:
+                pr = probes
+            local_filename = str(self.DM.shot_info["shots"][0]) + "_" + \
+                             jt.time_window_to_filelike_str(self.DM.shot_info["time_windows"][0]) + "_" + \
+                             pr + ".ANobj"
+            filename = os.path.join(PICKLE_SAVE_DIR, local_filename)
+            print(filename)
         with open(filename, "wb") as pick:
             pickle.dump({"self": {"results": self.results,
                                   "feature_object": self.feature_object,
                                   "z": self.z}, "DM": self.DM.__dict__}, pick)
         return
+
 
 class DataMining:
     # Updated version of original Analysis class, renamed to Datamining since all it does is
@@ -807,16 +828,28 @@ if __name__ == '__main__':
     shots = 159243
     time_windows = [300, 700]
     probes = "DIIID_toroidal_mag"
+    ## DataMining
     # Create the datamining object. Creating it will automatically perform the datamining,
     # however it will take a little bit of time (on the order of minutes).
     DM1 = DataMining(shots=shots, time_windows=time_windows, probes=probes)
-    # Saving to a default directory, no keyword filename required
-    print("########################## SAVING 1")
+    # Saving to a default directory, no keyword filename required.
     DM1.save()
-    # Saving to a custom directory
-    print("########################## SAVING 2")
+    # Saving to a custom directory.
     DM1.save(filename="TESTDMSAVE.DMobj")
-    # Restore
-    print("########################## RESTORING")
+    # Restoring
     DM2 = DataMining.restore(filename="TESTDMSAVE.DMobj")
+
+    ## Analysis
+    # Create the analysis object from the previously defined DataMining object. Creating it will
+    # automatically perform the analysis, however it will take a little bit of time (on the order
+    # of minutes).
+    AN1 = Analysis2(DM=DM1)
+    # Saving to a default directory, no keyword filename required.
+    AN1.save()
+    # Saving to a custom directory.
+    AN1.save(filename="TESTANSAVE.ANobj")
+    # Restoring
+    AN2 = Analysis2.restore(filename="TESTANSAVE.ANobj")
+
+
 
