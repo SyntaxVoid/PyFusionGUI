@@ -108,7 +108,7 @@ class Analysis2:
         return
 
     def __repr__(self):
-        return "<<Analysis object for {}>>".format(self.DM.__repr__())
+        return "<<Analysis object for {} >>".format(self.DM.__repr__())
 
     def run_analysis(self):
         # Returns analysis
