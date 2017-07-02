@@ -208,36 +208,13 @@ class Analysis2:
         figure2, axes2 = plt.subplots(nrows=nrows, ncols=ncols, sharex=True, sharey=True)
         axesf1 = axes1.flatten() if n_shots > 1 else np.array([axes1], dtype=object)
         axesf2 = axes2.flatten() if n_shots > 1 else np.array([axes2], dtype=object)
-        big_axes1 = figure1.add_subplot(111, frameon=False)
-        big_axes2 = figure2.add_subplot(111, frameon=False)
-        _big_axes(big_axes1)
-        _big_axes(big_axes2)
-        # big_axes1.spines["top"].set_color("none")
-        # big_axes1.spines["left"].set_color("none")
-        # big_axes1.spines["right"].set_color("none")
-        # big_axes1.spines["bottom"].set_color("none")
-        # big_axes2.spines["top"].set_color("none")
-        # big_axes2.spines["left"].set_color("none")
-        # big_axes2.spines["right"].set_color("none")
-        # big_axes2.spines["bottom"].set_color("none")
-        # big_axes1.set_xticklabels([])
-        # big_axes2.set_xticklabels([])
-        # big_axes1.set_yticklabels([])
-        # big_axes2.set_yticklabels([])
-        # big_axes1.tick_params(axis="x", pad=15)
-        # big_axes1.tick_params(axis="y", pad=20)
-        # big_axes2.tick_params(axis="x", pad=15)
-        # big_axes2.tick_params(axis="y", pad=20)
-        # big_axes1.set_xlabel("Time (ms)")
-        # big_axes1.set_ylabel("Freq (kHz)")
-        # big_axes2.set_xlabel("Time (ms)")
-        # big_axes2.set_ylabel("Freq (kHz)")
+        _big_axes(figure1.add_subplot(111, frameon=False))
+        _big_axes(figure2.add_subplot(111, frameon=False))
         for current_axes1, current_axes2, shot, result in \
                 zip(axesf1, axesf2, self.DM.shot_info["shots"], self.results):
             assignments = self.z.cluster_assignments
             details = self.z.cluster_details["EM_VMM_kappas"]
             shot_details = self.z.feature_obj.misc_data_dict["shot"]
-            print("SHOT DETAILS:", shot_details)
             time_base = result[3]
             signal = result[2][0, :]
             dt = np.mean(np.diff(time_base))
@@ -801,7 +778,7 @@ class Analysis:
 
 if __name__ == '__main__':
     # # Example of how to use these classes
-    shots = 159243
+    shots = [159243, 159244, 159245, 159246]
     time_windows = [300, 700]
     probes = "DIIID_toroidal_mag"
     # ## DataMining
