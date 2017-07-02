@@ -211,7 +211,7 @@ class Analysis2:
                     current_axes1.plot(self.z.feature_obj.misc_data_dict["time"][mask],
                                        self.z.feature_obj.misc_data_dict["freq"][mask],
                                        "o", markersize=markersize,
-                                       plot_colors=plot_colors[assignment])
+                                       color=plot_colors[assignment])
         for i in range(n_shots):
             shot = str(self.DM.shot_info["shots"][i])
             axesf1[i].set_xlim(self.DM.shot_info["time_windows"][i])
