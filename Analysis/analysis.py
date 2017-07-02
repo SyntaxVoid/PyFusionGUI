@@ -779,8 +779,8 @@ class Analysis:
 
 if __name__ == '__main__':
     # # Example of how to use these classes
-    shots = [159243, 159244, 159245, 159246]
-    time_windows = [300, 700]
+    shots = [159243, 159244]
+    time_windows = [500, 700]
     probes = "DIIID_toroidal_mag"
     # ## DataMining
     # # Create the datamining object. Creating it will automatically perform the datamining,
