@@ -13,6 +13,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 # PyFusion
+from PyFusionGUI import *  # This contains the default file locations of import directories.
 from pyfusion import DEFAULT_CONFIG_FILE
 
 # My Additions
@@ -21,21 +22,20 @@ from Analysis import analysis, point_analysis
 
 # tkinter
 try:
-    import tkinter as tk # Will work with python 3
+    import tkinter as tk  # Will work with python 3
     from tkinter.filedialog import askopenfilename, asksaveasfilename
     from tkinter.messagebox import showerror
 except ImportError:
-    import Tkinter as tk # Will work with python 2
+    import Tkinter as tk  # Will work with python 2
     from tkFileDialog import askopenfilename, asksaveasfilename
     from tkMessageBox import showerror, showinfo
-    1
+
 font_name = "Arial"
 font = (font_name, 14)
 
-FRONTEND_FILE_NAME = os.path.dirname(__file__)
-DEFAULT_SETTINGS_DIR = os.path.join(FRONTEND_FILE_NAME, "defaults.txt")
+DEFAULT_SETTINGS_DIR = os.path.join(GUI_DIR, ".guiconfig")
 
-print(FRONTEND_FILE_NAME)
+
 def TEST_PLOTTER():
     x = np.linspace(0,5*np.pi,1000)
     y1 = np.sin(x)
@@ -43,8 +43,6 @@ def TEST_PLOTTER():
     a1 = plt.plot(x, y1)
     a2 = plt.plot(x, y2)
     return a1, a2
-
-
 
 
 class ErrorWindow:
@@ -478,7 +476,7 @@ class PyFusionWindow:
 
     def load_settings(self):
         fname = askopenfilename(initialdir=os.path.dirname(__file__),
-                                filetypes=(("Text File (*.txt)", "*.txt"), ("All Files", "*.*")))
+                                filetypes=(("GUI Config File", "*.guiconfig"), ("All Files", "*.*")))
         if fname == "":
             return None
         try:
@@ -490,7 +488,7 @@ class PyFusionWindow:
     def save_settings(self):
         if self.valid_values():
             fname = asksaveasfilename(initialdir=os.path.dirname(__file__),
-                                      filetypes=(("Text File (*.txt)", "*.txt"), ("All Files", "*.*")))
+                                      filetypes=(("GUI Config File", "*.guiconfig"), ("All Files", "*.*")))
             if fname == "":
                 return None
             backend.save_values(self.value_dict, fname)
@@ -506,9 +504,9 @@ class PyFusionWindow:
             #A = self.settings_to_analysis_object()
             #A.run_analysis()
             #A.plot_clusters()
-            if not os.path.exists(os.path.join(FRONTEND_FILE_NAME,"temp")):
+            if not os.path.exists(os.path.join(GUI_DIR,"temp")):
                 print("Making directory!")
-                os.makedirs(os.path.join(FRONTEND_FILE_NAME, "temp"))
+                os.makedirs(os.path.join(GUI_DIR, "temp"))
             else:
                 print("Directory already made!")
             import time

@@ -13,6 +13,7 @@ import pyfusion.clustering as clust
 import pyfusion.clustering.extract_features_scans as ext
 from Utilities import jtools as jt
 import pickle
+from PyFusionGUI import *
 
 class OutOfOrderError(Exception):
     pass
@@ -165,11 +166,13 @@ class DataMining:
     # pythonic, and a lower memory usage. The keywords '_from_pickle' and '_pickle_data' should
     # be used very carefully. As far as I know, python is unable to have separate constructors
     # for the same class, which is why I use the if-else blocks and the _from_pickle keyword.
-    def __init__(self, shots=159243, time_windows=None, device="DIIID", probes="DIIID_toroidal_mag",
+    def __init__(self, shots=None, time_windows=None, device="DIIID", probes="DIIID_toroidal_mag",
                  fft_settings=None, datamining_settings=None, n_cpus=1,
                  _from_pickle=False, _pickle_data=None):
         if not _from_pickle:
             # This executes the 'normal' construction of an Analysis object.
+            if shots is None:
+                shots = 159243
             if type(shots) == int:
                 shots = [shots]
             if time_windows is None:
@@ -208,7 +211,7 @@ class DataMining:
 
     def __repr__(self):
         # Used to display something user friendly when executing print(<analysis_object>)
-        return "<<Analysis object for shots {}>>".format(sorted(self.shot_info["shots"]))
+        return "<<DataMining object for shots {}>>".format(sorted(self.shot_info["shots"]))
 
     @classmethod
     def restore(cls, filename):
@@ -220,15 +223,34 @@ class DataMining:
             data = pickle.load(pick)
         return cls(_from_pickle=True, _pickle_data=data)
 
-    def save(self, filename):
+    def save(self, filename=None):
         # Saves the current instance variables as a pickled object to "filename".
         # Since there are several different data structures within an analysis object,
-        # they will be compressed into a single dictionary object and then pickled.
+        # they will be compressed into a single dictionary object and then pickled. If
+        # filename is None, will create a custom filename based off of the FIRST shot,
+        # FIRST time window and probe name
         # FixMe: Remove the comment below if program works fine.
         # data = {"shot_info": self.shot_info, "fft_settings": self.fft_settings,
         #         "datamining_settings": self.datamining_settings, "n_cpus": self.n_cpus,
         #         "mags": self.mags, "raw_ffts": self.raw_ffts,
         #         "raw_mirnov_datas": self.raw_mirnov_datas, "raw_times": self.raw_times}
+        if filename is None:
+            probes = self.shot_info["probes"]
+            if probes == "DIIID_toroidal_mag":
+                pr = "TOR"
+            elif probes == "DIIID_poloidal322_mag":
+                pr = "POL"
+            elif probes == "ECEF_array":
+                pr = "ECE"
+            elif probes == "ECEF_array_red":
+                pr = "ECE_REDUCED"
+            else:
+                pr = probes
+            local_filename = str(self.shot_info["shots"][0]) + "_" + \
+                             str(self.shot_info["time_windows"][0]) + "_" + \
+                             pr + ".DMobj"
+            filename = os.path.join(PICKLE_SAVE_DIR, local_filename)
+            print(filename)
         with open(filename, "wb") as pick:
             pickle.dump(self.__dict__, pick)
         return
@@ -308,41 +330,6 @@ class DataMining:
         # We have to use a wrapper like this in order for multiprocessing to function correctly
         return copy.deepcopy(self.get_stft(input_data[0]))
 
-    def run_analysis(self, savefile=None):
-        func = stft_pickle_workaround
-        tmp_data_iter = itertools.izip(itertools.repeat(self),
-                                       self.shot_info["shots"],
-                                       self.shot_info["time_windows"])
-        if self.n_cpus > 1:
-            # We can process each shot separately using different processing cores.
-            pool = Pool(processes=self.n_cpus, maxtasksperchild=3)
-            self.results = pool.map(func, tmp_data_iter)
-            pool.close()
-            pool.join()
-        else:
-            self.results = map(func, tmp_data_iter)
-        start = True
-        instance_array = 0
-        misc_data_dict = 0
-        for n, res in enumerate(self.results):
-            if res[0] is not None:
-                if start:
-                    instance_array = copy.deepcopy(res[0])
-                    misc_data_dict = copy.deepcopy(res[1])
-                    start = False
-                else:
-                    instance_array = np.append(instance_array, res[0], axis=0)
-                    for i in misc_data_dict.keys():
-                        misc_data_dict[i] = np.append(misc_data_dict[i], res[1][i], axis=0)
-            else:
-                raise AnalysisError("Shot {} has failed!".format(self.shot_info["shots"][n]))
-        # FixMe: I don't like creating a new class variables outside of __init__
-        self.feature_object = clust.feature_object(instance_array=instance_array, misc_data_dict=misc_data_dict,
-                                                   instance_array_amps=+misc_data_dict["mirnov_data"])
-        self.z = self.feature_object.cluster(**self.datamining_settings)
-        if savefile is not None:
-            self.feature_object.dump_data(savefile)
-        return
 
 
 class Analysis:
@@ -813,3 +800,20 @@ class Analysis:
         if savefile is not None:
             self.feature_object.dump_data(savefile)
         return
+
+
+if __name__ == '__main__':
+    # Example of how to use these classes
+    shots = 159243
+    time_windows = [300, 700]
+    probes = "DIIID_toroidal_mag"
+    # Create the datamining object. Creating it will automatically perform the datamining,
+    # however it will take a little bit of time (on the order of minutes).
+    DM1 = DataMining(shots=shots, time_windows=time_windows, probes=probes)
+    # Saving to a default directory, no keyword filename required
+    DM1.save()
+    # Saving to a custom directory
+    DM1.save(filename="TESTDMSAVE.DMobj")
+    # Restore
+    DM2 = DataMining.restore(filename="TESTDMSAVE.DMobj")
+
