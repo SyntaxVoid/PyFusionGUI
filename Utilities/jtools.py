@@ -35,6 +35,11 @@ def complex_mag_list(zz):
 def type_verify(var, typ):
     return type(var) == typ
 
+def time_window_to_filelike_str(w):
+    # Takes a time window that looks like [300, 500] and converts it appropriately to be
+    # included in a filename.
+    return str(w[0]) + "-" + str(w[1])
+
 
 def scan_config(f):
     # Scans a config file, f, and returns all diagnostics in a list.

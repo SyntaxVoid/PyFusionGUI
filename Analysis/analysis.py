@@ -811,9 +811,12 @@ if __name__ == '__main__':
     # however it will take a little bit of time (on the order of minutes).
     DM1 = DataMining(shots=shots, time_windows=time_windows, probes=probes)
     # Saving to a default directory, no keyword filename required
+    print("########################## SAVING 1")
     DM1.save()
     # Saving to a custom directory
+    print("########################## SAVING 2")
     DM1.save(filename="TESTDMSAVE.DMobj")
     # Restore
+    print("########################## RESTORING")
     DM2 = DataMining.restore(filename="TESTDMSAVE.DMobj")
 
