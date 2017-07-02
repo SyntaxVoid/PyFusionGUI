@@ -94,8 +94,10 @@ class Analysis2:
     # the analysis step. The keywords _from_pickle and _pickle_data should be used very
     # carefuly. As far as I know, python is unable to have separate constructors for the
     # same class, which is why I use the if-else blocks and the _from_pickle keyword.
-    def __init__(self, DM, _from_pickle=False, _pickle_data=None):
+    def __init__(self, DM=None, _from_pickle=False, _pickle_data=None):
         if not _from_pickle:
+            if DM is None:
+                raise ValueError("DataMining object DM cannot be none!")
             self.DM = DM
             self.results, self.feature_object, self.z = self.run_analysis()
         else:
@@ -107,7 +109,7 @@ class Analysis2:
 
     def __repr__(self):
         return "<<Analysis object for {}>>".format(self.DM.__repr__())
-    
+
     def run_analysis(self):
         # Returns analysis
         func = stft_pickle_workaround
@@ -833,11 +835,11 @@ if __name__ == '__main__':
     # however it will take a little bit of time (on the order of minutes).
     DM1 = DataMining(shots=shots, time_windows=time_windows, probes=probes)
     # Saving to a default directory, no keyword filename required.
-    DM1.save()
+    #DM1.save()
     # Saving to a custom directory.
-    DM1.save(filename="TESTDMSAVE.DMobj")
+    #DM1.save(filename="TESTDMSAVE.DMobj")
     # Restoring
-    DM2 = DataMining.restore(filename="TESTDMSAVE.DMobj")
+    #DM2 = DataMining.restore(filename="TESTDMSAVE.DMobj")
 
     ## Analysis
     # Create the analysis object from the previously defined DataMining object. Creating it will
