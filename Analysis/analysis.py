@@ -34,6 +34,21 @@ def stft_ece_pickle_workaround(input_data):
     return copy.deepcopy(input_data[0].get_stft_ece(input_data[1]))
 
 
+def _big_axes(ax, xlabel="Time (ms)", ylabel="Freq (kHz)"):
+    # Hack that modifies an axes that we will lay overtop our other subplots,
+    # allowing us to easily place x and y labels, which otherwise isn't clear.
+    ax.spines["top"].set_color("none")
+    ax.spines["left"].set_color("none")
+    ax.spines["right"].set_color("none")
+    ax.spines["bottom"].set_color("none")
+    ax.set_xticklabels([])
+    ax.set_yticklabels([])
+    ax.tick_params(axis="x", pad=15)
+    ax.tick_params(axis="y", pad=23)
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(ylabel)
+    return None
+
 def plot_seperate_clusters(A, clust_arr, ax=None, doplot=True, dosave=None):
     # Inputs:
     #   A: Result from Analysis class (A.run_analysis() must have already been run.
@@ -195,28 +210,28 @@ class Analysis2:
         axesf2 = axes2.flatten() if n_shots > 1 else np.array([axes2], dtype=object)
         big_axes1 = figure1.add_subplot(111, frameon=False)
         big_axes2 = figure2.add_subplot(111, frameon=False)
-        big_axes1.spines["top"].set_color("none")
-        big_axes1.spines["left"].set_color("none")
-        big_axes1.spines["right"].set_color("none")
-        big_axes1.spines["bottom"].set_color("none")
-        #big_axes1.tick_params(top="off", bottom="off", left="off", right="off")
-        big_axes2.spines["top"].set_color("none")
-        big_axes2.spines["left"].set_color("none")
-        big_axes2.spines["right"].set_color("none")
-        big_axes2.spines["bottom"].set_color("none")
-        #big_axes2.tick_params(top="off", bottom="off", left="off", right="off")
-        big_axes1.set_xticklabels([])
-        big_axes2.set_xticklabels([])
-        big_axes1.set_yticklabels([])
-        big_axes2.set_yticklabels([])
-        big_axes1.tick_params(axis="x", pad=15)
-        big_axes1.tick_params(axis="y", pad=20)
-        big_axes2.tick_params(axis="x", pad=15)
-        big_axes2.tick_params(axis="y", pad=20)
-        big_axes1.set_xlabel("Time (ms)")
-        big_axes1.set_ylabel("Freq (kHz)")
-        big_axes2.set_xlabel("Time (ms)")
-        big_axes2.set_ylabel("Freq (kHz)")
+        _big_axes(big_axes1)
+        _big_axes(big_axes2)
+        # big_axes1.spines["top"].set_color("none")
+        # big_axes1.spines["left"].set_color("none")
+        # big_axes1.spines["right"].set_color("none")
+        # big_axes1.spines["bottom"].set_color("none")
+        # big_axes2.spines["top"].set_color("none")
+        # big_axes2.spines["left"].set_color("none")
+        # big_axes2.spines["right"].set_color("none")
+        # big_axes2.spines["bottom"].set_color("none")
+        # big_axes1.set_xticklabels([])
+        # big_axes2.set_xticklabels([])
+        # big_axes1.set_yticklabels([])
+        # big_axes2.set_yticklabels([])
+        # big_axes1.tick_params(axis="x", pad=15)
+        # big_axes1.tick_params(axis="y", pad=20)
+        # big_axes2.tick_params(axis="x", pad=15)
+        # big_axes2.tick_params(axis="y", pad=20)
+        # big_axes1.set_xlabel("Time (ms)")
+        # big_axes1.set_ylabel("Freq (kHz)")
+        # big_axes2.set_xlabel("Time (ms)")
+        # big_axes2.set_ylabel("Freq (kHz)")
         for current_axes1, current_axes2, shot, result in \
                 zip(axesf1, axesf2, self.DM.shot_info["shots"], self.results):
             assignments = self.z.cluster_assignments
@@ -246,10 +261,6 @@ class Analysis2:
             axesf2[i].text(tx, ty, shot, bbox={"facecolor": "green", "alpha": 0.90}, fontsize=fontsize)
         figure1.subplots_adjust(hspace=0, wspace=0)
         figure2.subplots_adjust(hspace=0, wspace=0)
-        # figure1.text(0.5, 0.065, "Time (ms)", ha="center", fontsize=fontsize-10)
-        # figure2.text(0.5, 0.065, "Time (ms)", ha="center", fontsize=fontsize - 10)
-        # figure1.text(0.1, 0.5, "Freq (kHz)", va="center", rotation="vertical", fontsize=fontsize-10)
-        # figure2.text(0.1, 0.5, "Freq (kHz)", va="center", rotation="vertical", fontsize=fontsize - 10)
         figure1.tight_layout()
         figure2.tight_layout()
         return ((figure1, axes1), (figure2, axes2))
