@@ -5,6 +5,27 @@ import numpy as np
 from pyfusion import DEFAULT_CONFIG_FILE
 
 
+class CycledList(list):
+    # WARNING. This should only be used if all you're going to be doing is indexing
+    # a list. There is non-deterministic behavior when using the __setitem__ operator
+    # among others.
+    def __getitem__(self, key):
+        return super(CycledList, self).__getitem__(np.mod(key, len(self)))
+
+def midpoint(x1, x2):
+    # Returns the number halfway between x1 and x2
+    return (x1+x2)/2
+
+def distance(x1, x2):
+    # Returns the absolute distance between x1 and x2
+    return abs(x2-x1)
+
+def text_location(xrange, yrange):
+    # Returns an appropriate text location for a plot with a given x range and y range.
+    xloc = midpoint(*xrange) - 0.10*distance(*xrange)
+    yloc = midpoint(*yrange) + 0.20*distance(*yrange)
+    return xloc, yloc
+
 def valid_int_from_str(s):
     # Returns true if s can be converted to an integer.
     try:

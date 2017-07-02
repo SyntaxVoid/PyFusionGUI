@@ -8,6 +8,7 @@ from multiprocessing import Pool
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib as mpl
+mpl.rcParams["axes.linewidth"] = 4.0
 import pyfusion as pf
 import pyfusion.clustering as clust
 import pyfusion.clustering.extract_features_scans as ext
@@ -178,6 +179,57 @@ class Analysis2:
                                   "feature_object": self.feature_object,
                                   "z": self.z}, "DM": self.DM.__dict__}, pick)
         return
+
+    def return_plots(self):
+        fontsize   = 35  # FixMe: More robust definition of fontsize... Not sure what to do now.
+        markersize = 15  # FixMe: More robust definition of markersize
+        plot_colors = ["#ff0000", "#ff9400", "#ffe100", "#bfff00",
+                       "#2aff00", "#00ffa9", "#00f6ff", "#0090ff",
+                       "#0033ff", "#8700ff", "#cb00ff", "#ff00f2",
+                       "#ff006a", "#631247", "#a312f7", "#a3f2f7"]
+        plot_colors = jt.CycledList(plot_colors)
+        n_shots = len(self.DM.shot_info["shots"])
+        nrows, ncols = jt.squareish_grid(n_shots, swapxy=True)
+        figure1, axes1 = plt.subplots(nrows=nrows, ncols=ncols, sharex=True, sharey=True)
+        figure2, axes2 = plt.subplots(nrows=nrows, ncols=ncols, sharex=True, sharey=True)
+        axesf1 = axes1.flatten() if n_shots > 1 else np.array(axes1, dtype=object)
+        axesf2 = axes2.flatten() if n_shots > 1 else np.array(axes2, dtype=object)
+        for current_axes1, current_axes2, shot, result in \
+                zip(axesf1, axesf2, self.DM.shot_info["shots"], self.results):
+            assignments = self.z.cluster_assignments
+            details = self.z.cluster_details["EM_VMM_kappas"]
+            shot_details = self.z.feature_obj.misc_data_dict["shot"]
+            print("SHOT DETAILS:", shot_details)
+            time_base = result[3]
+            signal = result[2][0, :]
+            dt = np.mean(np.diff(time_base))
+            current_axes1.specgram(signal, NFFT=1024, Fs=1./dt, noverlap=128, xextent=[time_base[0], time_base[-1]])
+            current_axes2.specgram(signal, NFFT=1024, Fs=1./dt, noverlap=128, xextent=[time_base[0], time_base[-1]])
+            for assignment in np.unique(assignments):
+                mask = (assignments==assignment)*(shot_details==shot)
+                if np.sum(mask) > 1 and np.mean(details[assignment, :]) > 5:  # FixMe: What does this do?
+                    current_axes1.plot(self.z.feature_obj.misc_data_dict["time"][mask],
+                                       self.z.feature_obj.misc_data_dict["freq"][mask],
+                                       "o", markersize=markersize,
+                                       plot_colors=plot_colors[assignment])
+        for i in range(n_shots):
+            shot = str(self.DM.shot_info["shots"][i])
+            axesf1[i].set_xlim(self.DM.shot_info["time_windows"][i])
+            axesf2[i].set_xlim(self.DM.shot_info["time_windows"][i])
+            axesf1[i].set_ylim([0, 250])
+            axesf2[i].set_ylim([0, 250])
+            tx, ty = jt.text_location(self.DM.shot_info["time_windows"][i], [0, 250])
+            axesf1[i].text(tx, ty, shot, bbox={"facecolor": "green", "alpha": 0.90}, fontsize=fontsize)
+            axesf2[i].text(tx, ty, shot, bbox={"facecolor": "green", "alpha": 0.90}, fontsize=fontsize)
+        figure1.subplots_adjust(hspace=0, wspace=0)
+        figure2.subplots_adjust(hspace=0, wspace=0)
+        figure1.text(0.5, 0.065, "Time (ms)", ha="center", fontsize=fontsize-10)
+        figure2.text(0.5, 0.065, "Time (ms)", ha="center", fontsize=fontsize - 10)
+        figure1.text(0.1, 0.5, "Freq (kHz)", va="center", rotation="vertical", fontsize=fontsize-10)
+        figure2.text(0.1, 0.5, "Freq (kHz)", va="center", rotation="vertical", fontsize=fontsize - 10)
+        figure1.tight_layout()
+        figure2.tight_layout()
+        return (figure1, axes1), (figure2, axes2)
 
 
 class DataMining:
@@ -356,117 +408,6 @@ class DataMining:
 
 
 class Analysis:
-    def __init__(self, shots, time_windows=None, device="DIIID", probes="DIIID_toroidal_mag",
-                 fft_settings=None, datamining_settings=None, n_cpus=1, markersize=14):
-        ## DONE ##
-        if type(shots) == int:
-            shots = [shots]
-        self.shots = shots
-        if time_windows is None:
-            time_windows = list(itertools.repeat([300, 1400], len(shots)))
-        elif type(time_windows[0]) is not list:
-            time_windows = list(itertools.repeat(time_windows, len(shots)))
-        self.time_windows = time_windows
-
-        self.input_data_iter = itertools.izip(self.shots, self.time_windows)
-        self.device = device
-        self.probes = probes
-        self.samples = 1024
-        self.overlap = 4
-        self.fft_settings = fft_settings if fft_settings is not None else \
-            {"n_pts": 8, "lower_freq": 10, "upper_freq": 250, "cutoff_by": "sigma_eq",
-             "ave_kappa_cutoff": 25, "filter_item": "EM_VMM_kappas"}
-
-        self.datamining_settings = datamining_settings if datamining_settings is not None else \
-            {'n_clusters': 16, 'n_iterations': 20, 'start': 'k_means', 'verbose': 0, 'method': 'EM_VMM', "seeds": None}
-        self.n_cpus = n_cpus
-        self.results = None
-        self.feature_object = None
-        self.z = None
-        self.fig = None
-        self.ax = None
-        self.axf = None
-        self.fig2 = None
-        self.ax2 = None
-        self.axf2 = None
-        self.im = None
-        self.pl = None
-        self.markersize = markersize
-
-        ## Done initializing most variables. Grab raw magnitudes and fft
-        self.mags = {}
-        self.raw_ffts = {}
-        self.raw_mirnov_datas = {}
-        self.raw_times = {}
-        for sh in self.shots:
-            self.mags[str(sh)] = self.get_mags(sh, probes=probes)
-            self.raw_ffts[str(sh)] = self.mags[str(sh)].generate_frequency_series(1024, 256)
-            self.raw_mirnov_datas[str(sh)] = self.raw_ffts[str(sh)].signal
-            self.raw_times[str(sh)] = self.raw_ffts[str(sh)].timebase
-        return
-
-
-    def get_mags(self, shot, probes):
-        ## DONE ##
-        dev = pf.getDevice(self.device)
-        time_window = self.time_windows[self.shots.index(shot)]
-        return dev.acq.getdata(shot, probes).reduce_time(time_window)
-
-    def get_stft(self, shot):
-        ## DONE ##
-        magi = self.mags[str(shot)]
-        data_ffti = self.raw_ffts[str(shot)]
-        good_indices = ext.find_peaks(data_ffti, **self.fft_settings)
-        rel_data = ext.return_values(data_ffti.signal, good_indices)
-        n = len(ext.return_non_freq_dependent(data_ffti.frequency_base, good_indices))
-        misc_data_dict = {"time": ext.return_time_values(data_ffti.timebase, good_indices),
-                          "freq": ext.return_non_freq_dependent(data_ffti.frequency_base, good_indices),
-                          "shot": np.ones(n, dtype=int) * shot,
-                          "mirnov_data": +rel_data}
-        rel_data_angles = np.angle(rel_data)
-        diff_angles = (np.diff(rel_data_angles)) % (2. * np.pi)
-        diff_angles[diff_angles > np.pi] -= (2. * np.pi)
-        z = ext.perform_data_datamining(diff_angles, misc_data_dict, self.datamining_settings)
-        instance_array_cur, misc_data_dict_cur = \
-            ext.filter_by_kappa_cutoff(z, ax=None, **self.fft_settings)
-        instance_array = np.array(instance_array_cur)
-        misc_data_dict = misc_data_dict_cur
-        return instance_array, misc_data_dict, magi.signal, magi.timebase
-
-    def get_stft_wrapper(self, input_data):
-        return copy.deepcopy(self.get_stft(input_data[0]))
-
-    def run_analysis(self, savefile=None):
-        func = stft_pickle_workaround
-        tmp_data_iter = itertools.izip(itertools.repeat(self), self.shots, self.time_windows)
-        if self.n_cpus > 1:
-            pool = Pool(processes=self.n_cpus, maxtasksperchild=3)
-            self.results = pool.map(func, tmp_data_iter)
-            pool.close()
-            pool.join()
-        else:
-            self.results = map(func, tmp_data_iter)
-        start = True
-        instance_array = 0
-        misc_data_dict = 0
-        for n, res in enumerate(self.results):
-            if res[0] is not None:
-                if start:
-                    instance_array = copy.deepcopy(res[0])
-                    misc_data_dict = copy.deepcopy(res[1])
-                    start = False
-                else:
-                    instance_array = np.append(instance_array, res[0], axis=0)
-                    for i in misc_data_dict.keys():
-                        misc_data_dict[i] = np.append(misc_data_dict[i], res[1][i], axis=0)
-            else:
-                print("One shot may have failed!")
-        self.feature_object = clust.feature_object(instance_array=instance_array, misc_data_dict=misc_data_dict,
-                                                   instance_array_amps=+misc_data_dict["mirnov_data"])
-        self.z = self.feature_object.cluster(**self.datamining_settings)
-        if savefile is not None:
-            self.feature_object.dump_data(savefile)
-        return
 
     def return_cluster_plot(self):
         # Returns a matplotlib plot object for use in tkinter
@@ -826,29 +767,34 @@ class Analysis:
 
 
 if __name__ == '__main__':
-    # Example of how to use these classes
+    # # Example of how to use these classes
     shots = 159243
     time_windows = [300, 700]
     probes = "DIIID_toroidal_mag"
-    ## DataMining
-    # Create the datamining object. Creating it will automatically perform the datamining,
-    # however it will take a little bit of time (on the order of minutes).
-    #DM1 = DataMining(shots=shots, time_windows=time_windows, probes=probes)
-    # Saving to a default directory, no keyword filename required.
-    #DM1.save()
-    # Saving to a custom directory.
-    #DM1.save(filename="TESTDMSAVE.DMobj")
-    # Restoring
-    DM2 = DataMining.restore(filename="TESTDMSAVE.DMobj")
-
-    ## Analysis
-    # Create the analysis object from the previously defined DataMining object. Creating it will
-    # automatically perform the analysis, however it will take a little bit of time (on the order
-    # of minutes).
-    AN1 = Analysis2(DM=DM2)
-    # Saving to a default directory, no keyword filename required.
-    AN1.save()
-    # Saving to a custom directory.
-    AN1.save(filename="TESTANSAVE.ANobj")
-    # Restoring
-    AN2 = Analysis2.restore(filename="TESTANSAVE.ANobj")
+    # ## DataMining
+    # # Create the datamining object. Creating it will automatically perform the datamining,
+    # # however it will take a little bit of time (on the order of minutes).
+    # DM1 = DataMining(shots=shots, time_windows=time_windows, probes=probes)
+    # # Saving to a default directory, no keyword filename required.
+    # # DM1.save()
+    # # Saving to a custom directory.
+    # DM1.save(filename="TESTDMSAVE.DMobj")
+    # # Restoring
+    # DM2 = DataMining.restore(filename="TESTDMSAVE.DMobj")
+    #
+    # ## Analysis
+    # # Create the analysis object from the previously defined DataMining object. Creating it will
+    # # automatically perform the analysis, however it will take a little bit of time (on the order
+    # # of minutes).
+    # AN1 = Analysis2(DM=DM1)
+    # # Saving to a default directory, no keyword filename required.
+    # # AN1.save()
+    # # Saving to a custom directory.
+    # AN1.save(filename="TESTANSAVE.ANobj")
+    # # Restoring
+    # AN2 = Analysis2.restore(filename="TESTANSAVE.ANobj")
+    DM1 = DataMining(shots=shots, time_windows=time_windows, probes=probes)
+    AN1 = Analysis2(DM=DM1)
+    plot1, plot2 = AN1.return_plots()
+    plt.show()
+    
