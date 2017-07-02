@@ -3,3 +3,5 @@
 *.py~
 GUI/temp/*
 ThrowAway.py
+SavePicklesHere/*
+*.DMObj
