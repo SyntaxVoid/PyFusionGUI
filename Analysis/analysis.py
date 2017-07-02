@@ -345,6 +345,7 @@ class DataMining:
         # Output is formatted like: {"159243": magnitudes, "159244": magnitudes, ... }
         out = {}
         dev = pf.getDevice(self.shot_info["device"])
+        print("#####", self.shot_info["shots"], self.shot_info["time_windows"])
         for sh,tw in zip(self.shot_info["shots"], self.shot_info["time_windows"]):
             print(sh, tw)
             out[str(sh)] = dev.acq.getdata(sh, self.shot_info["probes"]).reduce_time(tw)
