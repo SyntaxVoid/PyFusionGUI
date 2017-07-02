@@ -246,8 +246,8 @@ class Analysis2:
         # figure2.text(0.5, 0.065, "Time (ms)", ha="center", fontsize=fontsize - 10)
         # figure1.text(0.1, 0.5, "Freq (kHz)", va="center", rotation="vertical", fontsize=fontsize-10)
         # figure2.text(0.1, 0.5, "Freq (kHz)", va="center", rotation="vertical", fontsize=fontsize - 10)
-        figure1.tight_layout()
-        figure2.tight_layout()
+        # figure1.tight_layout()
+        # figure2.tight_layout()
         return ((figure1, axes1), (figure2, axes2))
 
 
