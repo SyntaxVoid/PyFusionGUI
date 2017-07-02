@@ -192,8 +192,8 @@ class Analysis2:
         nrows, ncols = jt.squareish_grid(n_shots, swapxy=True)
         figure1, axes1 = plt.subplots(nrows=nrows, ncols=ncols, sharex=True, sharey=True)
         figure2, axes2 = plt.subplots(nrows=nrows, ncols=ncols, sharex=True, sharey=True)
-        axesf1 = axes1.flatten() if n_shots > 1 else np.array(axes1, dtype=object)
-        axesf2 = axes2.flatten() if n_shots > 1 else np.array(axes2, dtype=object)
+        axesf1 = axes1.flatten() if n_shots > 1 else np.array([axes1], dtype=object)
+        axesf2 = axes2.flatten() if n_shots > 1 else np.array([axes2], dtype=object)
         for current_axes1, current_axes2, shot, result in \
                 zip(axesf1, axesf2, self.DM.shot_info["shots"], self.results):
             assignments = self.z.cluster_assignments
@@ -229,7 +229,7 @@ class Analysis2:
         figure2.text(0.1, 0.5, "Freq (kHz)", va="center", rotation="vertical", fontsize=fontsize - 10)
         figure1.tight_layout()
         figure2.tight_layout()
-        return (figure1, axes1), (figure2, axes2)
+        return ((figure1, axes1), (figure2, axes2))
 
 
 class DataMining:
@@ -256,7 +256,6 @@ class DataMining:
                 time_windows = list(itertools.repeat(time_windows, len(shots)))
             elif type(time_windows[0]) is not list:
                 time_windows = [time_windows]
-            print(type(time_windows), time_windows)
             self.shot_info = {"shots": shots, "time_windows": time_windows, "device": device, "probes": probes}
             self.fft_settings = fft_settings if fft_settings is not None else \
                 {"n_pts": 8, "lower_freq": 10, "upper_freq": 250, "cutoff_by": "sigma_eq",
@@ -797,4 +796,3 @@ if __name__ == '__main__':
     AN1 = Analysis2(DM=DM1)
     plot1, plot2 = AN1.return_plots()
     plt.show()
-    
