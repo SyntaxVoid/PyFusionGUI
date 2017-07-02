@@ -263,7 +263,7 @@ class DataMining:
                 shots = [shots]
             if time_windows is None:
                 time_windows = list(itertools.repeat([300, 1400], len(shots)))
-            elif type(time_windows) is not list:
+            elif type(time_windows) is list:
                 time_windows = list(itertools.repeat(time_windows, len(shots)))
             elif type(time_windows[0]) is not list:
                 time_windows = [time_windows]
