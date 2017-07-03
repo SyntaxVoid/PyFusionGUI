@@ -65,7 +65,7 @@ class ErrorWindow:
 
 
 class ClusteringWindow:
-    def __init__(self, master, AN):
+    def __init__(self, master):
         self.root = tk.Toplevel(master=master)
         self.message_frame = tk.Frame(master=self.root)
         self.message_frame.grid(row=0, column=0, sticky=tk.N)
@@ -78,7 +78,6 @@ class ClusteringWindow:
         self.label.grid(row=0, column=0, sticky=tk.N)
         self.root.grab_set()
         self.root.wm_protocol("WM_DELETE_WINDOW", self.x_no_close)
-        self.AN = AN
 
     def clustering_complete(self):
         # When clustering is complete, a window should pop up asking the user what they want to do.
@@ -581,9 +580,10 @@ class PyFusionWindow:
     def run_clustering(self):
 
         def callback():
-            # AN = self.settings_to_analysis_object()
-            import time
-            time.sleep(1)
+            AN = self.settings_to_analysis_object()
+            #import time
+            #time.sleep(1)
+            win.AN = AN
             win.root.event_generate("<<clustering_complete>>", when="tail")
             return
 
@@ -591,7 +591,7 @@ class PyFusionWindow:
             win.clustering_complete()
             return
 
-        win = ClusteringWindow(master=self.root, AN=TesterClass())
+        win = ClusteringWindow(master=self.root)
         win.root.bind("<<clustering_complete>>", clustering_complete)
         t = threading.Thread(target=callback)
         t.start()
