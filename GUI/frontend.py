@@ -37,12 +37,25 @@ DEFAULT_SETTINGS_DIR = os.path.join(GUI_DIR, ".guiconfig")
 
 
 def TEST_PLOTTER():
-    x = np.linspace(0,5*np.pi,1000)
-    y1 = np.sin(x)
-    y2 = np.cos(x)
-    a1 = plt.plot(x, y1)
-    a2 = plt.plot(x, y2)
-    return a1, a2
+    figure1, axes1 = plt.subplots(nrows=2, ncols=2)
+    figure2, axes2 = plt.subplots(nrows=2, ncols=2)
+    axesf1 = axes1.flatten()
+    axesf2 = axes2.flatten()
+    import random
+    x = np.linspace(0,6*np.pi,100)
+    for curax1, curax2 in zip(axesf1, axesf2):
+        amp = random.uniform(0.2, 1.2)
+        curax1.plot(amp*np.cos(x))
+        curax2.plot(amp*np.sin(x))
+    return ((figure1, axes1), (figure2, axes2))
+
+class TesterClass:
+    def __init__(self):
+        return
+    def save(self, f):
+        print("Saved (not really) to", f)
+    def restore(self, f):
+        print("Restored (not really) from", f)
 
 
 class ErrorWindow:
@@ -50,6 +63,69 @@ class ErrorWindow:
         showerror(master=master, title="Error!", message=message)
         return
 
+
+class ClusteringWindow:
+    def __init__(self, master, AN):
+        self.root = tk.Toplevel(master=master)
+        self.message_frame = tk.Frame(master=self.root)
+        self.message_frame.grid(row=0, column=0, sticky=tk.N)
+        self.buttons_frame = tk.Frame(master=self.root, bd=5, relief=tk.SUNKEN)
+        self.buttons_frame.grid(row=1, column=0, sticky=tk.N)
+        self.root.resizable(height=False, width=False)
+        self.root.title("Processing")
+        self.message = tk.StringVar(master=self.message_frame, value="Now clustering.\nPlease wait.")
+        self.label = tk.Label(master=self.message_frame, textvariable=self.message, font=(font_name, 24))
+        self.label.grid(row=0, column=0, sticky=tk.N)
+        self.root.grab_set()
+        self.root.wm_protocol("WM_DELETE_WINDOW", self.x_no_close)
+        self.AN = AN
+
+    def clustering_complete(self):
+        # When clustering is complete, a window should pop up asking the user what they want to do.
+        # Whether they want to save the actual objects, save the plots, show the plots or to close.
+        size = {"height": 2, "width": 16}
+        self.root.wm_protocol("WM_DELETE_WINDOW", self.x_close)
+        self.message.set("Clustering complete!\nPlease select an option.")
+        object_save_button = tk.Button(master=self.buttons_frame,
+                                       text="Save Analysis\nObject",
+                                       font=(font_name, 18),
+                                       command=self.save_objects,
+                                       **size)
+        object_save_button.grid(row=0, column=0, sticky=tk.N)
+        plot_button = tk.Button(master=self.buttons_frame,
+                                text="Plot clusters",
+                                font=(font_name, 18),
+                                command=self.plot_clusters,
+                                **size)
+        plot_button.grid(row=0, column=1, sticky=tk.N)
+        close_button = tk.Button(master=self.buttons_frame,
+                                 text="Close",
+                                 font=(font_name, 18),
+                                 command=self.root.destroy,
+                                 **size)
+        close_button.grid(row=0, column=2, sticky=tk.N)
+
+        return
+
+    def save_objects(self):
+        fname = asksaveasfilename(initialdir=PICKLE_SAVE_DIR,
+                              filetypes=(("Analysis Object File", "*.ANobj"), ("All Files", "*.*")))
+        if fname == "":
+            return None
+        self.AN.save(fname)
+        return
+
+    def plot_clusters(self):
+        plot1, plot2 = self.AN.return_plots()
+        plt.show()
+        return
+
+    def x_no_close(self):
+        return
+
+    def x_close(self):
+        self.root.destroy()
+        return
 
 class ProcessingWindow:
     def __init__(self, master, message):
@@ -366,7 +442,11 @@ class PyFusionWindow:
                                                    font=(font_name, 13), width=14,
                                                    command=self.run_point_analysis)
         self.run_point_analysis_button.grid(row=4, column=0, sticky=tk.N)
-
+        self.close_button = tk.Button(master=self.settings_buttons_frame,
+                                      text="Close",
+                                      font=(font_name, 13), width=14,
+                                      command=self.root.destroy)
+        self.close_button.grid(row=5, column=0, sticky=tk.N)
         # Save everything to a dictionary of tkinter StringVar's.
         self.value_dict["shots"] = self.shot_var
         self.value_dict["times"] = self.time_var
@@ -487,7 +567,7 @@ class PyFusionWindow:
 
     def save_settings(self):
         if self.valid_values():
-            fname = asksaveasfilename(initialdir=os.path.dirname(__file__),
+            fname = asksaveasfilename(initialdir=GUI_DIR,
                                       filetypes=(("GUI Config File", "*.guiconfig"), ("All Files", "*.*")))
             if fname == "":
                 return None
@@ -501,32 +581,18 @@ class PyFusionWindow:
     def run_clustering(self):
 
         def callback():
-            #A = self.settings_to_analysis_object()
-            #A.run_analysis()
-            #A.plot_clusters()
-            if not os.path.exists(os.path.join(GUI_DIR,"temp")):
-                print("Making directory!")
-                os.makedirs(os.path.join(GUI_DIR, "temp"))
-            else:
-                print("Directory already made!")
+            # AN = self.settings_to_analysis_object()
             import time
-            time.sleep(3)
-            fig1, fig2 = TEST_PLOTTER()
-
+            time.sleep(1)
             win.root.event_generate("<<clustering_complete>>", when="tail")
             return
 
         def clustering_complete(e):
-
-            win.processing_complete("Clustering complete!")
+            win.clustering_complete()
             return
 
-        sv = "Now clustering.\nPlease wait."
-        win = ProcessingWindow(master=self.root, message=sv)
-        #win.root.grab_set()
+        win = ClusteringWindow(master=self.root, AN=TesterClass())
         win.root.bind("<<clustering_complete>>", clustering_complete)
-
-
         t = threading.Thread(target=callback)
         t.start()
         return None
@@ -586,9 +652,10 @@ class PyFusionWindow:
             seeds = int(self.value_dict["seed"].get())
             datamining_settings = {'n_clusters': n_clusters, 'n_iterations': n_iterations, 'start': start, 'verbose': 0,
                                    'method': method, "seeds": seeds}
-            A = analysis.Analysis(shots=shots, time_windows=time_windows, probes=probes, markersize=15,
-                                  datamining_settings=datamining_settings, n_cpus=n_cpus)
-            return A
+            DM = analysis.DataMining(shots=shots, time_windows=time_windows, probes=probes,
+                                     datamining_settings=datamining_settings, n_cpus=n_cpus)
+            AN = analysis.Analysis(DM=DM)
+            return AN
         return None
 
 if __name__ == '__main__':

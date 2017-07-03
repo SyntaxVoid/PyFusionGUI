@@ -104,7 +104,7 @@ def plot_seperate_clusters(A, clust_arr, ax=None, doplot=True, dosave=None):
                     markersize=A.markersize)
     return
 
-class Analysis2:
+class Analysis:
     # Updated Analysis object. These methods were separated from the DataMining object
     # so that there could be a clear intermediary step between the datamining step and
     # the analysis step. The keywords _from_pickle and _pickle_data should be used very
@@ -197,7 +197,7 @@ class Analysis2:
 
     def return_plots(self):
         fontsize   = 35  # FixMe: More robust definition of fontsize... Not sure what to do now.
-        markersize = 15  # FixMe: More robust definition of markersize
+        markersize = 5  # FixMe: More robust definition of markersize
         plot_colors = jt.CycledList(["#ff0000", "#ff9400", "#ffe100", "#bfff00",
                                      "#2aff00", "#00ffa9", "#00f6ff", "#0090ff",
                                      "#0033ff", "#8700ff", "#cb00ff", "#ff00f2",
@@ -418,7 +418,7 @@ class DataMining:
 
 
 
-class Analysis:
+class Analysis2:
 
     def return_cluster_plot(self):
         # Returns a matplotlib plot object for use in tkinter
@@ -797,14 +797,14 @@ if __name__ == '__main__':
     # # Create the analysis object from the previously defined DataMining object. Creating it will
     # # automatically perform the analysis, however it will take a little bit of time (on the order
     # # of minutes).
-    # AN1 = Analysis2(DM=DM1)
+    # AN1 = Analysis(DM=DM1)
     # # Saving to a default directory, no keyword filename required.
     # # AN1.save()
     # # Saving to a custom directory.
     # AN1.save(filename="TESTANSAVE.ANobj")
     # # Restoring
-    # AN2 = Analysis2.restore(filename="TESTANSAVE.ANobj")
+    # AN2 = Analysis.restore(filename="TESTANSAVE.ANobj")
     DM1 = DataMining(shots=shots, time_windows=time_windows, probes=probes)
-    AN1 = Analysis2(DM=DM1)
+    AN1 = Analysis(DM=DM1)
     plot1, plot2 = AN1.return_plots()
     plt.show()
