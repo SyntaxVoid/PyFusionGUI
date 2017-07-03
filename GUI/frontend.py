@@ -72,7 +72,8 @@ class ClusteringWindow:
         self.buttons_frame = tk.Frame(master=self.root, bd=5, relief=tk.SUNKEN)
         self.buttons_frame.grid(row=1, column=0, sticky=tk.N)
         self.root.resizable(height=False, width=False)
-        self.root.title("Processing")
+        self.root.title("Clustering in Progress")
+
         self.message = tk.StringVar(master=self.message_frame, value="Now clustering.\nPlease wait.")
         self.label = tk.Label(master=self.message_frame, textvariable=self.message, font=(font_name, 24))
         self.label.grid(row=0, column=0, sticky=tk.N)
@@ -83,6 +84,7 @@ class ClusteringWindow:
         # When clustering is complete, a window should pop up asking the user what they want to do.
         # Whether they want to save the actual objects, save the plots, show the plots or to close.
         size = {"height": 2, "width": 16}
+        self.root.title("Clustering Complete!")
         self.root.wm_protocol("WM_DELETE_WINDOW", self.x_close)
         self.message.set("Clustering complete!\nPlease select an option.")
         object_save_button = tk.Button(master=self.buttons_frame,
@@ -532,34 +534,55 @@ class PyFusionWindow:
         # Checks the contents of "every" cell to ensure the contents are valid.
         return valid
 
-    def load_values(self, f):
+    def load_values_from_str(self, s):
+        lines = s.split("\n")
+        print(s)
+        print(lines)
+        for line in lines:
+            val = line.split(":")[1].strip()
+            if line.startswith("shots"):
+                self.shot_var.set(val)
+            elif line.startswith("times"):
+                self.time_var.set(val)
+            elif line.startswith("probe_array"):
+                self.probe_var.set(val)
+            elif line.startswith("n_cpus"):
+                self.ncpus_var.set(val)
+            elif line.startswith("n_clusters"):
+                self.nclusters_var.set(val)
+            elif line.startswith("n_iterations"):
+                self.niter_var.set(val)
+            elif line.startswith("start"):
+                self.start_method_var.set(val)
+            elif line.startswith("method"):
+                self.method_var.set(val)
+            elif line.startswith("freq_range"):
+                self.freq_range_var.set(val)
+            elif line.startswith("seed"):
+                self.seed_var.set(val)
+            elif line.startswith("n_peaks"):
+                self.npeaks_var.set(val)
+            elif line.startswith("cutoff_by"):
+                self.cutoff_var.set(val)
+            elif line.startswith("cutoff_value"):
+                self.cutoff_val_var.set(val)
+            elif line.startswith("filter_item"):
+                self.filter_item_var.set(val)
+        return
+
+    def load_values_from_file(self, f):
         with open(f) as vals:
-            lines = vals.readlines()
-            for line in lines:
-                val = line.split(":")[1].strip()
-                if line.startswith("shots"): self.shot_var.set(val)
-                elif line.startswith("times"): self.time_var.set(val)
-                elif line.startswith("probe_array"): self.probe_var.set(val)
-                elif line.startswith("n_cpus"): self.ncpus_var.set(val)
-                elif line.startswith("n_clusters"): self.nclusters_var.set(val)
-                elif line.startswith("n_iterations"): self.niter_var.set(val)
-                elif line.startswith("start"): self.start_method_var.set(val)
-                elif line.startswith("method"): self.method_var.set(val)
-                elif line.startswith("freq_range"): self.freq_range_var.set(val)
-                elif line.startswith("seed"): self.seed_var.set(val)
-                elif line.startswith("n_peaks"): self.npeaks_var.set(val)
-                elif line.startswith("cutoff_by"): self.cutoff_var.set(val)
-                elif line.startswith("cutoff_value"): self.cutoff_val_var.set(val)
-                elif line.startswith("filter_item"): self.filter_item_var.set(val)
+            settings = vals.read()
+        self.load_values_from_str(settings)
         return
 
     def load_settings(self):
-        fname = askopenfilename(initialdir=os.path.dirname(__file__),
+        fname = askopenfilename(initialdir=GUI_DIR,
                                 filetypes=(("GUI Config File", "*.guiconfig"), ("All Files", "*.*")))
         if fname == "":
             return None
         try:
-            self.load_values(fname)
+            self.load_values_from_file(fname)
         except:
             ErrorWindow(self.root, "Incorrect file format.")
         return None
@@ -573,17 +596,40 @@ class PyFusionWindow:
             backend.save_values(self.value_dict, fname)
             return None
 
+    def defaults_missing(self):
+        defaults = '''shots: 159243
+        times: 300-1400
+        probe_array: DIIID_toroidal_mag
+        n_cpus: 1
+        n_clusters: 16
+        n_iterations: 20
+        start: k_means
+        method: EM_VMM
+        freq_range: 50-250
+        seed: 743
+        n_peaks: 20
+        cutoff_by: sigma_eq
+        cutoff_value: 20
+        filter_items: EM_VMM_kappas'''
+        self.load_values_from_str(defaults)
+        with open(os.path.join(GUI_DIR,".guiconfig"), "w") as new_default:
+            new_default.write(defaults)
+        return
+
     def restore_defaults(self):
-        self.load_values(DEFAULT_SETTINGS_DIR)
+        try:
+            self.load_values_from_file(DEFAULT_SETTINGS_DIR)
+        except:
+            self.defaults_missing()
         return None
 
     def run_clustering(self):
 
         def callback():
-            AN = self.settings_to_analysis_object()
-            #import time
-            #time.sleep(1)
-            win.AN = AN
+            # AN = self.settings_to_analysis_object()
+            import time
+            time.sleep(1)
+            # win.AN = AN
             win.root.event_generate("<<clustering_complete>>", when="tail")
             return
 
