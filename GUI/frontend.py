@@ -79,6 +79,8 @@ class ClusteringWindow:
         self.label.grid(row=0, column=0, sticky=tk.N)
         self.root.grab_set()
         self.root.wm_protocol("WM_DELETE_WINDOW", self.x_no_close)
+        self.root.bind("<<clustering_complete>>", self.clustering_complete)
+        self.root.bind("<<clustering_failed>>", self.clustering_failed)
 
     def clustering_complete(self):
         # When clustering is complete, a window should pop up asking the user what they want to do.
@@ -87,6 +89,7 @@ class ClusteringWindow:
         self.root.title("Clustering Complete!")
         self.root.wm_protocol("WM_DELETE_WINDOW", self.x_close)
         self.message.set("Clustering complete!\nPlease select an option.")
+        self.root.resizable(width=False, height=False)
         object_save_button = tk.Button(master=self.buttons_frame,
                                        text="Save Analysis\nObject",
                                        font=(font_name, 18),
@@ -105,7 +108,16 @@ class ClusteringWindow:
                                  command=self.root.destroy,
                                  **size)
         close_button.grid(row=0, column=2, sticky=tk.N)
+        return
 
+    def clustering_failed(self):
+        self.root.title("Clustering Failed!")
+        self.root.wm_protocol("WM_DELETE_WINDOW", self.x_close)
+        self.message.set("Clustering Failed!")
+        self.ok_button = tk.Button(master=self.buttons_frame,
+                                   text="OK", font=(font_name, 18),
+                                   command=self.root.destroy)
+        self.ok_button.grid(row=0, column=0, sticky=tk.N)
         return
 
     def save_objects(self):
@@ -676,7 +688,6 @@ filter_items: EM_VMM_kappas'''
             return
 
         win = ClusteringWindow(master=self.root)
-        win.root.bind("<<clustering_complete>>", clustering_complete)
         t = threading.Thread(target=callback)
         t.start()
         return None
@@ -748,6 +759,7 @@ filter_items: EM_VMM_kappas'''
             AN = analysis.Analysis(DM=DM)
             if AN.results is None or AN.feature_object is None or AN.z is None:
                 ErrorWindow(master=self.root, message="No clusters found! (Maybe try increasing cutoff value...)")
+                return None
             return AN
         return None
 
