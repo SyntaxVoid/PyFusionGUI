@@ -156,6 +156,7 @@ class Analysis:
                         misc_data_dict[i] = np.append(misc_data_dict[i], res[1][i], axis=0)
             else:
                 raise AnalysisError("Shot {} has failed!".format(self.DM.shot_info["shots"][n]))
+        print(misc_data_dict)
         feature_object = clust.feature_object(instance_array=instance_array, misc_data_dict=misc_data_dict,
                                               instance_array_amps=+misc_data_dict["mirnov_data"])
         z = feature_object.cluster(**self.DM.datamining_settings)
