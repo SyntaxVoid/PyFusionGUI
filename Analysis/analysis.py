@@ -25,7 +25,7 @@ class AnalysisError(Exception):
 def stft_pickle_workaround(input_data):
     # This looks a little funny. Because of how python treats multiprocessing, any function
     # using mp must be at the highest scope level (not inside a class) to operate correctly.
-    return copy.deepcopy(input_data[0].get_stft(*input_data[1:]))
+    return copy.deepcopy(input_data[0].get_stft(input_data[1]))
 
 
 def stft_ece_pickle_workaround(input_data):
@@ -130,8 +130,7 @@ class Analysis:
         # Returns analysis
         func = stft_pickle_workaround
         tmp_data_iter = itertools.izip(itertools.repeat(self.DM),
-                                       self.DM.shot_info["shots"],
-                                       self.DM.shot_info["time_windows"])
+                                       self.DM.shot_info["shots"])
         if self.DM.n_cpus > 1:
             # We can process each shot separately using different processing cores.
             pool = Pool(processes=self.DM.n_cpus, maxtasksperchild=3)
@@ -409,7 +408,8 @@ class DataMining:
         diff_angles[diff_angles > np.pi] -= (2. * np.pi)
         z = ext.perform_data_datamining(diff_angles, misc_data_dict, self.datamining_settings)
         instance_array_cur, misc_data_dict_cur = \
-            ext.filter_by_kappa_cutoff(z, ax=None, **self.fft_settings)
+            ext.filter_by_kappa_cutoff(z, **self.fft_settings)
+
         instance_array = np.array(instance_array_cur)
         misc_data_dict = misc_data_dict_cur
         return instance_array, misc_data_dict, magi.signal, magi.timebase

@@ -724,7 +724,7 @@ def filter_by_kappa_cutoff(z, ave_kappa_cutoff=25, ax = None, prob_cutoff = None
         if ax!=None: ax.plot(z.feature_obj.misc_data_dict['time'][current],z.feature_obj.misc_data_dict['freq'][current],'k,') 
         include = 0
         if cutoff_by=='sigma_eq':
-            print std_eq, ave_kappa_cutoff
+            print "DEBUG:", std_eq, ave_kappa_cutoff
             if std_eq < ave_kappa_cutoff: include = 1
         elif cutoff_by=='sigma_bar':
             if std_bar < ave_kappa_cutoff: include = 1
@@ -753,7 +753,7 @@ def filter_by_kappa_cutoff(z, ave_kappa_cutoff=25, ax = None, prob_cutoff = None
                 for j in z.feature_obj.misc_data_dict.keys():
                     misc_data_dict2[j] = np.append(misc_data_dict2[j], z.feature_obj.misc_data_dict[j][current_new],axis=0)
     #Catch incase no good clusters were found....
-    if start==1: instance_array2 = None; misc_data_dict2 = None
+    if start==1: instance_array2 = None; misc_data_dict2 = None; print("DEBUG: NO CLUSTERS")
     return instance_array2, misc_data_dict2
 
 def single_shot(current_shot, array_names, NFFT, hop, n_pts, lower_freq, ax, start_time, end_time, perform_datamining, ave_kappa_cutoff, cutoff_by):
