@@ -208,7 +208,7 @@ class PinpointWindow:
         self.cancel_button = tk.Button(master=self.button_frame, text="Cancel", font=font, command=self.root.destroy)
         self.cancel_button.grid(row=0, column=1, sticky=tk.W)
         self.root.grab_set()
-        self.root.bind("<<analysis_complete", self.analysis_complete)
+        self.root.bind("<<analysis_complete>>", self.analysis_complete)
 
         if defaults is not None:
             self.shot_var.set(defaults[0])
