@@ -151,7 +151,7 @@ class ClusteringWindow:
         return
 
 class PinpointWindow:
-    def __init__(self, master, func, defaults, pf_window):
+    def __init__(self, master, defaults, pf_window):
         self.pf_window = pf_window
         self.root = tk.Toplevel(master=master)
         self.root.geometry("410x350")
@@ -207,7 +207,6 @@ class PinpointWindow:
         self.ok_button.grid(row=0, column=0, sticky=tk.E)
         self.cancel_button = tk.Button(master=self.button_frame, text="Cancel", font=font, command=self.root.destroy)
         self.cancel_button.grid(row=0, column=1, sticky=tk.W)
-        self.root.bind("<<ok_clicked>>", func)
         self.root.grab_set()
         if defaults is not None:
             self.shot_var.set(defaults[0])
@@ -256,6 +255,9 @@ class PinpointWindow:
                 point_analysis.point_analysis(A=A, shot=shot, time_window=time_window,
                                               t0=time, f0=freq,
                                               probe_array=self.pf_window.value_dict["probe_array"].get())
+        popup = tk.Toplevel(master=self.root)
+        message = tk.Label(master=popup, text="Now performing pinpoint analysis.\nPlease wait.", font=font)
+        message.grid(row=0, column=0, sticky=tk.N)
         t = threading.Thread(target=callback)
         t.start()
         return
@@ -788,26 +790,11 @@ filter_items: EM_VMM_kappas'''
         # Verify both frequency and time are within our analysis windows.
         # Can only be done after the analysis has been performed. (Grey out button before that??)
         # but we'll ignore the latter for now.
-        def callback(e):
-            win2 = tk.Toplevel(master=win.root)
-            message = tk.Label(master=win2, text="Now processing.\nPlease wait.", font=font)
-            message.grid(row=0, column=0, sticky=tk.N)
-            if not win.valid_values():
-                return
-            import time
-            time.sleep(2)
-            shot, time_window, freq_range, time, freq = win.get_vars()
-            time_window = jt.time_window_parser(time_window)
-            freq_range = jt.time_window_parser(freq_range)
-            #A = self.settings_to_analysis_object()
-            #point_analysis.point_analysis(A=A, shot=shot, time_window=time_window,
-            #                              t0=time, f0=freq, probe_array=self.value_dict["probe_array"].get())
-            return
         if self.valid_values():
             defaults = [str(jt.shot_str_parser(self.value_dict["shots"].get())[0]),
                         self.value_dict["times"].get(),
                         self.value_dict["freq_range"].get()]
-            win = PinpointWindow(master=self.root, func=callback, defaults=defaults, pf_window=self)
+            win = PinpointWindow(master=self.root, defaults=defaults, pf_window=self)
 
         return
 
