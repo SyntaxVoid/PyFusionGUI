@@ -664,10 +664,10 @@ filter_items: EM_VMM_kappas'''
     def run_clustering(self):
 
         def callback():
-            # AN = self.settings_to_analysis_object()
-            import time
-            time.sleep(1)
-            # win.AN = AN
+            AN = self.settings_to_analysis_object()
+            #import time
+            #time.sleep(1)
+            win.AN = AN
             win.root.event_generate("<<clustering_complete>>", when="tail")
             return
 
