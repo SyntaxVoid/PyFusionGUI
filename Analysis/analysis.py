@@ -25,7 +25,7 @@ class AnalysisError(Exception):
 def stft_pickle_workaround(input_data):
     # This looks a little funny. Because of how python treats multiprocessing, any function
     # using mp must be at the highest scope level (not inside a class) to operate correctly.
-    return copy.deepcopy(input_data[0].get_stft(input_data[1]))
+    return copy.deepcopy(input_data[0].get_stft(*input_data[1:]))
 
 
 def stft_ece_pickle_workaround(input_data):
