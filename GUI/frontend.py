@@ -812,10 +812,11 @@ filter_items: EM_VMM_kappas'''
             shot, time_window, freq_range, time, freq = win.get_vars()
             time_window = jt.time_window_parser(time_window)
             freq_range = jt.time_window_parser(freq_range)
-            A = self.settings_to_analysis_object()
-            point_analysis.point_analysis(A=A, shot=shot, time_window=time_window,
-                                          t0=time, f0=freq, probe_array=self.value_dict["probe_array"].get())
-            
+            time.sleep(3)
+            #A = self.settings_to_analysis_object()
+            #point_analysis.point_analysis(A=A, shot=shot, time_window=time_window,
+            #                              t0=time, f0=freq, probe_array=self.value_dict["probe_array"].get())
+
             return
         if self.valid_values():
             defaults = [str(jt.shot_str_parser(self.value_dict["shots"].get())[0]),

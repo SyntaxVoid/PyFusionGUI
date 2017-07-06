@@ -76,7 +76,7 @@ def plot_clusters(A, clust_arr, ax=None, doplot=True, dosave=None):
 
 
 def point_analysis(A, shot, time_window, t0, f0, probe_array, doplot=True, dosave=None, clustarr=None):
-    fft = A.raw_ffts["shot"]
+    fft = A.DM.raw_ffts["shot"]
     raw_mirnov = fft.signal
     raw_times = fft.timebase
     raw_freqs = fft.frequency_base
