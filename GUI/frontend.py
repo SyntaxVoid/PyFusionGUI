@@ -256,8 +256,10 @@ class PinpointWindow:
                                               t0=time, f0=freq,
                                               probe_array=self.pf_window.value_dict["probe_array"].get())
         popup = tk.Toplevel(master=self.root)
+        popup.resizable(width=False, height=False)
         message = tk.Label(master=popup, text="Now performing pinpoint analysis.\nPlease wait.", font=font)
         message.grid(row=0, column=0, sticky=tk.N)
+        popup.grab_set()
         t = threading.Thread(target=callback)
         t.start()
         return
