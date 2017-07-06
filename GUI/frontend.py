@@ -746,6 +746,8 @@ filter_items: EM_VMM_kappas'''
                                      datamining_settings=datamining_settings, fft_settings=fft_settings,
                                      n_cpus=n_cpus)
             AN = analysis.Analysis(DM=DM)
+            if AN.results is None or AN.feature_object is None or AN.z is None:
+                ErrorWindow(master=self.root, message="No clusters found! (Maybe try increasing cutoff value...)")
             return AN
         return None
 

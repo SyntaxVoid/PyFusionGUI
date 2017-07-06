@@ -723,9 +723,7 @@ def filter_by_kappa_cutoff(z, ave_kappa_cutoff=25, ax = None, prob_cutoff = None
         current = z.cluster_assignments==i
         if ax!=None: ax.plot(z.feature_obj.misc_data_dict['time'][current],z.feature_obj.misc_data_dict['freq'][current],'k,') 
         include = 0
-        print("DEBUGGGGGGGGGGG", cutoff_by)
         if cutoff_by=='sigma_eq':
-            print "DEBUG:", std_eq, ave_kappa_cutoff
             if std_eq < ave_kappa_cutoff: include = 1
         elif cutoff_by=='sigma_bar':
             if std_bar < ave_kappa_cutoff: include = 1
@@ -741,20 +739,15 @@ def filter_by_kappa_cutoff(z, ave_kappa_cutoff=25, ax = None, prob_cutoff = None
                 current_new = current*prob_cutoff
             else:
                 current_new = +current
-                
-            #print '###############', np.sum(current), np.sum(prob_cutoff), prob_cutoff.shape, current.shape#, np.sum(current_new)
             if start==1:
-                #print '################', np.sum(z.cluster_details['zij'][current,:]>0.90), np.sum(z.cluster_details['zij'][current,i]<0.90)
                 instance_array2 = z.feature_obj.instance_array[current_new,:]
                 start = 0
                 for j in z.feature_obj.misc_data_dict.keys(): misc_data_dict2[j] = copy.deepcopy(z.feature_obj.misc_data_dict[j][current_new])
             else:
-                #print '################', np.sum(z.cluster_details['zij'][current,:]>0.90), np.sum(z.cluster_details['zij'][current,i]<0.90)
                 instance_array2 = np.append(instance_array2, z.feature_obj.instance_array[current_new,:],axis=0)
                 for j in z.feature_obj.misc_data_dict.keys():
                     misc_data_dict2[j] = np.append(misc_data_dict2[j], z.feature_obj.misc_data_dict[j][current_new],axis=0)
-    #Catch incase no good clusters were found....
-    if start==1: instance_array2 = None; misc_data_dict2 = None; print("DEBUG: NO CLUSTERS")
+    if start==1: instance_array2 = None; misc_data_dict2 = None
     return instance_array2, misc_data_dict2
 
 def single_shot(current_shot, array_names, NFFT, hop, n_pts, lower_freq, ax, start_time, end_time, perform_datamining, ave_kappa_cutoff, cutoff_by):
