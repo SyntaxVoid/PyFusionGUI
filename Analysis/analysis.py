@@ -1,26 +1,27 @@
-# Analysis/analysis.py #
-# John Gresl 6/20/2017 #
-
-import copy
+# Native Python
 import os
+import copy
 import itertools
 from multiprocessing import Pool
+import pickle
+
+# Anaconda
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib as mpl
-mpl.rcParams["axes.linewidth"] = 4.0
+
+# PyFusion
 import pyfusion as pf
 import pyfusion.clustering as clust
 import pyfusion.clustering.extract_features_scans as ext
-from Utilities import jtools as jt
-import pickle
 from PyFusionGUI import *
 
-class OutOfOrderError(Exception):
-    pass
+# My Stuff
+from Utilities import jtools as jt
+OutOfOrderError = jt.OutOfOrderException
+AnalysisError = jt.AnalysisError
+mpl.rcParams["axes.linewidth"] = 4.0
 
-class AnalysisError(Exception):
-    pass
 
 def stft_pickle_workaround(input_data):
     # This looks a little funny. Because of how python treats multiprocessing, any function
@@ -36,7 +37,7 @@ def stft_ece_pickle_workaround(input_data):
 
 def _big_axes(ax, xlabel="Time (ms)", ylabel="Freq (kHz)"):
     # Hack that modifies an axes that we will lay overtop our other subplots,
-    # allowing us to easily place x and y labels, which otherwise isn't clear.
+    # allowing us to easily place common x and y labels, which otherwise isn't clear.
     ax.spines["top"].set_color("none")
     ax.spines["left"].set_color("none")
     ax.spines["right"].set_color("none")
@@ -48,61 +49,6 @@ def _big_axes(ax, xlabel="Time (ms)", ylabel="Freq (kHz)"):
     ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel)
     return None
-
-def plot_seperate_clusters(A, clust_arr, ax=None, doplot=True, dosave=None):
-    # Inputs:
-    #   A: Result from Analysis class (A.run_analysis() must have already been run.
-    #   clust_arr: Array of the clusters we want to plot. eg: [1,4,6] will plot clusters 1,4 and 6
-    #   ax: if ax is supplied, will plot it on the specified axes
-    # Outputs:
-    #   A graph.
-    if clust_arr == "all":
-        clust_arr = np.unique(A.z.cluster_assignments)
-
-    class CycledList:
-        def __init__(self, arr):
-            self.arr = arr
-            return
-
-        def __getitem__(self, key):
-            return self.arr[np.mod(key, len(self.arr))]
-
-    plot_colors = CycledList(["silver", "darkorchid", "royalblue", "red", "chartreuse", "gold", "olivedrab",
-                              "mediumspringgreen", "lightseagreen", "darkcyan", "deepskyblue",
-                              "c", "sienna", "m", "mediumvioletred", "lightsalmon"])
-    if ax is None:
-        plt.figure(figsize=(11, 8.5), dpi=100, facecolor="w", edgecolor="k")
-        plt.specgram(A.results[0][2][0, :], NFFT=1024, Fs=1./np.mean(np.diff(A.results[0][3])),
-                     noverlap=128, xextent=[A.results[0][3][0], A.results[0][3][-1]])
-        for cl in clust_arr:
-            mask = (A.z.cluster_assignments == cl)
-            plt.plot(A.z.feature_obj.misc_data_dict["time"][mask],
-                     A.z.feature_obj.misc_data_dict["freq"][mask],
-                     color=plot_colors[cl], marker="o", linestyle="None",
-                     markersize=A.markersize)
-        # Cause I'm lazy.
-        if dosave is not None and "toroidal" in dosave.lower():
-            plt.title("Shot 159243 Toroidal Array")
-        if dosave is not None and "poloidal" in dosave.lower():
-            plt.title("Shot 159243 Poloidal Array")
-        plt.xlabel("Time (ms)")
-        plt.ylabel("Freq (kHz)")
-        plt.xlim([750, 850])
-        plt.ylim([45, 250])
-        if doplot:
-            plt.show()
-        if dosave is not None:
-            plt.savefig(dosave)
-    else:
-        ax.specgram(A.results[0][2][0, :], NFFT=1024, Fs=1. / np.mean(np.diff(A.results[0][3])),
-                    noverlap=128, xextent=[A.results[0][3][0], A.results[0][3][-1]])
-        for cl in clust_arr:
-            mask = (A.z.cluster_assignments == cl)
-            ax.plot(A.z.feature_obj.misc_data_dict["time"][mask],
-                    A.z.feature_obj.misc_data_dict["freq"][mask],
-                    color=plot_colors[cl], marker="o", linestyle="None",
-                    markersize=A.markersize)
-    return
 
 class Analysis:
     # Updated Analysis object. These methods were separated from the DataMining object
@@ -127,7 +73,7 @@ class Analysis:
         return "<<Analysis object for {} >>".format(self.DM.__repr__())
 
     def run_analysis(self):
-        # Returns analysis
+        # Returns results, feature object, and z of the analysis object. Called in __init__.
         func = stft_pickle_workaround
         tmp_data_iter = itertools.izip(itertools.repeat(self.DM),
                                        self.DM.shot_info["shots"])
@@ -142,7 +88,6 @@ class Analysis:
         start = True
         instance_array = {}
         misc_data_dict = {}
-        print(results)
         for n, res in enumerate(results):
             if res[0] is not None:
                 if start:
@@ -176,28 +121,22 @@ class Analysis:
         # they will be compressed into a single dictionary object and then pickled.
         if filename is None:
             probes = self.DM.shot_info["probes"]
-            if probes == "DIIID_toroidal_mag":
-                pr = "TOR"
-            elif probes == "DIIID_poloidal322_mag":
-                pr = "POL"
-            elif probes == "ECEF_array":
-                pr = "ECE"
-            elif probes == "ECEF_array_red":
-                pr = "ECE_REDUCED"
-            else:
-                pr = probes
+            if probes == "DIIID_toroidal_mag": pr = "TOR"
+            elif probes == "DIIID_poloidal322_mag": pr = "POL"
+            elif probes == "ECEF_array": pr = "ECE"
+            elif probes == "ECEF_array_red": pr = "ECE_REDUCED"
+            else: pr = probes
             local_filename = str(self.DM.shot_info["shots"][0]) + "_" + \
                              jt.time_window_to_filelike_str(self.DM.shot_info["time_windows"][0]) + "_" + \
                              pr + ".ANobj"
             filename = os.path.join(PICKLE_SAVE_DIR, local_filename)
-            print(filename)
         with open(filename, "wb") as pick:
             pickle.dump({"self": {"results": self.results,
                                   "feature_object": self.feature_object,
                                   "z": self.z}, "DM": self.DM.__dict__}, pick)
         return
 
-    def return_plots(self):
+    def return_specgrams(self):
         fontsize   = 35  # FixMe: More robust definition of fontsize... Not sure what to do now.
         markersize = 5  # FixMe: More robust definition of markersize
         plot_colors = jt.CycledList(["#ff0000", "#ff9400", "#ffe100", "#bfff00",
@@ -206,8 +145,8 @@ class Analysis:
                                      "#ff006a", "#631247", "#a312f7", "#a3f2f7"])
         n_shots = len(self.DM.shot_info["shots"])
         nrows, ncols = jt.squareish_grid(n_shots, swapxy=True)
-        figure1, axes1 = plt.subplots(nrows=nrows, ncols=ncols, sharex=True, sharey=True)
-        figure2, axes2 = plt.subplots(nrows=nrows, ncols=ncols, sharex=True, sharey=True)
+        figure1, axes1 = plt.subplots(nrows=nrows, ncols=ncols, sharex=True, sharey=True, edgecolor="k", facecolor="w")
+        figure2, axes2 = plt.subplots(nrows=nrows, ncols=ncols, sharex=True, sharey=True, edgecolor="k", facecolor="w")
         axesf1 = axes1.flatten() if n_shots > 1 else np.array([axes1], dtype=object)
         axesf2 = axes2.flatten() if n_shots > 1 else np.array([axes2], dtype=object)
         _big_axes(figure1.add_subplot(111, frameon=False))
@@ -337,7 +276,6 @@ class DataMining:
                              jt.time_window_to_filelike_str(self.shot_info["time_windows"][0]) + "_" + \
                              pr + ".DMobj"
             filename = os.path.join(PICKLE_SAVE_DIR, local_filename)
-            print(filename)
         with open(filename, "wb") as pick:
             pickle.dump(self.__dict__, pick)
         return
@@ -347,9 +285,7 @@ class DataMining:
         # Output is formatted like: {"159243": magnitudes, "159244": magnitudes, ... }
         out = {}
         dev = pf.getDevice(self.shot_info["device"])
-        print("#####", self.shot_info["shots"], self.shot_info["time_windows"])
         for sh,tw in zip(self.shot_info["shots"], self.shot_info["time_windows"]):
-            print(sh, tw)
             out[str(sh)] = dev.acq.getdata(sh, self.shot_info["probes"]).reduce_time(tw)
         return out
 
@@ -421,158 +357,6 @@ class DataMining:
 
 
 
-class Analysis2:
-
-
-    def plot_diagnostics(self, shot, time_window, t0, f0, idx="", doplot=True, dosave=None, clust_arr=None):
-        # Plots amplitude vs. phase graphs with a spectrogram aswell. t0 and f0 are the time and frequency
-        # you would like the phases and amplitudes for. If dosave is equal to a filename string, the plot
-        # will be saved to that file.
-        pi = np.pi
-        fft = self.raw_ffts[str(shot)]
-        raw_mirnov = fft.signal
-        raw_times = fft.timebase
-        raw_freqs = fft.frequency_base
-
-        nt, t_actual = jt.find_closest(raw_times, t0)
-        nf, f_actual = jt.find_closest(raw_freqs, f0)
-        print("Requested t={}ms. Got t={}ms. dt={}ms".format(t0, t_actual, abs(t0 - t_actual)))
-        print("Requested f={}kHz. Got f={}kHz. df={}kHz".format(f0, f_actual, abs(f0 - f_actual)))
-
-        complex_amps = []
-        tmp = raw_mirnov[nt]
-        for prb in tmp:
-            complex_amps.append(prb[nf])
-        amps = jt.complex_mag_list(complex_amps)
-        phases = np.angle(complex_amps)
-        positions = []
-        if idx.lower() == "tor":
-            positions = [20., 67., 97., 127., 132., 137., 157., 200., 247., 277., 307., 312., 322., 340.]
-        elif idx.lower() == "pol":
-            positions = [000.0, 018.4, 036.0, 048.7, 059.2, 069.6, 078.0, 085.1, 093.4, 100.7, 107.7,
-                         114.9, 121.0, 129.2, 143.6, 165.3, 180.1, 195.0, 216.3, 230.8, 238.9, 244.9,
-                         253.5, 262.1, 271.1, 279.5, 290.6, 300.6, 311.8, 324.2, 341.9]
-        elif idx.lower() == "ece3":
-            positions = [36 * 0, 36 * 1, 36 * 2, 36 * 3, 36 * 4, 36 * 5, 36 * 6, 36 * 7, 36 * 8, 36 * 9]
-        tmp = self.results[0]
-        time_base = tmp[3]
-        sig = tmp[2]
-        dt = np.mean(np.diff(time_base))
-        tmp_sig = sig[0, :]
-
-        plt.figure(num=None, figsize=(11, 8.5), dpi=100, facecolor="w", edgecolor="k")
-        mpl.rcParams['mathtext.fontset'] = 'stix'
-        mpl.rcParams['font.family'] = 'STIXGeneral'
-        mpl.pyplot.title(r'ABC123 vs $\mathrm{ABC123}^{123}$')
-        ax1 = plt.subplot2grid((2, 3), (0, 0))
-        ax2 = plt.subplot2grid((2, 3), (1, 0))
-        ax3 = plt.subplot2grid((2, 3), (0, 1), rowspan=2, colspan=2)
-
-        ax1.plot(positions, amps, "k*-", linewidth=2)
-        ax1.set_xlabel("Probe Positions ($^\circ$)", fontsize=16)
-        ax1.set_ylabel("Amplitudes", fontsize=16)
-        ax1.set_xticks(np.arange(0, 360 + 1, 60))
-        ax1.set_xlim([0, 360])
-        ax1.grid()
-
-        ax2.plot(positions, phases, "k*-", linewidth=2)
-        ax2.set_xlabel("Probe Positions ($^\circ$)", fontsize=16)
-        ax2.set_ylabel("Phase", fontsize=16)
-        ax2.set_xlim([0, 360])
-        ax2.set_xticks(np.arange(0, 360 + 1, 60))
-        ax2.set_yticks([-pi, -3 * pi / 4, -pi / 2, -pi / 4, 0, pi / 4, pi / 2, 3 * pi / 4, pi])
-        ax2.set_yticklabels(["$-\pi$", r"$-\frac{3\pi}{4}$", r"$-\frac{\pi}{2}$", r"$-\frac{\pi}{4}$", "$0$",
-                             r"$\frac{\pi}{2}$", r"$\pi$", r"$\frac{3\pi}{2}$", r"$\pi$"])
-        ax2.set_ylim([-pi, pi])
-        ax2.grid()
-
-        ax3.specgram(tmp_sig, NFFT=1024, Fs=1. / dt,
-                     noverlap=128, xextent=[time_base[0], time_base[-1]])
-        if idx.lower() == "tor":
-            plot_seperate_clusters(self, clust_arr, ax3)
-        if idx.lower() == "ece3":
-            plot_seperate_clusters(self, clust_arr, ax3)
-        elif idx.lower() == "pol":
-            pass
-        ax3.set_xlabel("Time (ms)", fontsize=16)
-        ax3.set_ylabel("Freq (kHz)", fontsize=16)
-
-        ax3.plot([t0, t0], [45, 250], "k")
-        ax3.plot(time_window, [f0, f0], "k")
-        ax3.set_xlim(time_window)
-        ax3.set_ylim([45, 250])
-
-        plt.suptitle("Shot 159243 ({}) at t = {} ms, f = {} kHz".format(idx, t_actual, f_actual), fontsize=24)
-        plt.subplots_adjust(wspace=0.4)
-        if doplot:
-            plt.show()
-        if dosave is not None:
-            plt.savefig(dosave)
-        return
-
-    # ECE #
-    def get_stft_ece(self, shot):
-        magi = self.mags[str(shot)]
-        data_ffti = self.raw_ffts[str(shot)]
-        good_indices = ext.find_peaks(data_ffti, **self.fft_settings)
-        rel_data = ext.return_values(data_ffti.signal, good_indices)
-        tmp = len(ext.return_non_freq_dependent(data_ffti.frequency_base, good_indices))
-        misc_data_dict = {"time": ext.return_time_values(data_ffti.timebase, good_indices),
-                          "freq": ext.return_non_freq_dependent(data_ffti.frequency_base, good_indices),
-                          "shot": np.ones(tmp, dtype=int) * shot,
-                          "mirnov_data": +rel_data}
-        print("######################" * 50)
-        rel_data_angles = np.angle(rel_data)
-        diff_angles = (np.diff(rel_data_angles)) % (2. * np.pi)
-        diff_angles[diff_angles > np.pi] -= (2. * np.pi)
-        diff_amps = np.abs(np.diff(jt.complex_mag_list(rel_data)))
-        # This is where ECE is different. Use magnitudes as clustering instead of angles
-        z = ext.perform_data_datamining(diff_amps, misc_data_dict, self.datamining_settings)
-        instance_array_cur, misc_data_dict_cur = \
-            ext.filter_by_kappa_cutoff(z, **self.fft_settings)
-        instance_array = np.array(instance_array_cur)
-        misc_data_dict = misc_data_dict_cur
-        return instance_array, misc_data_dict, magi.signal, magi.timebase
-
-    def get_stft_ece_wrapper(self, input_data):
-        return copy.deepcopy(self.get_stft_ece(input_data[0]))
-
-    def run_analysis_ece(self, method="stft", savefile=None):
-        if method == "stft":
-            func = stft_ece_pickle_workaround
-        else:
-            func = None
-        # tmp_data_iter = itertools.izip(itertools.repeat(self),itertools.izip(self.shots,self.time_windows))
-        tmp_data_iter = itertools.izip(itertools.repeat(self), self.shots, self.time_windows)
-        if self.n_cpus > 1:
-            pool = Pool(processes=self.n_cpus, maxtasksperchild=3)
-            self.results = pool.map(func, tmp_data_iter)
-            pool.close()
-            pool.join()
-        else:
-            self.results = map(func, tmp_data_iter)
-        start = True
-        instance_array = 0
-        misc_data_dict = 0
-        for n, res in enumerate(self.results):
-            if res[0] is not None:
-                if start:
-                    instance_array = copy.deepcopy(res[0])
-                    misc_data_dict = copy.deepcopy(res[1])
-                    start = False
-                else:
-                    instance_array = np.append(instance_array, res[0], axis=0)
-                    for i in misc_data_dict.keys():
-                        misc_data_dict[i] = np.append(misc_data_dict[i], res[1][i], axis=0)
-            else:
-                print("One shot may have failed!")
-        self.feature_object = clust.feature_object(instance_array=instance_array, misc_data_dict=misc_data_dict,
-                                                   instance_array_amps=+misc_data_dict["mirnov_data"])
-        self.z = self.feature_object.cluster(**self.datamining_settings)
-        if savefile is not None:
-            self.feature_object.dump_data(savefile)
-        return
-
 
 if __name__ == '__main__':
     # # Example of how to use these classes
@@ -603,5 +387,5 @@ if __name__ == '__main__':
     # AN2 = Analysis.restore(filename="TESTANSAVE.ANobj")
     DM1 = DataMining(shots=shots, time_windows=time_windows, probes=probes)
     AN1 = Analysis(DM=DM1)
-    plot1, plot2 = AN1.return_plots()
+    plot1, plot2 = AN1.return_specgrams()
     plt.show()

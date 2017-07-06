@@ -4,6 +4,13 @@ import re
 import numpy as np
 from pyfusion import DEFAULT_CONFIG_FILE
 
+class OutOfOrderException(Exception):
+    pass
+
+
+class AnalysisError(Exception):
+    pass
+
 
 class CycledList(list):
     # WARNING. This should only be used if all you're going to be doing is indexing

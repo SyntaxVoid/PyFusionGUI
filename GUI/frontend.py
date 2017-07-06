@@ -208,6 +208,7 @@ class PinpointWindow:
         self.cancel_button = tk.Button(master=self.button_frame, text="Cancel", font=font, command=self.root.destroy)
         self.cancel_button.grid(row=0, column=1, sticky=tk.W)
         self.root.grab_set()
+        self.analysis_message = tk.StringVar(master=self.root)
         self.root.bind("<<analysis_complete>>", self.analysis_complete)
 
         if defaults is not None:
@@ -226,6 +227,7 @@ class PinpointWindow:
         ax3 = point_analysis.point_analysis(A=self.A, shot=shot, time_window=time_window,
                                             t0=time, f0=freq,
                                             probe_array=self.pf_window.value_dict["probe_array"].get())
+        self.analysis_message.set("Analysis complete!")
         plt.show()
         return
 
@@ -269,15 +271,10 @@ class PinpointWindow:
                 # TODO: What if A is None
                 self.A = self.pf_window.settings_to_analysis_object()
                 self.root.event_generate("<<analysis_complete>>", when="tail")
-                # fig, \
-                # ax1,  \
-                # ax2,   \
-                # ax3 = point_analysis.point_analysis(A=A, shot=shot, time_window=time_window,
-                #                                     t0=time, f0=freq,
-                #                                     probe_array=self.pf_window.value_dict["probe_array"].get())
         popup = tk.Toplevel(master=self.root)
         popup.resizable(width=False, height=False)
-        message = tk.Label(master=popup, text="Now performing pinpoint analysis.\nPlease wait.", font=(font_name, 24))
+        self.analysis_message.set("Now performing pinpoint analysis.\nPlease wait.")
+        message = tk.Label(master=popup, textvariable=self.analysis_message, font=(font_name, 24))
         message.grid(row=0, column=0, sticky=tk.N)
         popup.grab_set()
         t = threading.Thread(target=callback)
