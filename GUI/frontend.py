@@ -690,10 +690,11 @@ filter_items: EM_VMM_kappas'''
         def clustering_complete(e):
             win.clustering_complete()
             return
+        if self.valid_values():
+            win = ClusteringWindow(master=self.root)
+            t = threading.Thread(target=callback)
+            t.start()
 
-        win = ClusteringWindow(master=self.root)
-        t = threading.Thread(target=callback)
-        t.start()
         return None
 
     def run_point_analysis(self):
