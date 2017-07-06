@@ -82,7 +82,7 @@ class ClusteringWindow:
         self.root.bind("<<clustering_complete>>", self.clustering_complete)
         self.root.bind("<<clustering_failed>>", self.clustering_failed)
 
-    def clustering_complete(self):
+    def clustering_complete(self, e):
         # When clustering is complete, a window should pop up asking the user what they want to do.
         # Whether they want to save the actual objects, save the plots, show the plots or to close.
         size = {"height": 2, "width": 16}
@@ -110,7 +110,7 @@ class ClusteringWindow:
         close_button.grid(row=0, column=2, sticky=tk.N)
         return
 
-    def clustering_failed(self):
+    def clustering_failed(self, e):
         self.root.title("Clustering Failed!")
         self.root.wm_protocol("WM_DELETE_WINDOW", self.x_close)
         self.message.set("Clustering Failed!")
