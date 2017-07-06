@@ -19,7 +19,7 @@ def probe_positions(probe_array):
     return None, None
 
 
-def plot_clusters(A, clust_arr, ax=None, doplot=True, dosave=None):
+def plot_clusters(A, clust_arr, ax=None, doplot=False, dosave=None):
     # Inputs:
     #   A: Result from Analysis class (A.run_analysis() must have already been run.
     #   clust_arr: Array of the clusters we want to plot. eg: [1,4,6] will plot clusters 1,4 and 6
@@ -104,7 +104,7 @@ def point_analysis(A, shot, time_window, t0, f0, probe_array, doplot=True, dosav
     dt = np.mean(np.diff(time_base))
     tmp_sig = sig[0, :]
 
-    plt.figure(num=None, figsize=(11, 8.5), dpi=100, facecolor="w", edgecolor="k")
+    fig = plt.figure(num=None, figsize=(11, 8.5), dpi=100, facecolor="w", edgecolor="k")
     mpl.rcParams['mathtext.fontset'] = 'stix'
     mpl.rcParams['font.family'] = 'STIXGeneral'
     mpl.pyplot.title(r'ABC123 vs $\mathrm{ABC123}^{123}$')
@@ -146,7 +146,8 @@ def point_analysis(A, shot, time_window, t0, f0, probe_array, doplot=True, dosav
     plt.suptitle("Shot 159243 ({})\nt = {} ms, f = {} kHz".format(probe_array, t_actual, f_actual), fontsize=24)
     plt.subplots_adjust(wspace=0.4)
     if doplot:
-        plt.show()
+        # plt.show()
+        pass
     if dosave is not None:
         plt.savefig(dosave)
-    return
+    return fig, ax1, ax2, ax3

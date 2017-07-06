@@ -208,10 +208,25 @@ class PinpointWindow:
         self.cancel_button = tk.Button(master=self.button_frame, text="Cancel", font=font, command=self.root.destroy)
         self.cancel_button.grid(row=0, column=1, sticky=tk.W)
         self.root.grab_set()
+        self.root.bind("<<analysis_complete", self.analysis_complete)
+
         if defaults is not None:
             self.shot_var.set(defaults[0])
             self.time_window_var.set(defaults[1])
             self.freq_range_var.set(defaults[2])
+        return
+
+    def analysis_complete(self, e):
+        shot, time_window, freq_range, time, freq = self.get_vars()
+        time_window = jt.time_window_parser(time_window)
+        freq_range = jt.time_window_parser(freq_range)
+        fig, \
+        ax1,  \
+        ax2,   \
+        ax3 = point_analysis.point_analysis(A=self.A, shot=shot, time_window=time_window,
+                                            t0=time, f0=freq,
+                                            probe_array=self.pf_window.value_dict["probe_array"].get())
+        plt.show()
         return
 
     def valid_values(self):
@@ -251,10 +266,15 @@ class PinpointWindow:
                 shot, time_window, freq_range, time, freq = self.get_vars()
                 time_window = jt.time_window_parser(time_window)
                 freq_range = jt.time_window_parser(freq_range)
-                A=self.pf_window.settings_to_analysis_object()
-                point_analysis.point_analysis(A=A, shot=shot, time_window=time_window,
-                                              t0=time, f0=freq,
-                                              probe_array=self.pf_window.value_dict["probe_array"].get())
+                # TODO: What if A is None
+                self.A = self.pf_window.settings_to_analysis_object()
+                self.root.event_generate("<<analysis_complete>>", when="tail")
+                # fig, \
+                # ax1,  \
+                # ax2,   \
+                # ax3 = point_analysis.point_analysis(A=A, shot=shot, time_window=time_window,
+                #                                     t0=time, f0=freq,
+                #                                     probe_array=self.pf_window.value_dict["probe_array"].get())
         popup = tk.Toplevel(master=self.root)
         popup.resizable(width=False, height=False)
         message = tk.Label(master=popup, text="Now performing pinpoint analysis.\nPlease wait.", font=(font_name, 24))
