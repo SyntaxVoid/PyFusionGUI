@@ -242,7 +242,7 @@ class PyFusionWindow:
         # ======================================
         # ======================================
         self.dms_frame = tk.Frame(master=self.root, bd=5, relief=tk.SUNKEN)
-        self.dms_frame.grid(padx=15, pady=15, row=0, column=1, sticky=tk.N + tk.E)
+        self.dms_frame.grid(padx=7, pady=15, row=0, column=1, sticky=tk.N + tk.E)
         self.dms_info = tk.Label(master=self.dms_frame,
                                  text="Datamining Settings",
                                  font=(font_name, 20))
@@ -462,11 +462,15 @@ class PyFusionWindow:
                                                    command=self.restore_clustering)
         self.restore_clustering_button.grid(row=2, column=0, sticky=tk.N)
         self.run_point_analysis_button = tk.Button(master=self.analysis_frame,
-                                                   text="Point Analysis",
+                                                   text="Pinpoint Analysis",
                                                    font=(font_name, 13), width=14,
                                                    command=self.run_point_analysis)
         self.run_point_analysis_button.grid(row=3, column=0, sticky=tk.N)
-
+        self.run_point_analysis_help = tk.Label(master=self.analysis_frame,
+                                                text="For plotting data at a certain"
+                                                     "\ntime and frequency.",
+                                                font=(font_name, 9))
+        self.run_point_analysis_help.grid(row=4, column=0, sticky=tk.N)
         # ======================================
         # ======================================
         # ==          MISC. WIDGETS           ==
@@ -677,8 +681,6 @@ filter_items: EM_VMM_kappas'''
 
         def callback():
             AN = self.settings_to_analysis_object()
-            #import time
-            #time.sleep(1)
             if AN is None:
                 win.AN = None
                 win.root.event_generate("<<clustering_failed>>", when="tail")
@@ -687,9 +689,6 @@ filter_items: EM_VMM_kappas'''
                 win.root.event_generate("<<clustering_complete>>", when="tail")
             return
 
-        def clustering_complete(e):
-            win.clustering_complete()
-            return
         if self.valid_values():
             win = ClusteringWindow(master=self.root)
             t = threading.Thread(target=callback)
@@ -726,7 +725,6 @@ filter_items: EM_VMM_kappas'''
                            prompts=["Shot", "Time Window (ms)", "Frequency (khz)", "Time (ms)"],
                            func_on_ok=run)
         win.root.grab_set()
-        self.root.wait_window(win.root)
         shot, time_window, freq, time = win.getVars()
         time_window = jt.time_window_parser(time_window)
         A = self.settings_to_analysis_object()
