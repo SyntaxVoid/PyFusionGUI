@@ -140,7 +140,6 @@ class ClusteringWindow:
         self.root.destroy()
         return
 
-
 class PromptWindow:
     def __init__(self, master, prompts, func_on_ok):
         self.root = tk.Toplevel(master=master)
@@ -171,6 +170,111 @@ class PromptWindow:
 
     def getVars(self):
         return [i.get() for i in self.tkVars]
+
+class PinpointWindow:
+    def __init__(self, master, func, defaults):
+        self.root = tk.Toplevel(master=master)
+        self.root.geometry("410x350")
+        self.root.resizable(width=False, height=False)
+        self.heading_label = tk.Label(master=self.root, text="Pinpoint Analysis", font=(font_name, 24))
+        self.heading_label.grid(row=0, column=0, columnspan=2, sticky=tk.N)
+        self.shot_label = tk.Label(master=self.root, text="Shot:", font=font)
+        self.shot_label.grid(row=1, column=0, sticky=tk.NE)
+        self.shot_var = tk.StringVar(master=self.root)
+        self.shot_entry = tk.Entry(master=self.root, font=font, textvariable=self.shot_var)
+        self.shot_entry.grid(row=1, column=1, sticky=tk.N)
+        self.shot_help_label = tk.Label(master=self.root, text="Enter shot number", font=(font_name, 9))
+        self.shot_help_label.grid(row=2, column=0, columnspan=2, sticky=tk.N)
+        self.time_window_label = tk.Label(master=self.root, text="Time Window (ms):", font=font)
+        self.time_window_label.grid(row=3, column=0, sticky=tk.NE)
+        self.time_window_var = tk.StringVar(master=self.root)
+        self.time_window_entry = tk.Entry(master=self.root, font=font, textvariable=self.time_window_var)
+        self.time_window_entry.grid(row=3, column=1, sticky=tk.N)
+        self.time_window_help_label = tk.Label(master=self.root,
+                                               text="Enter time window (plotting purposes only). e.g. 300-500",
+                                               font=(font_name, 9))
+        self.time_window_help_label.grid(row=4, column=0, columnspan=2, sticky=tk.N)
+        self.freq_range_label = tk.Label(master=self.root, text="Freq. Range (kHz):", font=font)
+        self.freq_range_label.grid(row=5, column=0, sticky=tk.NE)
+        self.freq_range_var = tk.StringVar(master=self.root)
+        self.freq_range_entry = tk.Entry(master=self.root, font=font, textvariable=self.freq_range_var)
+        self.freq_range_entry.grid(row=5, column=1, sticky=tk.N)
+        self.freq_range_help_label = tk.Label(master=self.root,
+                                              text="Enter frequency range (plotting purposes only). e.g. 50-250",
+                                              font=(font_name, 9))
+        self.freq_range_help_label.grid(row=6, column=0, columnspan=2, sticky=tk.N)
+        self.time_label = tk.Label(master=self.root, text="Time (ms):", font=font)
+        self.time_label.grid(row=7, column=0, sticky=tk.NE)
+        self.time_var = tk.StringVar(master=self.root)
+        self.time_entry = tk.Entry(master=self.root, font=font, textvariable=self.time_var)
+        self.time_entry.grid(row=7, column=1, sticky=tk.N)
+        self.time_help_label = tk.Label(master=self.root,
+                                        text="Enter the time you would like to pinpoint. e.g. 534.23",
+                                        font=(font_name, 9))
+        self.time_help_label.grid(row=8, column=0, columnspan=2, sticky=tk.N)
+        self.freq_label = tk.Label(master=self.root, text="Freq. (kHz):", font=font)
+        self.freq_label.grid(row=9, column=0, sticky=tk.NE)
+        self.freq_var = tk.StringVar(master=self.root)
+        self.freq_entry = tk.Entry(master=self.root, font=font, textvariable=self.freq_var)
+        self.freq_entry.grid(row=9, column=1, sticky=tk.N)
+        self.freq_help_label = tk.Label(master=self.root,
+                                        text="Enter the freq you would like to pinpoint. e.g. 63.42",
+                                        font=(font_name, 9))
+        self.freq_help_label.grid(row=10, column=0, columnspan=2, sticky=tk.N)
+        self.button_frame = tk.Frame(master=self.root, bd=5, relief=tk.SUNKEN)
+        self.button_frame.grid(row=11, column=1, sticky=tk.E)
+        self.ok_button = tk.Button(master=self.button_frame, text="Continue", font=font, command=self.ok)
+        self.ok_button.grid(row=0, column=0, sticky=tk.E)
+        self.cancel_button = tk.Button(master=self.button_frame, text="Cancel", font=font, command=self.root.destroy)
+        self.cancel_button.grid(row=0, column=1, sticky=tk.W)
+        self.root.bind("<<ok_clicked>>", func)
+        self.root.grab_set()
+        if defaults is not None:
+            self.shot_var.set(defaults[0])
+            self.time_window_var.set(defaults[1])
+            self.freq_range_var.set(defaults[2])
+        return
+
+    def valid_values(self):
+        valid = True
+        try:
+            int(self.shot_var.get())
+        except ValueError:
+            valid = False
+            ErrorWindow(self.root, "Shot entry is invalid.")
+        if not jt.valid_window(self.time_window_var.get()):
+            valid = False
+            ErrorWindow(self.root, "Time window entry is invalid.")
+        if not jt.valid_window(self.freq_range_var.get()):
+            valid = False
+            ErrorWindow(self.root, "Freq. range entry is invalid.")
+        try:
+            float(self.time_var.get())
+        except ValueError:
+            valid = False
+            ErrorWindow(self.root, "Time entry is invalid.")
+        try:
+            float(self.freq_var.get())
+        except ValueError:
+            valid = False
+            ErrorWindow(self.root, "Freq. entry is invalid.")
+        return valid
+
+    def get_vars(self):
+        return self.shot_var.get(), self.time_window_var.get(), \
+               self.freq_range_var.get(), float(self.time_var.get()), float(self.freq_var.get())
+
+    def ok(self):
+        def callback():
+            self.root.event_generate("<<ok_clicked>>", when="tail")
+        t = threading.Thread(target=callback)
+        t.start()
+        return
+
+    def cancel(self):
+        print("cancelllll...")
+        return
+
 
 
 class PyFusionWindow:
@@ -701,35 +805,23 @@ filter_items: EM_VMM_kappas'''
         # Verify both frequency and time are within our analysis windows.
         # Can only be done after the analysis has been performed. (Grey out button before that??)
         # but we'll ignore the latter for now.
-        def run():
-            shot, time_window, freq, time = win.getVars()
-            if not jt.valid_int_from_str(shot):
-                ErrorWindow(master=win.root, message="Shot entry is not valid.")
-            elif not jt.in_tkStringVar_array(shot, self.value_dict["shots"]):
-                ErrorWindow(master=win.root, message="Shot entry is not within the analysis range.")
-            elif not jt.valid_window(time_window):
-                ErrorWindow(master=win.root, message="Time window entry is not valid.")
-            elif not jt.window_subset(jt.time_window_parser(time_window),
-                                      jt.time_window_parser(self.value_dict["times"].get())):
-                ErrorWindow(master=win.root, message="Time window must be contained within the analysis time window.")
-            elif not jt.valid_float_from_str(freq):
-                ErrorWindow(master=win.root, message="Frequency entry is not valid.")
-            elif not jt.valid_float_from_str(time):
-                ErrorWindow(master=win.root, message="Time entry is not valid.")
-            elif not jt.t_in_window(time, time_window):
-                ErrorWindow(master=win.root, message="Time entry must be within the time window.")
-            else:
-                win.root.destroy()
+        import time
+        def callback(e):
+            if not win.valid_values():
+                return
+            shot, time_window, freq_range, time, freq = win.get_vars()
+            time_window = jt.time_window_parser(time_window)
+            freq_range = jt.time_window_parser(freq_range)
+            A = self.settings_to_analysis_object()
+            point_analysis.point_analysis(A=A, shot=shot, time_window=time_window,
+                                          t0=time, f0=freq, probe_array=self.value_dict["probe_array"].get())
+            
             return
-        win = PromptWindow(master=self.root,
-                           prompts=["Shot", "Time Window (ms)", "Frequency (khz)", "Time (ms)"],
-                           func_on_ok=run)
-        win.root.grab_set()
-        shot, time_window, freq, time = win.getVars()
-        time_window = jt.time_window_parser(time_window)
-        A = self.settings_to_analysis_object()
-        point_analysis.point_analysis(A, shot, time_window, time, freq,
-                                      self.value_dict["probe_array"].get(), clustarr="all")
+        if self.valid_values():
+            defaults = [str(jt.shot_str_parser(self.value_dict["shots"].get())[0]),
+                        self.value_dict["times"].get(),
+                        self.value_dict["freq_range"].get()]
+            win = PinpointWindow(master=self.root, func=callback, defaults=defaults)
         return
 
     def settings_to_analysis_object(self):
@@ -769,4 +861,21 @@ filter_items: EM_VMM_kappas'''
 if __name__ == '__main__':
     window1 = PyFusionWindow()
     window1.start()
+    # import time
+    # root = tk.Tk()
+    # def snoot(s):
+    #     print(s)
+    #     time.sleep(3)
+    #     print(s)
+    #     return
+    #
+    # def boop():
+    #     vars = P.get_vars()
+    #     snoot(vars)
+    #     return
+    #
+    #
+    # #t = threading.Thread(target=snoot)
+    # P = PinpointWindow(root, boop)
+    # root.mainloop()
     pass

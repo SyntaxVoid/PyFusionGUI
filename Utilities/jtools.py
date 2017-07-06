@@ -93,12 +93,21 @@ def valid_method(s):
     # Returns true if s is a valid method. Methods are hard coded below... Fix this?
     return s in return_methods()
 
+def probe_positions(probe_array):
+    if probe_array.lower() == "DIIID_toroidal_mag":
+        return "azimuthal", [20., 67., 97., 127., 132., 137., 157., 200., 247., 277., 307., 312., 322., 340.]
+    if probe_array.lower() == "DIIID_poloidal322_mag":
+        return "azimuthal", [000.0, 018.4, 036.0, 048.7, 059.2, 069.6, 078.0, 085.1, 093.4, 100.7, 107.7,
+                             114.9, 121.0, 129.2, 143.6, 165.3, 180.1, 195.0, 216.3, 230.8, 238.9, 244.9,
+                             253.5, 262.1, 271.1, 279.5, 290.6, 300.6, 311.8, 324.2, 341.9]
+    return None, None
 
 def valid_window(s):
     # Returns true if s is a valid time window in the format "t0-t1" where t1>t0
-    m = re.compile("^\d+ *- *\d+$")  # Checks format
+    s = s.strip()
+    m = re.compile("^\d+.?\d+ *- *\d+.?\d+$")  # Checks format
     if m.match(s) is not None:
-        if int(s.split("-")[0]) > int(s.split("-")[1]):  # Checks t1>t0
+        if float(s.split("-")[0]) > float(s.split("-")[1]):  # Checks t1>t0
             return 0
         return 1
     return 0
