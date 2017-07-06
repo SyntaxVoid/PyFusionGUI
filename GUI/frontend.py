@@ -679,8 +679,12 @@ filter_items: EM_VMM_kappas'''
             AN = self.settings_to_analysis_object()
             #import time
             #time.sleep(1)
-            win.AN = AN
-            win.root.event_generate("<<clustering_complete>>", when="tail")
+            if AN is None:
+                win.AN = None
+                win.root.event_generate("<<clustering_failed>>", when="tail")
+            else:
+                win.AN = AN
+                win.root.event_generate("<<clustering_complete>>", when="tail")
             return
 
         def clustering_complete(e):
