@@ -134,45 +134,25 @@ class ClusteringWindow:
         return
 
     def x_no_close(self):
+        # Uncomment this when I figure out how to cancel
+        # the analysis that is already in progress. . .
+        # popup = tk.Toplevel(master=self.root)
+        # popup.resizable(width=False, height=False)
+        # message = tk.Label(master=popup, text="Do you really wish to close?", font=font)
+        # message.grid(row=0, column=0, columnspan=2, sticky=tk.N)
+        # yes = tk.Button(master=popup, text="Yes", command=self.root.destroy, font=font)
+        # yes.grid(row=1, column=0, sticky=tk.N)
+        # no = tk.Button(master=popup, text="No", command=popup.destroy, font=font)
+        # no.grid(row=1, column=1, sticky=tk.N)
         return
 
     def x_close(self):
         self.root.destroy()
         return
 
-class PromptWindow:
-    def __init__(self, master, prompts, func_on_ok):
-        self.root = tk.Toplevel(master=master)
-        self.prompt_frame = tk.Frame(master=self.root, bd=5, relief=tk.SUNKEN)
-        self.prompt_frame.grid(row=0, column=0, sticky=tk.NW)
-        self.tkVars = []
-        self.var_strings = []
-        self.ok_pressed = False
-        for (n, prompt) in enumerate(prompts):
-            tk.Label(master=self.prompt_frame, text=prompt.capitalize()+":",
-                     font=font).grid(row=n, column=0, sticky=tk.NE)
-            var = tk.StringVar(master=self.root)
-            tk.Entry(master=self.prompt_frame, font=font, textvariable=var).grid(row=n, column=1, sticky=tk.NW)
-            self.tkVars.append(var)
-        self.button_frame = tk.Frame(master=self.root)
-        self.button_frame.grid(row=1, column=0, sticky=tk.NW)
-        self.ok_button = tk.Button(master=self.button_frame, text="Ok", font=font, command=func_on_ok)
-        self.ok_button.grid(row=0, column=0, sticky=tk.E)
-        self.cancel_button = tk.Button(master=self.button_frame, text="Cancel", font=font, command=self.cancel)
-        self.cancel_button.grid(row=0, column=1, sticky=tk.E)
-        return
-
-    def cancel(self):
-        for var in self.tkVars:
-            var.set("")
-        self.root.destroy()
-        return
-
-    def getVars(self):
-        return [i.get() for i in self.tkVars]
-
 class PinpointWindow:
-    def __init__(self, master, func, defaults):
+    def __init__(self, master, func, defaults, pf_window):
+        self.pf_window = pf_window
         self.root = tk.Toplevel(master=master)
         self.root.geometry("410x350")
         self.root.resizable(width=False, height=False)
@@ -266,16 +246,19 @@ class PinpointWindow:
 
     def ok(self):
         def callback():
-            self.root.event_generate("<<ok_clicked>>", when="tail")
+            if not self.valid_values():
+                return
+            else:
+                shot, time_window, freq_range, time, freq = self.get_vars()
+                time_window = jt.time_window_parser(time_window)
+                freq_range = jt.time_window_parser(freq_range)
+                A=self.pf_window.settings_to_analysis_object()
+                point_analysis.point_analysis(A=A, shot=shot, time_window=time_window,
+                                              t0=time, f0=freq,
+                                              probe_array=self.pf_window.value_dict["probe_array"].get())
         t = threading.Thread(target=callback)
         t.start()
         return
-
-    def cancel(self):
-        print("cancelllll...")
-        return
-
-
 
 class PyFusionWindow:
     def __init__(self):
@@ -785,19 +768,19 @@ filter_items: EM_VMM_kappas'''
 
         def callback():
             AN = self.settings_to_analysis_object()
+            win.AN = AN
             if AN is None:
-                win.AN = None
                 win.root.event_generate("<<clustering_failed>>", when="tail")
             else:
-                win.AN = AN
                 win.root.event_generate("<<clustering_complete>>", when="tail")
+            # import time
+            # time.sleep(5)
             return
 
         if self.valid_values():
             win = ClusteringWindow(master=self.root)
             t = threading.Thread(target=callback)
             t.start()
-
         return None
 
     def run_point_analysis(self):
@@ -805,24 +788,27 @@ filter_items: EM_VMM_kappas'''
         # Verify both frequency and time are within our analysis windows.
         # Can only be done after the analysis has been performed. (Grey out button before that??)
         # but we'll ignore the latter for now.
-        import time
         def callback(e):
+            win2 = tk.Toplevel(master=win.root)
+            message = tk.Label(master=win2, text="Now processing.\nPlease wait.", font=font)
+            message.grid(row=0, column=0, sticky=tk.N)
             if not win.valid_values():
                 return
+            import time
+            time.sleep(2)
             shot, time_window, freq_range, time, freq = win.get_vars()
             time_window = jt.time_window_parser(time_window)
             freq_range = jt.time_window_parser(freq_range)
-            time.sleep(3)
             #A = self.settings_to_analysis_object()
             #point_analysis.point_analysis(A=A, shot=shot, time_window=time_window,
             #                              t0=time, f0=freq, probe_array=self.value_dict["probe_array"].get())
-
             return
         if self.valid_values():
             defaults = [str(jt.shot_str_parser(self.value_dict["shots"].get())[0]),
                         self.value_dict["times"].get(),
                         self.value_dict["freq_range"].get()]
-            win = PinpointWindow(master=self.root, func=callback, defaults=defaults)
+            win = PinpointWindow(master=self.root, func=callback, defaults=defaults, pf_window=self)
+
         return
 
     def settings_to_analysis_object(self):
