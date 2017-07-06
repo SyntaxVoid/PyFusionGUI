@@ -67,12 +67,13 @@ def plot_clusters(A, clust_arr, ax=None, doplot=True, dosave=None):
     else:
         ax.specgram(A.results[0][2][0, :], NFFT=1024, Fs=1. / np.mean(np.diff(A.results[0][3])),
                     noverlap=128, xextent=[A.results[0][3][0], A.results[0][3][-1]])
-        for cl in clust_arr:
-            mask = (A.z.cluster_assignments == cl)
-            ax.plot(A.z.feature_obj.misc_data_dict["time"][mask],
-                    A.z.feature_obj.misc_data_dict["freq"][mask],
-                    color=plot_colors[cl], marker="o", linestyle="None",
-                    markersize=A.markersize)
+        if clust_arr is not None:
+            for cl in clust_arr:
+                mask = (A.z.cluster_assignments == cl)
+                ax.plot(A.z.feature_obj.misc_data_dict["time"][mask],
+                        A.z.feature_obj.misc_data_dict["freq"][mask],
+                        color=plot_colors[cl], marker="o", linestyle="None",
+                        markersize=A.markersize)
     return
 
 
