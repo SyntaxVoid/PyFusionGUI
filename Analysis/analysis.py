@@ -141,8 +141,9 @@ class Analysis:
         else:
             results = map(func, tmp_data_iter)
         start = True
-        instance_array = 0
-        misc_data_dict = 0
+        instance_array = {}
+        misc_data_dict = {}
+        print(results)
         for n, res in enumerate(results):
             if res[0] is not None:
                 if start:
