@@ -647,7 +647,7 @@ freq_range: 50-250
 seed: 743
 n_peaks: 20
 cutoff_by: sigma_eq
-cutoff_value: 20
+cutoff_value: 25
 filter_items: EM_VMM_kappas'''
         self.load_values_from_str(defaults)
         with open(os.path.join(GUI_DIR,".guiconfig"), "w") as new_default:
