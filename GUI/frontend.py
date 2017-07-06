@@ -128,29 +128,6 @@ class ClusteringWindow:
         self.root.destroy()
         return
 
-class ProcessingWindow:
-    def __init__(self, master, message):
-        self.root = tk.Toplevel(master=master)
-        self.root.resizable(height=False, width=False)
-        if type(message) is str:
-            self.message = tk.StringVar(master=self.root, value=message)
-        else:
-            self.message = message
-        self.root.title("Processing.")
-        self.label = tk.Label(master=self.root, textvariable=self.message, font=(font_name, 25))
-        self.label.grid(row=0, column=0, sticky=tk.N)
-        self.root.grab_set()
-        return
-
-    def processing_complete(self, message="Processing complete!"):
-        self.message.set(message)
-        but = tk.Button(master=self.root, text="Close.", font=font, command=self.kill)
-        but.grid(row=1, column=0, sticky=tk.N)
-        return
-
-    def kill(self):
-        self.root.destroy()
-
 
 class PromptWindow:
     def __init__(self, master, prompts, func_on_ok):
@@ -189,9 +166,14 @@ class PyFusionWindow:
         self.root = tk.Tk()
         self.root.resizable(width=False, height=False)
         self.root.title("PyFusion GUI v. 0")
-        self.root.geometry("1050x500")
+        self.root.geometry("1070x500")
         self.value_dict = OrderedDict()
-        # Shot Frame (Shots, Times, Probe Arrays)
+
+        # ======================================
+        # ======================================
+        # ==         SHOT INFORMATION         ==
+        # ======================================
+        # ======================================
         self.shot_frame = tk.Frame(master=self.root, bd=5, relief=tk.SUNKEN)
         self.shot_frame.grid(padx=15, pady=15, row=0, column=0, sticky=tk.N + tk.W)
         self.shot_info = tk.Label(master=self.shot_frame,
@@ -242,7 +224,11 @@ class PyFusionWindow:
                                textvariable=self.probe_var)
         self.probes.grid(row=5, column=1, padx=5)
 
-        # Datamining Settings (dms)
+        # ======================================
+        # ======================================
+        # ==       DATAMINING SETTINGS        ==
+        # ======================================
+        # ======================================
         self.dms_frame = tk.Frame(master=self.root, bd=5, relief=tk.SUNKEN)
         self.dms_frame.grid(padx=15, pady=15, row=0, column=1, sticky=tk.N + tk.E)
         self.dms_info = tk.Label(master=self.dms_frame,
@@ -412,43 +398,85 @@ class PyFusionWindow:
                                           textvariable=self.filter_item_var)
         self.filter_item_entry.grid(row=11, column=4, padx=5, sticky=tk.W)
 
-        # Buttons
-        self.settings_buttons_frame = tk.Frame(master=self.root, bd=5, relief=tk.SUNKEN)
-        self.settings_buttons_frame.grid(row=0, column=2, sticky=tk.N, padx=15, pady=15)
+        # ======================================
+        # ======================================
+        # ==        SETTINGS BUTTONS          ==
+        # ======================================
+        # ======================================
+        self.button_frame = tk.Frame(master=self.root)
+        self.button_frame.grid(row=0, column=2, sticky=tk.N)
+        self.settings_buttons_frame = tk.Frame(master=self.button_frame, bd=5, relief=tk.SUNKEN)
+        self.settings_buttons_frame.grid(row=0, column=0, sticky=tk.N, padx=15, pady=15)
 
+        self.settings_button_heading = tk.Label(master=self.settings_buttons_frame,
+                                                text="Settings Options",
+                                                font=font)
+        self.settings_button_heading.grid(row=0, column=0, sticky=tk.N)
         self.save_settings_button = tk.Button(master=self.settings_buttons_frame,
                                               text="Save Settings",
                                               font=(font_name, 13), width=14,
                                               command=self.save_settings)
-        self.save_settings_button.grid(row=0, column=0, sticky=tk.N)
+        self.save_settings_button.grid(row=1, column=0, sticky=tk.N)
         self.load_settings_button = tk.Button(master=self.settings_buttons_frame,
                                               text="Load From File",
                                               font=(font_name, 13), width=14,
                                               command=self.load_settings)
-        self.load_settings_button.grid(row=1, column=0, sticky=tk.N)
+        self.load_settings_button.grid(row=2, column=0, sticky=tk.N)
         self.restore_defaults_button = tk.Button(master=self.settings_buttons_frame,
                                                  text="Restore Defaults",
                                                  font=(font_name, 13), width=14,
                                                  command=self.restore_defaults)
-        self.restore_defaults_button.grid(row=2, column=0, sticky=tk.N)
+        self.restore_defaults_button.grid(row=3, column=0, sticky=tk.N)
 
-        self.run_clustering_button = tk.Button(master=self.settings_buttons_frame,
-                                               text="Cluster",
+        # ======================================
+        # ======================================
+        # ==        CLUSTERING BUTTONS        ==
+        # ======================================
+        # ======================================
+        self.analysis_frame = tk.Frame(master=self.button_frame, bd=5, relief=tk.SUNKEN)
+        self.analysis_frame.grid(row=1, column=0, sticky=tk.N, padx=15, pady=15)
+        self.analysis_heading = tk.Label(master=self.analysis_frame,
+                                         text="Analysis Options",
+                                         font=font)
+        self.analysis_heading.grid(row=0, column=0, sticky=tk.N)
+        self.run_clustering_button = tk.Button(master=self.analysis_frame,
+                                               text="Cluster from\nCurrent Settings",
                                                font=(font_name, 13), width=14,
                                                command=self.run_clustering)
-        self.run_clustering_button.grid(row=3, column=0, sticky=tk.N)
-
-        self.run_point_analysis_button = tk.Button(master=self.settings_buttons_frame,
+        self.run_clustering_button.grid(row=1, column=0, sticky=tk.N)
+        self.restore_clustering_button = tk.Button(master=self.analysis_frame,
+                                                   text="Restore from\nPrevious Analysis",
+                                                   font=(font_name, 13), width=14,
+                                                   command=self.restore_clustering)
+        self.restore_clustering_button.grid(row=2, column=0, sticky=tk.N)
+        self.run_point_analysis_button = tk.Button(master=self.analysis_frame,
                                                    text="Point Analysis",
                                                    font=(font_name, 13), width=14,
                                                    command=self.run_point_analysis)
-        self.run_point_analysis_button.grid(row=4, column=0, sticky=tk.N)
-        self.close_button = tk.Button(master=self.settings_buttons_frame,
-                                      text="Close",
+        self.run_point_analysis_button.grid(row=3, column=0, sticky=tk.N)
+
+        # ======================================
+        # ======================================
+        # ==          MISC. WIDGETS           ==
+        # ======================================
+        # ======================================
+        self.misc_frame = tk.Frame(master=self.button_frame, bd=5, relief=tk.SUNKEN)
+        self.misc_frame.grid(row=2, column=0, sticky=tk.N)
+        self.misc_heading = tk.Label(master=self.misc_frame,
+                                     text="Other Options",
+                                     font=font)
+        self.misc_heading.grid(row=0, column=0, sticky=tk.N)
+        self.close_button = tk.Button(master=self.misc_frame,
+                                      text="Close Window",
                                       font=(font_name, 13), width=14,
                                       command=self.root.destroy)
-        self.close_button.grid(row=5, column=0, sticky=tk.N)
-        # Save everything to a dictionary of tkinter StringVar's.
+        self.close_button.grid(row=1, column=0, sticky=tk.N)
+
+        # ======================================
+        # ======================================
+        # ==      SAVING INITIAL VALUES       ==
+        # ======================================
+        # ======================================
         self.value_dict["shots"] = self.shot_var
         self.value_dict["times"] = self.time_var
         self.value_dict["probe_array"] = self.probe_var
@@ -473,6 +501,18 @@ class PyFusionWindow:
 
     def random_seed(self):
         self.seed_var.set(str(random.choice(range(200, 1000))))
+        return None
+
+    def restore_clustering(self):
+        fname = askopenfilename(initialdir=GUI_DIR,
+                                filetypes=(("Analysis File Object", "*.ANobj"), ("All Files", "*.*")))
+        if fname == "":
+            return None
+        try:
+            AN = analysis.Analysis.restore(fname)
+            print(AN)
+        except:
+            ErrorWindow(self.root, "Incorrect file format.")
         return None
 
     def update_values(self):
@@ -536,8 +576,6 @@ class PyFusionWindow:
 
     def load_values_from_str(self, s):
         lines = s.split("\n")
-        print(s)
-        print(lines)
         for line in lines:
             val = line.split(":")[1].strip()
             if line.startswith("shots"):
@@ -598,19 +636,19 @@ class PyFusionWindow:
 
     def defaults_missing(self):
         defaults = '''shots: 159243
-        times: 300-1400
-        probe_array: DIIID_toroidal_mag
-        n_cpus: 1
-        n_clusters: 16
-        n_iterations: 20
-        start: k_means
-        method: EM_VMM
-        freq_range: 50-250
-        seed: 743
-        n_peaks: 20
-        cutoff_by: sigma_eq
-        cutoff_value: 20
-        filter_items: EM_VMM_kappas'''
+times: 300-1400
+probe_array: DIIID_toroidal_mag
+n_cpus: 1
+n_clusters: 16
+n_iterations: 20
+start: k_means
+method: EM_VMM
+freq_range: 50-250
+seed: 743
+n_peaks: 20
+cutoff_by: sigma_eq
+cutoff_value: 20
+filter_items: EM_VMM_kappas'''
         self.load_values_from_str(defaults)
         with open(os.path.join(GUI_DIR,".guiconfig"), "w") as new_default:
             new_default.write(defaults)
@@ -682,9 +720,6 @@ class PyFusionWindow:
 
     def settings_to_analysis_object(self):
         # Takes the current settings and creates an Analysis object from Analysis/analysis.py
-        # A1 = Analysis(shots=shots, time_windows=time_windows, probes="DIIID_toroidal_mag", markersize=15,
-        #               datamining_settings={'n_clusters': 8, 'n_iterations': 20, 'start': 'k_means', 'verbose': 0,
-        #                                    'method': 'EM_VMM', "seeds": None})
         if self.valid_values():
             shots = jt.shot_str_parser(self.value_dict["shots"].get())
             time_windows = jt.time_window_parser(self.value_dict["times"].get())
@@ -695,11 +730,21 @@ class PyFusionWindow:
             n_iterations = int(self.value_dict["n_iterations"].get())
             start = self.value_dict["start"].get()
             method = self.value_dict["method"].get()
+            freq_range = jt.time_window_parser(self.value_dict["freq_range"].get())
+            lower_freq = freq_range[0]
+            upper_freq = freq_range[1]
             seeds = int(self.value_dict["seed"].get())
-            datamining_settings = {'n_clusters': n_clusters, 'n_iterations': n_iterations, 'start': start, 'verbose': 0,
-                                   'method': method, "seeds": seeds}
+            n_peaks = int(self.value_dict["n_peaks"].get())
+            cutoff_by = self.value_dict["cutoff_by"].get()
+            cutoff_value = int(self.value_dict["cutoff_value"].get())
+            filter_items = self.value_dict["filter_items"].get()
+            datamining_settings = {'n_clusters': n_clusters, 'n_iterations': n_iterations,
+                                   'start': start, 'verbose': 0, 'method': method, "seeds": seeds}
+            fft_settings = {"n_pts": n_peaks, "lower_freq": lower_freq, "upper_freq": upper_freq,
+                            "cutoff_by": cutoff_by, "ave_kappa_cutoff": cutoff_value, "filter_item": filter_items}
             DM = analysis.DataMining(shots=shots, time_windows=time_windows, probes=probes,
-                                     datamining_settings=datamining_settings, n_cpus=n_cpus)
+                                     datamining_settings=datamining_settings, fft_settings=fft_settings,
+                                     n_cpus=n_cpus)
             AN = analysis.Analysis(DM=DM)
             return AN
         return None
