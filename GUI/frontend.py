@@ -895,7 +895,7 @@ filter_items: EM_VMM_kappas'''
             else:
                 return
         else:
-            object_settings = self._restore_settings_from_loaded_object()
+            object_settings = self.return_restored_object_values()
             defaults = [object_settings["shots"], object_settings["times"], object_settings["freq_range"]]
         PinpointWindow(master=self.root, defaults=defaults, pf_window=self, previous_analysis=self.AN)
         return
