@@ -18,7 +18,7 @@ from pyfusion import DEFAULT_CONFIG_FILE
 
 # My Additions
 from Utilities import jtools as jt
-from Analysis import analysis, point_analysis
+from Analysis import analysis
 
 # tkinter
 try:
@@ -129,11 +129,12 @@ class ClusteringWindow:
         return
 
     def plot_clusters(self):
-        plot1, plot2 = self.AN.return_plots()
+        self.AN.return_plots()
         plt.show()
         return
 
-    def x_no_close(self):
+    @staticmethod
+    def x_no_close():
         # Uncomment this when I figure out how to cancel the analysis that is already in progress.
         #  popup = tk.Toplevel(master=self.root)
         # popup.resizable(width=False, height=False)
@@ -207,8 +208,15 @@ class PinpointWindow:
         self.cancel_button = tk.Button(master=self.button_frame, text="Cancel", font=font, command=self.root.destroy)
         self.cancel_button.grid(row=0, column=1, sticky=tk.W)
         self.root.grab_set()
-        self.analysis_message = tk.StringVar(master=self.root)
         self.root.bind("<<analysis_complete>>", self.analysis_complete)
+        self.root.bind("<<analysis_failed>>", self.analysis_failed)
+
+        self.popup = tk.Toplevel(master=self.root)
+        self.popup.resizable(width=False, height=False)
+        self.analysis_message = tk.StringVar(master=self.root, value="Now performing pinpoint analysis.\nPlease wait.")
+        self.message = tk.Label(master=self.popup, textvariable=self.analysis_message, font=(font_name, 24))
+        self.message.grid(row=0, column=0, sticky=tk.N)
+        self.popup.withdraw()
 
         if defaults is not None:
             self.shot_var.set(defaults[0])
@@ -223,13 +231,27 @@ class PinpointWindow:
         fig, \
         ax1,  \
         ax2,   \
-        ax3 = self.A.return_pinpoint_plots(shot=shot, t0=time, f0=freq, time_window=time_window,
+        ax3 = self.AN.return_pinpoint_plots(shot=shot, t0=time, f0=freq, time_window=time_window,
                                            frequency_window=freq_range, clusters="all")
             # point_analysis.point_analysis(A=self.A, shot=shot, time_window=time_window,
             #                                 t0=time, f0=freq,
             #                                 probe_array=self.pf_window.value_dict["probe_array"].get())
+        self.root.title("Analysis complete!")
         self.analysis_message.set("Analysis complete!")
+        self.root.wm_protocol("WM_DELETE_WINDOW", self.x_close)
+        ok = tk.Button(master=self.popup, text="OK", command = self.root.destroy, font=(font_name, 24))
+        ok.grid(row=1, column=0, sticky=tk.N)
         plt.show()
+        return
+
+
+    def analysis_failed(self, e):
+        self.root.title("Analysis Failed!")
+        self.root.wm_protocol("WM_DELETE_WINDOW", self.x_close)
+        self.message.set("Clustering Failed!")
+        self.ok_button = tk.Button(master=self.button_frame, text="OK",
+                                   font=(font_name, 18), command = self.root.destroy)
+        self.ok_button.grid(row=0, column=0, sticky=tk.N)
         return
 
     def valid_values(self):
@@ -266,21 +288,30 @@ class PinpointWindow:
             if not self.valid_values():
                 return
             else:
-                shot, time_window, freq_range, time, freq = self.get_vars()
-                time_window = jt.time_window_parser(time_window)
-                freq_range = jt.time_window_parser(freq_range)
-                # TODO: What if A is None
-                self.A = self.pf_window.settings_to_analysis_object()
+                # shot, time_window, freq_range, time, freq = self.get_vars()
+                self.popup.deiconify()
+                self.popup.wm_protocol("WM_DELETE_WINDOW", self.x_no_close)
+                self.AN = self.pf_window.settings_to_analysis_object()
+                if self.AN is None:
+                    self.root.event_generate("<<analysis_failed>>", when="tail")
                 self.root.event_generate("<<analysis_complete>>", when="tail")
-        popup = tk.Toplevel(master=self.root)
-        popup.resizable(width=False, height=False)
-        self.analysis_message.set("Now performing pinpoint analysis.\nPlease wait.")
-        message = tk.Label(master=popup, textvariable=self.analysis_message, font=(font_name, 24))
-        message.grid(row=0, column=0, sticky=tk.N)
-        popup.grab_set()
+        # popup = tk.Toplevel(master=self.root)
+        # popup.resizable(width=False, height=False)
+        # self.analysis_message.set("Now performing pinpoint analysis.\nPlease wait.")
+        # message = tk.Label(master=popup, textvariable=self.analysis_message, font=(font_name, 24))
+        # message.grid(row=0, column=0, sticky=tk.N)
+        # popup.grab_set()
         t = threading.Thread(target=callback)
         t.start()
         return
+
+    def x_no_close(self):
+        return
+
+    def x_close(self):
+        self.root.destroy()
+        return
+
 
 class PyFusionWindow:
     def __init__(self):

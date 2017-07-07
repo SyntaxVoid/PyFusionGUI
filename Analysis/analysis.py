@@ -400,9 +400,7 @@ class Analysis:
         ax2.grid()
 
         self._plot_clusters(temp_signal, time_base, clusters, ax3)
-        print("DEBUG::: TIME WINDOW SHOULD BE: ", time_window)
-        print("DEBUG::: FREQ WINDOW SHOULD BE: ", frequency_window)
-        ax3.plot([t0, t0], [time_window[0], time_window[-1]])
+        ax3.plot([t0, t0], [frequency_window[0], frequency_window[-1]], "k")
         ax3.plot(time_window, [f0, f0], "k")
         ax3.set_xlim(time_window)
         ax3.set_ylim(frequency_window)
