@@ -129,7 +129,7 @@ class ClusteringWindow:
         return
 
     def plot_clusters(self):
-        self.AN.return_plots()
+        self.AN.return_specgrams()
         plt.show()
         return
 
@@ -290,6 +290,7 @@ class PinpointWindow:
             else:
                 # shot, time_window, freq_range, time, freq = self.get_vars()
                 self.popup.deiconify()
+                self.popup.grab_set()
                 self.popup.wm_protocol("WM_DELETE_WINDOW", self.x_no_close)
                 self.AN = self.pf_window.settings_to_analysis_object()
                 if self.AN is None:
