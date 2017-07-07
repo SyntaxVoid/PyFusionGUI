@@ -134,9 +134,8 @@ class ClusteringWindow:
         return
 
     def x_no_close(self):
-        # Uncomment this when I figure out how to cancel
-        # the analysis that is already in progress. . .
-        # popup = tk.Toplevel(master=self.root)
+        # Uncomment this when I figure out how to cancel the analysis that is already in progress.
+        #  popup = tk.Toplevel(master=self.root)
         # popup.resizable(width=False, height=False)
         # message = tk.Label(master=popup, text="Do you really wish to close?", font=font)
         # message.grid(row=0, column=0, columnspan=2, sticky=tk.N)
@@ -224,9 +223,10 @@ class PinpointWindow:
         fig, \
         ax1,  \
         ax2,   \
-        ax3 = point_analysis.point_analysis(A=self.A, shot=shot, time_window=time_window,
-                                            t0=time, f0=freq,
-                                            probe_array=self.pf_window.value_dict["probe_array"].get())
+        ax3 = self.A.return_pinpoint_plots(shot, time, freq, clusters="all")
+            # point_analysis.point_analysis(A=self.A, shot=shot, time_window=time_window,
+            #                                 t0=time, f0=freq,
+            #                                 probe_array=self.pf_window.value_dict["probe_array"].get())
         self.analysis_message.set("Analysis complete!")
         plt.show()
         return
