@@ -641,7 +641,7 @@ class PyFusionWindow:
                                                "Please perform clustering or\nrestore an anlysis object.")
         self.using_analysis_label = tk.Label(master=self.big_frame,
                                              textvariable=self.using_analysis_var,
-                                             font=(font_name, 14), fg="red")
+                                             font=(font_name, 14, "bold"), fg="red")
         self.using_analysis_label.grid(row=1, column=0, sticky=tk.N)
         # ======================================
         # ======================================
@@ -684,7 +684,7 @@ class PyFusionWindow:
         try:
             self.AN = analysis.Analysis.restore(fname)
             self.using_analysis_var.set("Using analysis object from\n{}".format(jt.break_path(fname, 24)))
-            self.using_analysis_label.config(fg="green")
+            self.using_analysis_label.config(fg="dark green")
         except:
             ErrorWindow(self.root, "Incorrect file format.")
         return None
