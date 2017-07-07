@@ -368,7 +368,7 @@ class Analysis:
         if positions is None:
             positions = list(range(len(phases)))
             positions_in_degrees = False
-        shot_index = self.DM.shot_info["shots"].index(str(shot))
+        shot_index = self.DM.shot_info["shots"].index(int(shot))
         time_base = self.results[shot_index][3]
         signal = self.results[shot_index][2]
         temp_signal = signal[0, :]
