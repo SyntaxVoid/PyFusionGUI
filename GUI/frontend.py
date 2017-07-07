@@ -696,7 +696,7 @@ class PyFusionWindow:
 
     def _restore_settings_from_loaded_object(self):
         # Loads the settings used to analyze an Analysis object that has been loaded.
-        self.value_dict["shots"].set(str(self.AN.DM.shot_info["shots"]))
+        self.value_dict["shots"].set(jt.reverse_shot_str_parser(self.AN.DM.shot_info["shots"]))
         self.value_dict["times"].set(jt.ANobj_times_to_time_window(self.AN.DM.shot_info["time_windows"]))
         self.value_dict["probe_array"].set(self.AN.DM.shot_info["probes"])
         self.value_dict["n_cpus"].set(str(self.AN.DM.n_cpus))

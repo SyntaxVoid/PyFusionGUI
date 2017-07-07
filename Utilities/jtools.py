@@ -212,6 +212,12 @@ def shot_str_parser(s):
             raise ValueError("Invalid string.")
     return out
 
+def reverse_shot_str_parser(shot_list):
+    # Takes a list of shots and returns them in a way that PyFusionWindow would accept them
+    # TODO: Make it so that it returns the most convenient shot list
+    return str(shot_list)[1:-1]
+
+
 
 def squareish_grid(n, swapxy=False):
     # Returns the grid closest to a square that will fit n elements
