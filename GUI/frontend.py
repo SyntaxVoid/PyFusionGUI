@@ -694,6 +694,23 @@ class PyFusionWindow:
         #    ErrorWindow(self.root, "Incorrect file format.")
         return None
 
+    def return_restored_object_values(self):
+        return {"shots": jt.reverse_shot_str_parser(self.AN.DM.shot_info["shots"]),
+                "times": jt.ANobj_times_to_time_window(self.AN.DM.shot_info["time_windows"]),
+                "probe_array": self.AN.DM.shot_info["probes"],
+                "n_cpus": str(self.AN.DM.n_cpus),
+                "n_clusters": str(self.AN.DM.datamining_settings["n_clusters"]),
+                "n_iterations": str(self.AN.DM.datamining_settings["n_iterations"]),
+                "start": self.AN.DM.datamining_settings["start"],
+                "method": self.AN.DM.datamining_settings["method"],
+                "freq_range": str(self.AN.DM.fft_settings["lower_freq"])+"-"+
+                                          str(self.AN.DM.fft_settings["upper_freq"]),
+                "seed": str(self.AN.DM.datamining_settings["seeds"]),
+                "n_peaks": str(self.AN.DM.fft_settings["n_pts"]),
+                "cutoff_by": self.AN.DM.fft_settings["cutoff_by"],
+                "cutoff_value": str(self.AN.DM.fft_settings["ave_kappa_cutoff"]),
+                "filter_items": self.AN.DM.fft_settings["filter_item"]}
+
     def _restore_settings_from_loaded_object(self):
         # Loads the settings used to analyze an Analysis object that has been loaded.
         self.value_dict["shots"].set(jt.reverse_shot_str_parser(self.AN.DM.shot_info["shots"]))
@@ -878,7 +895,8 @@ filter_items: EM_VMM_kappas'''
             else:
                 return
         else:
-            defaults=None
+            object_settings = self._restore_settings_from_loaded_object()
+            defaults = [object_settings["shots"], object_settings["times"], object_settings["freq_range"]]
         PinpointWindow(master=self.root, defaults=defaults, pf_window=self, previous_analysis=self.AN)
         return
 
