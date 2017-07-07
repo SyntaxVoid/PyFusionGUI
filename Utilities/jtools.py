@@ -3,7 +3,7 @@
 import re
 import numpy as np
 from pyfusion import DEFAULT_CONFIG_FILE
-
+import os.path
 class OutOfOrderException(Exception):
     pass
 
@@ -26,6 +26,20 @@ def midpoint(x1, x2):
 def distance(x1, x2):
     # Returns the absolute distance between x1 and x2
     return abs(x2-x1)
+
+
+def break_path(p, line_length):
+    split_path = os.path.normpath(p).split(os.sep)
+    out = ""
+    current_line_length=0
+    for dir in split_path:
+        if current_line_length + len(dir) > line_length:
+            out+="\n"
+            current_line_length=0
+        out += dir+os.sep
+        current_line_length += len(dir)
+    return out
+
 
 def text_location(xrange, yrange):
     # Returns an appropriate text location for a plot with a given x range and y range.

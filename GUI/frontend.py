@@ -66,6 +66,7 @@ class ErrorWindow:
 
 class ClusteringWindow:
     def __init__(self, master):
+        self.AN = None
         self.root = tk.Toplevel(master=master)
         self.message_frame = tk.Frame(master=self.root)
         self.message_frame.grid(row=0, column=0, sticky=tk.N)
@@ -248,7 +249,7 @@ class PinpointWindow:
     def analysis_failed(self, e):
         self.root.title("Analysis Failed!")
         self.root.wm_protocol("WM_DELETE_WINDOW", self.x_close)
-        self.message.set("Clustering Failed!")
+        self.analysis_message.set("Clustering Failed!")
         self.ok_button = tk.Button(master=self.button_frame, text="OK",
                                    font=(font_name, 18), command = self.root.destroy)
         self.ok_button.grid(row=0, column=0, sticky=tk.N)
@@ -316,6 +317,7 @@ class PinpointWindow:
 
 class PyFusionWindow:
     def __init__(self):
+        self.AN = None
         self.root = tk.Tk()
         self.root.resizable(width=False, height=False)
         self.root.title("PyFusion GUI v. 0")
@@ -327,7 +329,9 @@ class PyFusionWindow:
         # ==         SHOT INFORMATION         ==
         # ======================================
         # ======================================
-        self.shot_frame = tk.Frame(master=self.root, bd=5, relief=tk.SUNKEN)
+        self.big_frame = tk.Frame(master=self.root)
+        self.big_frame.grid(row=0, column=0, sticky=tk.N)
+        self.shot_frame = tk.Frame(master=self.big_frame, bd=5, relief=tk.SUNKEN)
         self.shot_frame.grid(padx=15, pady=15, row=0, column=0, sticky=tk.N + tk.W)
         self.shot_info = tk.Label(master=self.shot_frame,
                                   text="Shot Info",
@@ -592,16 +596,20 @@ class PyFusionWindow:
                                          text="Analysis Options",
                                          font=font)
         self.analysis_heading.grid(row=0, column=0, sticky=tk.N)
-        self.run_clustering_button = tk.Button(master=self.analysis_frame,
-                                               text="Cluster from\nCurrent Settings",
-                                               font=(font_name, 13), width=14,
-                                               command=self.run_clustering)
-        self.run_clustering_button.grid(row=1, column=0, sticky=tk.N)
+
         self.restore_clustering_button = tk.Button(master=self.analysis_frame,
                                                    text="Restore from\nPrevious Analysis",
                                                    font=(font_name, 13), width=14,
                                                    command=self.restore_clustering)
-        self.restore_clustering_button.grid(row=2, column=0, sticky=tk.N)
+        self.restore_clustering_button.grid(row=1, column=0, sticky=tk.N)
+
+        self.run_clustering_button = tk.Button(master=self.analysis_frame,
+                                               text="Cluster from\nCurrent Settings",
+                                               font=(font_name, 13), width=14,
+                                               command=self.run_clustering)
+        self.run_clustering_button.grid(row=2, column=0, sticky=tk.N)
+
+
         self.run_point_analysis_button = tk.Button(master=self.analysis_frame,
                                                    text="Pinpoint Analysis",
                                                    font=(font_name, 13), width=14,
@@ -629,6 +637,12 @@ class PyFusionWindow:
                                       command=self.root.destroy)
         self.close_button.grid(row=1, column=0, sticky=tk.N)
 
+        self.using_analysis_var = tk.StringVar(master=self.root, value="No analysis object loaded yet.\n"\
+                                               "Please perform clustering or\nrestore an anlysis object.")
+        self.using_analysis_label = tk.Label(master=self.big_frame,
+                                             textvariable=self.using_analysis_var,
+                                             font=(font_name, 14), fg="red")
+        self.using_analysis_label.grid(row=1, column=0, sticky=tk.N)
         # ======================================
         # ======================================
         # ==      SAVING INITIAL VALUES       ==
@@ -663,11 +677,14 @@ class PyFusionWindow:
     def restore_clustering(self):
         fname = askopenfilename(initialdir=GUI_DIR,
                                 filetypes=(("Analysis File Object", "*.ANobj"), ("All Files", "*.*")))
+
+        print("DEBBUG::: ", fname)
         if fname == "":
             return None
         try:
-            AN = analysis.Analysis.restore(fname)
-            print(AN)
+            self.AN = analysis.Analysis.restore(fname)
+            self.using_analysis_var.set("Using analysis object from\n{}".format(jt.break_path(fname, 24)))
+            self.using_analysis_label.config(fg="green")
         except:
             ErrorWindow(self.root, "Incorrect file format.")
         return None
