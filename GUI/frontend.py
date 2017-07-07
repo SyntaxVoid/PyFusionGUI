@@ -704,8 +704,8 @@ class PyFusionWindow:
         self.value_dict["n_iterations"].set(str(self.AN.DM.datamining_settings["n_iterations"]))
         self.value_dict["start"].set(self.AN.DM.datamining_settings["start"])
         self.value_dict["method"].set(self.AN.DM.datamining_settings["method"])
-        self.value_dict["freq_range"].set(str(self.AN.DM.datamining_settings["lower_freq"])+"-"+
-                                          str(self.AN.DM.datamining_settings["upper_freq"]))
+        self.value_dict["freq_range"].set(str(self.AN.DM.fft_settings["lower_freq"])+"-"+
+                                          str(self.AN.DM.fft_settings["upper_freq"]))
         self.value_dict["seed"].set(str(self.AN.DM.datamining_settings["seeds"]))
         self.value_dict["n_peaks"].set(str(self.AN.DM.fft_settings["n_pts"]))
         self.value_dict["cutoff_by"].set(self.AN.DM.fft_settings["cutoff_by"])
