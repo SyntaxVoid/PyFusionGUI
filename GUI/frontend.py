@@ -685,13 +685,13 @@ class PyFusionWindow:
                                 filetypes=(("Analysis File Object", "*.ANobj"), ("All Files", "*.*")))
         if fname == "":
             return None
-        try:
-            self.AN = analysis.Analysis.restore(fname)
-            self._restore_settings_from_loaded_object()
-            self.using_analysis_var.set("Using analysis object from\n{}".format(jt.break_path(fname, 24)))
-            self.using_analysis_label.config(fg="dark green")
-        except:
-            ErrorWindow(self.root, "Incorrect file format.")
+        #try:
+        self.AN = analysis.Analysis.restore(fname)
+        self._restore_settings_from_loaded_object()
+        self.using_analysis_var.set("Using analysis object from\n{}".format(jt.break_path(fname, 24)))
+        self.using_analysis_label.config(fg="dark green")
+        #except:
+        #    ErrorWindow(self.root, "Incorrect file format.")
         return None
 
     def _restore_settings_from_loaded_object(self):
