@@ -752,34 +752,20 @@ class PyFusionWindow:
         lines = s.split("\n")
         for line in lines:
             val = line.split(":")[1].strip()
-            if line.startswith("shots"):
-                self.shot_var.set(val)
-            elif line.startswith("times"):
-                self.time_var.set(val)
-            elif line.startswith("probe_array"):
-                self.probe_var.set(val)
-            elif line.startswith("n_cpus"):
-                self.ncpus_var.set(val)
-            elif line.startswith("n_clusters"):
-                self.nclusters_var.set(val)
-            elif line.startswith("n_iterations"):
-                self.niter_var.set(val)
-            elif line.startswith("start"):
-                self.start_method_var.set(val)
-            elif line.startswith("method"):
-                self.method_var.set(val)
-            elif line.startswith("freq_range"):
-                self.freq_range_var.set(val)
-            elif line.startswith("seed"):
-                self.seed_var.set(val)
-            elif line.startswith("n_peaks"):
-                self.npeaks_var.set(val)
-            elif line.startswith("cutoff_by"):
-                self.cutoff_var.set(val)
-            elif line.startswith("cutoff_value"):
-                self.cutoff_val_var.set(val)
-            elif line.startswith("filter_item"):
-                self.filter_item_var.set(val)
+            if line.startswith("shots"): self.shot_var.set(val)
+            elif line.startswith("times"): self.time_var.set(val)
+            elif line.startswith("probe_array"): self.probe_var.set(val)
+            elif line.startswith("n_cpus"): self.ncpus_var.set(val)
+            elif line.startswith("n_clusters"): self.nclusters_var.set(val)
+            elif line.startswith("n_iterations"): self.niter_var.set(val)
+            elif line.startswith("start"): self.start_method_var.set(val)
+            elif line.startswith("method"): self.method_var.set(val)
+            elif line.startswith("freq_range"): self.freq_range_var.set(val)
+            elif line.startswith("seed"): self.seed_var.set(val)
+            elif line.startswith("n_peaks"): self.npeaks_var.set(val)
+            elif line.startswith("cutoff_by"): self.cutoff_var.set(val)
+            elif line.startswith("cutoff_value"): self.cutoff_val_var.set(val)
+            elif line.startswith("filter_item"): self.filter_item_var.set(val)
         return
 
     def load_values_from_file(self, f):
@@ -791,7 +777,7 @@ class PyFusionWindow:
     def load_settings(self):
         fname = askopenfilename(initialdir=GUI_DIR,
                                 filetypes=(("GUI Config File", "*.guiconfig"), ("All Files", "*.*")))
-        if fname == "":
+        if fname == "" or fname == ():
             return None
         try:
             self.load_values_from_file(fname)
@@ -838,14 +824,15 @@ filter_items: EM_VMM_kappas'''
     def run_clustering(self):
 
         def callback():
-            AN = self.settings_to_analysis_object()
-            win.AN = AN
-            if AN is None:
+            self.AN = self.settings_to_analysis_object()
+            win.AN = self.AN
+            if self.AN is None:
                 win.root.event_generate("<<clustering_failed>>", when="tail")
             else:
                 win.root.event_generate("<<clustering_complete>>", when="tail")
-            # import time
-            # time.sleep(5)
+                self.using_analysis_var.set("Using analysis object created\n"
+                                            "from custom user settings.")
+                self.using_analysis_label.config(fg="dark green")
             return
 
         if self.valid_values():
@@ -859,12 +846,16 @@ filter_items: EM_VMM_kappas'''
         # Verify both frequency and time are within our analysis windows.
         # Can only be done after the analysis has been performed. (Grey out button before that??)
         # but we'll ignore the latter for now.
-        if self.valid_values():
-            defaults = [str(jt.shot_str_parser(self.value_dict["shots"].get())[0]),
-                        self.value_dict["times"].get(),
-                        self.value_dict["freq_range"].get()]
-            win = PinpointWindow(master=self.root, defaults=defaults, pf_window=self)
-
+        if self.AN is None:
+            if self.valid_values():
+                defaults = [str(jt.shot_str_parser(self.value_dict["shots"].get())[0]),
+                            self.value_dict["times"].get(),
+                            self.value_dict["freq_range"].get()]
+                PinpointWindow(master=self.root, defaults=defaults, pf_window=self)
+        else:
+            if self.valid_values():
+                #TODO: IM HEREEEE FIXME
+                pass
         return
 
     def settings_to_analysis_object(self):
