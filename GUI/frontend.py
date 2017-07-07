@@ -152,7 +152,8 @@ class ClusteringWindow:
         return
 
 class PinpointWindow:
-    def __init__(self, master, defaults, pf_window):
+    def __init__(self, master, defaults, pf_window, previous_analysis=None):
+        self.previous_analysis = previous_analysis
         self.pf_window = pf_window
         self.root = tk.Toplevel(master=master)
         self.root.geometry("410x350")
@@ -293,10 +294,14 @@ class PinpointWindow:
                 self.popup.deiconify()
                 self.popup.grab_set()
                 self.popup.wm_protocol("WM_DELETE_WINDOW", self.x_no_close)
-                self.AN = self.pf_window.settings_to_analysis_object()
+                if self.previous_analysis is None:
+                    self.AN = self.pf_window.settings_to_analysis_object()
+                else:
+                    self.AN = self.previous_analysis
                 if self.AN is None:
                     self.root.event_generate("<<analysis_failed>>", when="tail")
-                self.root.event_generate("<<analysis_complete>>", when="tail")
+                else:
+                    self.root.event_generate("<<analysis_complete>>", when="tail")
         # popup = tk.Toplevel(master=self.root)
         # popup.resizable(width=False, height=False)
         # self.analysis_message.set("Now performing pinpoint analysis.\nPlease wait.")
@@ -851,11 +856,11 @@ filter_items: EM_VMM_kappas'''
                 defaults = [str(jt.shot_str_parser(self.value_dict["shots"].get())[0]),
                             self.value_dict["times"].get(),
                             self.value_dict["freq_range"].get()]
-                PinpointWindow(master=self.root, defaults=defaults, pf_window=self)
+            else:
+                return
         else:
-            if self.valid_values():
-                #TODO: IM HEREEEE FIXME
-                pass
+            defaults=None
+        PinpointWindow(master=self.root, defaults=defaults, pf_window=self, previous_analysis=self.AN)
         return
 
     def settings_to_analysis_object(self):
