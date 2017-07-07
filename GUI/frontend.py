@@ -224,6 +224,7 @@ class PinpointWindow:
             self.shot_var.set(defaults[0])
             self.time_window_var.set(defaults[1])
             self.freq_range_var.set(defaults[2])
+
         return
 
     def analysis_complete(self, e):
@@ -680,19 +681,37 @@ class PyFusionWindow:
         return None
 
     def restore_clustering(self):
-        fname = askopenfilename(initialdir=GUI_DIR,
+        fname = askopenfilename(initialdir=PICKLE_SAVE_DIR,
                                 filetypes=(("Analysis File Object", "*.ANobj"), ("All Files", "*.*")))
-
-        print("DEBBUG::: ", fname)
         if fname == "":
             return None
         try:
             self.AN = analysis.Analysis.restore(fname)
+            self._restore_settings_from_loaded_object()
             self.using_analysis_var.set("Using analysis object from\n{}".format(jt.break_path(fname, 24)))
             self.using_analysis_label.config(fg="dark green")
         except:
             ErrorWindow(self.root, "Incorrect file format.")
         return None
+
+    def _restore_settings_from_loaded_object(self):
+        # Loads the settings used to analyze an Analysis object that has been loaded.
+        self.value_dict["shots"].set(str(self.AN.DM.shot_info["shots"]))
+        self.value_dict["times"].set(jt.ANobj_times_to_time_window(self.AN.DM.shot_info["time_windows"]))
+        self.value_dict["probe_array"].set(self.AN.DM.shot_info["probes"])
+        self.value_dict["n_cpus"].set(str(self.AN.DM.n_cpus))
+        self.value_dict["n_clusters"].set(str(self.AN.DM.datamining_settings["n_clusters"]))
+        self.value_dict["n_iterations"].set(str(self.AN.DM.datamining_settings["n_iterations"]))
+        self.value_dict["start"].set(self.AN.DM.datamining_settings["start"])
+        self.value_dict["method"].set(self.AN.DM.datamining_settings["method"])
+        self.value_dict["freq_range"].set(str(self.AN.DM.datamining_settings["lower_freq"])+"-"+
+                                          str(self.AN.DM.datamining_settings["upper_freq"]))
+        self.value_dict["seed"].set(str(self.AN.DM.datamining_settings["seeds"]))
+        self.value_dict["n_peaks"].set(str(self.AN.DM.fft_settings["n_pts"]))
+        self.value_dict["cutoff_by"].set(self.AN.DM.fft_settings["cutoff_by"])
+        self.value_dict["cutoff_value"].set(str(self.AN.DM.fft_settings["ave_kappa_cutoff"]))
+        self.value_dict["filter_items"].set(self.AN.DM.fft_settings["filter_item"])
+        return
 
     def update_values(self):
         self.shot_var.set(self.value_dict["shots"])

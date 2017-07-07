@@ -27,6 +27,11 @@ def distance(x1, x2):
     # Returns the absolute distance between x1 and x2
     return abs(x2-x1)
 
+def ANobj_times_to_time_window(t):
+    return str(t[0][0])+"-"+str(t[0][1])
+
+
+
 
 def break_path(p, line_length):
     split_path = os.path.normpath(p).split(os.sep)
@@ -38,7 +43,7 @@ def break_path(p, line_length):
             current_line_length=0
         out += dir+os.sep
         current_line_length += len(dir)
-    return out
+    return out[:-1]
 
 
 def text_location(xrange, yrange):
