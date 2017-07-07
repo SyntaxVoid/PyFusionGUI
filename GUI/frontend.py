@@ -223,7 +223,8 @@ class PinpointWindow:
         fig, \
         ax1,  \
         ax2,   \
-        ax3 = self.A.return_pinpoint_plots(shot, time, freq, clusters="all")
+        ax3 = self.A.return_pinpoint_plots(shot=shot, t0=time, f0=freq, time_window=time_window,
+                                           frequency_window=freq_range, clusters="all")
             # point_analysis.point_analysis(A=self.A, shot=shot, time_window=time_window,
             #                                 t0=time, f0=freq,
             #                                 probe_array=self.pf_window.value_dict["probe_array"].get())

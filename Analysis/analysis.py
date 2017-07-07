@@ -347,9 +347,16 @@ class Analysis:
         figure2.tight_layout()
         return (figure1, axes1), (figure2, axes2)
 
-    def return_pinpoint_plots(self, shot, t0, f0, clusters=None):
+    def return_pinpoint_plots(self, shot, t0, f0, time_window=None, frequency_window=None, clusters=None):
+        shot_index = self.DM.shot_info["shots"].index(int(shot))
         if clusters is None:
             clusters = []
+        if time_window is None:
+            time_window = [float(self.DM.shot_info["time_windows"][shot_index][0]),
+                           float(self.DM.shot_info["time_windows"][shot_index][-1])]
+        if frequency_window is None:
+            frequency_window = [float(self.DM.fft_settings["lower_freq"]),
+                                float(self.DM.fft_settings["upper_freq"])]
         fft = self.DM.raw_ffts[str(shot)]
         raw_mirnov = fft.signal
         raw_times = fft.timebase
@@ -368,7 +375,7 @@ class Analysis:
         if positions is None:
             positions = list(range(len(phases)))
             positions_in_degrees = False
-        shot_index = self.DM.shot_info["shots"].index(int(shot))
+
         time_base = self.results[shot_index][3]
         signal = self.results[shot_index][2]
         temp_signal = signal[0, :]
@@ -393,10 +400,6 @@ class Analysis:
         ax2.grid()
 
         self._plot_clusters(temp_signal, time_base, clusters, ax3)
-        time_window = [float(self.DM.shot_info["time_windows"][shot_index][0]),
-                       float(self.DM.shot_info["time_windows"][shot_index][-1])]
-        frequency_window = [float(self.DM.fft_settings["lower_freq"]),
-                            float(self.DM.fft_settings["upper_freq"])]
         print("DEBUG::: TIME WINDOW SHOULD BE: ", time_window)
         print("DEBUG::: FREQ WINDOW SHOULD BE: ", frequency_window)
         ax3.plot([t0, t0], [time_window[0], time_window[-1]])
@@ -406,7 +409,7 @@ class Analysis:
 
         plt.suptitle("Shot {} -- ({})\nt = {} ms, f = {} kHz".format(shot,
                                                                      self.DM.shot_info["probes"],
-                                                                     t_actual, f_actual), fontsize=24)
+                                                                     t_actual, f_actual), fontsize=20)
         plt.subplots_adjust(wspace=0.4)
         return fig, ax1, ax2, ax3
 
