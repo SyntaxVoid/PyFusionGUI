@@ -21,12 +21,12 @@ from Utilities import jtools as jt
 from Analysis import analysis
 
 # tkinter
-try:
-    import tkinter as tk  # Will work with python 3
+try: # Will work with python 3
+    import tkinter as tk
     from tkinter.filedialog import askopenfilename, asksaveasfilename
     from tkinter.messagebox import showerror
-except ImportError:
-    import Tkinter as tk  # Will work with python 2
+except ImportError: # Will work with python 2
+    import Tkinter as tk
     from tkFileDialog import askopenfilename, asksaveasfilename
     from tkMessageBox import showerror, showinfo
 
@@ -34,28 +34,6 @@ font_name = "Arial"
 font = (font_name, 14)
 
 DEFAULT_SETTINGS_DIR = os.path.join(GUI_DIR, ".guiconfig")
-
-
-def TEST_PLOTTER():
-    figure1, axes1 = plt.subplots(nrows=2, ncols=2)
-    figure2, axes2 = plt.subplots(nrows=2, ncols=2)
-    axesf1 = axes1.flatten()
-    axesf2 = axes2.flatten()
-    import random
-    x = np.linspace(0,6*np.pi,100)
-    for curax1, curax2 in zip(axesf1, axesf2):
-        amp = random.uniform(0.2, 1.2)
-        curax1.plot(amp*np.cos(x))
-        curax2.plot(amp*np.sin(x))
-    return ((figure1, axes1), (figure2, axes2))
-
-class TesterClass:
-    def __init__(self):
-        return
-    def save(self, f):
-        print("Saved (not really) to", f)
-    def restore(self, f):
-        print("Restored (not really) from", f)
 
 
 class ErrorWindow:
@@ -905,7 +883,6 @@ filter_items: EM_VMM_kappas'''
         if self.valid_values():
             shots = jt.shot_str_parser(self.value_dict["shots"].get())
             time_windows = jt.time_window_parser(self.value_dict["times"].get())
-            print(time_windows)
             probes = self.value_dict["probe_array"].get()
             n_cpus = int(self.value_dict["n_cpus"].get())
             n_clusters = int(self.value_dict["n_clusters"].get())

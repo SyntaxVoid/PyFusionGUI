@@ -148,6 +148,7 @@ class DataMining:
         out = {}
         dev = pf.getDevice(self.shot_info["device"])
         for sh, tw in zip(self.shot_info["shots"], self.shot_info["time_windows"]):
+            print("DEBUG::::: SAVING SHOT {} INFORMATION".format(sh))
             out[str(sh)] = dev.acq.getdata(sh, self.shot_info["probes"]).reduce_time(tw)
         return out
 
