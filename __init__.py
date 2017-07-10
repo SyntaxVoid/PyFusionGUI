@@ -19,7 +19,7 @@ PICKLE_SAVE_DIR = os.path.join(PROJECT_ROOT_DIR, "SaveObjectsHere")
 import os, logging
 import logging.config
 
-from pyfusion.conf import PyfusionConfigParser
+from PyFusionGUI.pyfusion.conf import PyfusionConfigParser
 from pyfusion.conf.utils import read_config
 from pyfusion.orm import ORMManager
 from pyfusion.version import get_version
