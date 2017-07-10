@@ -147,9 +147,7 @@ class DataMining:
         # Output is formatted like: {"159243": magnitudes, "159244": magnitudes, ... }
         out = {}
         dev = pf.getDevice(self.shot_info["device"])
-        print("DEBUG::::: \n\tShots: {}\n\tTime Windows: {}".format(self.shot_info["shots"], self.shot_info["time_windows"]))
         for sh, tw in zip(self.shot_info["shots"], self.shot_info["time_windows"]):
-            print("DEBUG::::: SAVING SHOT {} INFORMATION".format(sh))
             out[str(sh)] = dev.acq.getdata(sh, self.shot_info["probes"]).reduce_time(tw)
         return out
 
@@ -265,7 +263,6 @@ class Analysis:
                     misc_data_dict = copy.deepcopy(res[1])
                     start = False
                 else:
-                    print("DEBUG::::: \n\tINSTANCE ARRAY SHAPE: {}\n\tRES[0] SHAPE: {}".format(instance_array.shape, res[0].shape))
                     instance_array = np.append(instance_array, res[0], axis=0)
                     for i in misc_data_dict.keys():
                         misc_data_dict[i] = np.append(misc_data_dict[i], res[1][i], axis=0)
@@ -335,13 +332,16 @@ class Analysis:
                                        self.z.feature_obj.misc_data_dict["freq"][mask],
                                        "o", markersize=markersize,
                                        color=PLOT_COLORS[assignment])
+        shots = self.DM.shot_info["shots"]
+        time_windows = self.DM.shot_info["time_windows"]
+        freq_window = [self.DM.fft_settings["lower_freq"], self.DM.fft_settings["upper_freq"]]
         for i in range(n_shots):
-            shot = str(self.DM.shot_info["shots"][i])
-            axesf1[i].set_xlim(self.DM.shot_info["time_windows"][i])
-            axesf2[i].set_xlim(self.DM.shot_info["time_windows"][i])
-            axesf1[i].set_ylim([0, 250])
-            axesf2[i].set_ylim([0, 250])
-            tx, ty = jt.text_location(self.DM.shot_info["time_windows"][i], [0, 250])
+            shot = str(shots[i])
+            axesf1[i].set_xlim(time_windows[i])
+            axesf2[i].set_xlim(time_windows[i])
+            axesf1[i].set_ylim(freq_window)
+            axesf2[i].set_ylim(freq_window)
+            tx, ty = jt.text_location(time_windows[i], [0, 250])
             axesf1[i].text(tx, ty, shot, bbox={"facecolor": "green", "alpha": 0.90}, fontsize=fontsize)
             axesf2[i].text(tx, ty, shot, bbox={"facecolor": "green", "alpha": 0.90}, fontsize=fontsize)
         figure1.subplots_adjust(hspace=0, wspace=0)
