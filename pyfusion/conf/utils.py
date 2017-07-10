@@ -1,7 +1,7 @@
 """ Useful functions for manipulating config files."""
 
 from ConfigParser import NoSectionError
-from PyFusionGUI import pyfusion
+import PyFusionGUI.pyfusion
 
 def CannotImportFromConfigError(Exception):
     """Failed to import a module, class or method from config setting."""
