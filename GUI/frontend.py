@@ -627,11 +627,21 @@ class PyFusionWindow:
                                              textvariable=self.using_analysis_var,
                                              font=(font_name, 14, "bold"), fg="red")
         self.using_analysis_label.grid(row=1, column=0, sticky=tk.N)
-        # ======================================
-        # ======================================
-        # ==      SAVING INITIAL VALUES       ==
-        # ======================================
-        # ======================================
+
+        # ====================================== #
+        # ====================================== #
+        # ==             BINDINGS             == #
+        # ====================================== #
+        # ====================================== #
+        self.root.bind("<<clustering_failed>>", self.clustering_failed)
+        self.root.bind("<<clustering_complete>>", self.clustering_complete)
+        self.root.bind("<<clustering_in_progress>>", self.clustering_in_progress)
+
+        # ====================================== #
+        # ====================================== #
+        # ==      SAVING INITIAL VALUES       == #
+        # ====================================== #
+        # ====================================== #
         self.value_dict["shots"] = self.shot_var
         self.value_dict["times"] = self.time_var
         self.value_dict["probe_array"] = self.probe_var
@@ -649,13 +659,30 @@ class PyFusionWindow:
 
         return
 
+    def clustering_failed(self, e):
+        self.using_analysis_var.set("Clustering Failed. No analysis object\n"
+                                    "loaded yet. Please perform clustering\n"
+                                    "or restore a saved analysis object")
+        self.using_analysis_label.config(fg="red")
+        return
+
+    def clustering_complete(self, e):
+        self.using_analysis_var.set("Using analysis object created\n"
+                                    "from custom user settings.")
+        self.using_analysis_label.config(fg="dark green")
+        return
+
+    def clustering_in_progress(self, e):
+        self.using_analysis_var.set("Now clustering. Please wait.")
+        self.using_analysis_label.config(fg="DarkOrange1")
+
     def start(self):
         self.restore_defaults()
         self.root.mainloop()
         return None
 
     def random_seed(self):
-        self.seed_var.set(str(random.choice(range(200, 1000))))
+        self.seed_var.set(str(random.choice(range(1, 10000))))
         return None
 
     def restore_clustering(self):
@@ -663,13 +690,13 @@ class PyFusionWindow:
                                 filetypes=(("Analysis File Object", "*.ANobj"), ("All Files", "*.*")))
         if fname == "":
             return None
-        #try:
-        self.AN = analysis.Analysis.restore(fname)
-        self._restore_settings_from_loaded_object()
-        self.using_analysis_var.set("Using analysis object from\n{}".format(jt.break_path(fname, 24)))
-        self.using_analysis_label.config(fg="dark green")
-        #except:
-        #    ErrorWindow(self.root, "Incorrect file format.")
+        try:
+            self.AN = analysis.Analysis.restore(fname)
+            self._restore_settings_from_loaded_object()
+            self.using_analysis_var.set("Using analysis object from\n{}".format(jt.break_path(fname, 24)))
+            self.using_analysis_label.config(fg="dark green")
+        except:
+            ErrorWindow(self.root, "Incorrect file format.")
         return None
 
     def return_restored_object_values(self):
@@ -843,20 +870,25 @@ filter_items: EM_VMM_kappas'''
     def run_clustering(self):
 
         def callback():
-            self.AN = self.settings_to_analysis_object()
-            win.AN = self.AN
-            if self.AN is None:
-                win.root.event_generate("<<clustering_failed>>", when="tail")
-            else:
+            try:
+                self.AN = self.settings_to_analysis_object()
+                win.AN = self.AN
                 win.root.event_generate("<<clustering_complete>>", when="tail")
-                self.using_analysis_var.set("Using analysis object created\n"
-                                            "from custom user settings.")
-                self.using_analysis_label.config(fg="dark green")
+                self.root.event_generate("<<clustering_complete>>", when="tail")
+            except:
+                win.root.event_generate("<<clustering_failed>>", when="tail")
+                self.root.event_generate("<<clustering_failed>>", when="tail")
+            #if self.AN is None:
+            #    win.root.event_generate("<<clustering_failed>>", when="tail")
+            #else:
+            #    win.root.event_generate("<<clustering_complete>>", when="tail")
+            #    self.using_analysis_var.set("Using analysis object created\n"
+            #                                "from custom user settings.")
+            #    self.using_analysis_label.config(fg="dark green")
             return
 
         if self.valid_values():
-            self.using_analysis_var.set("Now clustering. Please wait.")
-            self.using_analysis_label.config(fg="DarkOrange1")
+            self.root.event_generate("<<clustering_in_progress", when="tail")
             win = ClusteringWindow(master=self.root)
             t = threading.Thread(target=callback)
             t.start()
