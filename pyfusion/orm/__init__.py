@@ -1,6 +1,6 @@
 """Object relational mapping for Pyfusion"""
 
-import PyFusionGUI.pyfusion
+import pyfusion
 
 class ORMManager(object):
     def __init__(self):

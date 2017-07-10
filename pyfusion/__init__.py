@@ -1,10 +1,10 @@
 import os, logging
 import logging.config
 
-from PyFusionGUI.pyfusion.conf import PyfusionConfigParser
-from PyFusionGUI.pyfusion.conf.utils import read_config
-from PyFusionGUI.pyfusion.orm import ORMManager
-from PyFusionGUI.pyfusion.version import get_version
+from pyfusion.conf import PyfusionConfigParser
+from pyfusion.conf.utils import read_config
+from pyfusion.orm import ORMManager
+from pyfusion.version import get_version
 
 # This grabs the directory of the pyfusion module.
 PYFUSION_ROOT_DIR = os.path.dirname(__file__)

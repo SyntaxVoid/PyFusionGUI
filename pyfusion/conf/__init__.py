@@ -2,7 +2,7 @@
 
 from ConfigParser import ConfigParser
 
-from PyFusionGUI.pyfusion.conf.exceptions import DisallowedSectionType, \
+from pyfusion.conf.exceptions import DisallowedSectionType, \
      ConfigSectionSyntaxError, UnknownVariableTypeError
 
 # This list contains allowed section types, i.e. [SectionType:Name] in
