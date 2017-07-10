@@ -1,5 +1,6 @@
 import os.path
 
+import pyfusion
 # Here is where all of the important PyFusion file locations will be stored.
 # They are automatically imported when importing PyFusionGUI. You must make
 # sure the PARENT directory of PyFusion is listed in your Python path to import.
