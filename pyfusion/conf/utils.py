@@ -1,7 +1,7 @@
 """ Useful functions for manipulating config files."""
 
 from ConfigParser import NoSectionError
-import PyFusionGUI.pyfusion
+import PyFusionGUI.pyfusion as pyfusion
 
 def CannotImportFromConfigError(Exception):
     """Failed to import a module, class or method from config setting."""
@@ -16,20 +16,20 @@ def import_from_str(string_value):
 
 def import_setting(component, component_name, setting):
     """Attempt to import and return a config setting."""
-    value_str = PyFusionGUI.pyfusion.config.pf_get(component, component_name, setting)
+    value_str = pyfusion.config.pf_get(component, component_name, setting)
     return import_from_str(value_str)
 
 def kwarg_config_handler(component_type, component_name, **kwargs):
-    for config_var in PyFusionGUI.pyfusion.config.pf_options(component_type, component_name):
+    for config_var in pyfusion.config.pf_options(component_type, component_name):
             if not config_var in kwargs.keys():
-                kwargs[config_var] = PyFusionGUI.pyfusion.config.pf_get(component_type,
+                kwargs[config_var] = pyfusion.config.pf_get(component_type,
                                                    component_name, config_var)
     return kwargs
 
 
 def get_config_as_dict(component_type, component_name):
-    config_option_list = PyFusionGUI.pyfusion.config.pf_options(component_type, component_name)
-    config_map = lambda x: (x, PyFusionGUI.pyfusion.config.pf_get(component_type, component_name, x))
+    config_option_list = pyfusion.config.pf_options(component_type, component_name)
+    config_map = lambda x: (x, pyfusion.config.pf_get(component_type, component_name, x))
     return dict(map(config_map, config_option_list))
 
 
@@ -39,14 +39,14 @@ def read_config(config_files):
     Argument is either a single file object, or a list of filenames.
     """
     try:
-        existing_database = PyFusionGUI.pyfusion.config.get('global', 'database')
+        existing_database = pyfusion.config.get('global', 'database')
     except NoSectionError:
         existing_database = 'None'
 
     try:
-        files_read = PyFusionGUI.pyfusion.config.readfp(config_files)
+        files_read = pyfusion.config.readfp(config_files)
     except:
-        files_read = PyFusionGUI.pyfusion.config.read(config_files)
+        files_read = pyfusion.config.read(config_files)
 
     if files_read != None: # readfp returns None
         if len(files_read) == 0: 
@@ -63,5 +63,5 @@ def read_config(config_files):
 
 def clear_config():
     """Clear pyfusion.config."""
-    import PyFusionGUI.pyfusion
-    PyFusionGUI.pyfusion.config = PyFusionGUI.pyfusion.conf.PyfusionConfigParser()
+    import pyfusion
+    pyfusion.config = pyfusion.conf.PyfusionConfigParser()
