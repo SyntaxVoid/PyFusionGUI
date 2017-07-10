@@ -856,7 +856,7 @@ filter_items: EM_VMM_kappas'''
 
         if self.valid_values():
             self.using_analysis_var.set("Now clustering. Please wait.")
-            self.using_analysis_label.config(fg="goldenrod2")
+            self.using_analysis_label.config(fg="DarkOrange1")
             win = ClusteringWindow(master=self.root)
             t = threading.Thread(target=callback)
             t.start()
