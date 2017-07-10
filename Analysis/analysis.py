@@ -333,17 +333,15 @@ class Analysis:
                                        "o", markersize=markersize,
                                        color=PLOT_COLORS[assignment])
         shots = self.DM.shot_info["shots"]
-        print(shots)
         time_windows = self.DM.shot_info["time_windows"]
         freq_window = [self.DM.fft_settings["lower_freq"], self.DM.fft_settings["upper_freq"]]
         for i in range(n_shots):
             shot = str(shots[i])
-            print(axesf1)
             axesf1[i].set_xlim(time_windows[i])
             axesf2[i].set_xlim(time_windows[i])
             axesf1[i].set_ylim(freq_window)
             axesf2[i].set_ylim(freq_window)
-            tx, ty = jt.text_location(time_windows[i], [0, 250])
+            tx, ty = jt.text_location(time_windows[i], freq_window)
             axesf1[i].text(tx, ty, shot, bbox={"facecolor": "green", "alpha": 0.90}, fontsize=fontsize)
             axesf2[i].text(tx, ty, shot, bbox={"facecolor": "green", "alpha": 0.90}, fontsize=fontsize)
         figure1.subplots_adjust(hspace=0, wspace=0)
