@@ -93,6 +93,7 @@ class ClusteringWindow:
         self.root.title("Clustering Failed!")
         self.root.wm_protocol("WM_DELETE_WINDOW", self.x_close)
         self.message.set("Clustering Failed!")
+        self.label.config(fg="red")
         self.ok_button = tk.Button(master=self.buttons_frame,
                                    text="OK", font=(font_name, 18),
                                    command=self.root.destroy)
