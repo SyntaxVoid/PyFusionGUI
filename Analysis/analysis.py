@@ -338,6 +338,7 @@ class Analysis:
         freq_window = [self.DM.fft_settings["lower_freq"], self.DM.fft_settings["upper_freq"]]
         for i in range(n_shots):
             shot = str(shots[i])
+            print(axesf1)
             axesf1[i].set_xlim(time_windows[i])
             axesf2[i].set_xlim(time_windows[i])
             axesf1[i].set_ylim(freq_window)
