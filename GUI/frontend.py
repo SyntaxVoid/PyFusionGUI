@@ -889,7 +889,7 @@ filter_items: EM_VMM_kappas'''
             return
 
         if self.valid_values():
-            self.root.event_generate("<<clustering_in_progress", when="tail")
+            self.root.event_generate("<<clustering_in_progress>>", when="tail")
             win = ClusteringWindow(master=self.root)
             t = threading.Thread(target=callback)
             t.start()
