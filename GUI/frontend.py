@@ -90,7 +90,7 @@ class ClusteringWindow:
         return
 
     def slurm_active(self):
-        return not os.path.isfile(".{}".format(self.slurm_start_time))
+        return not os.path.isfile(IRIS_CSCRATCH_DIR+self.slurm_start_time+".slurmdone")
 
     def slurm_clustering_complete(self, e):
         self.root.title("Slurm Clustering Complete!")
@@ -738,7 +738,7 @@ class PyFusionWindow:
         return None
 
     def restore_clustering(self):
-        fname = askopenfilename(initialdir=PICKLE_SAVE_DIR,
+        fname = askopenfilename(initialdir=IRIS_CSCRATCH_DIR,
                                 filetypes=(("Analysis File Object", "*.ANobj"), ("All Files", "*.*")))
         if fname == "" or fname == ():
             return None
@@ -940,32 +940,31 @@ filter_items: EM_VMM_kappas'''
                 return None
             if self.use_worker_node_val:
                 # Need to create a job script and a python script for SLURM.
-                now = datetime.now().strftime("%Y%m%d%H%M%S")
+                now = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
                 pythonscript = '''from PyFusionGUI.Analysis.analysis import *
 from PyFusionGUI.Utilities.jtools import *
 A1 = {ANALYSIS_OBJECT}
 A1.save(\"{ANOBJ_FILE}\")
 write_finished_file(".{TIME}")
 '''.format(ANALYSIS_OBJECT=self.settings_to_analysis_object_str(),
-           ANOBJ_FILE=now+".ANobj",
-           TIME=now)
-                with open("TEST.PY", "w") as test:
+           ANOBJ_FILE=IRIS_CSCRATCH_DIR+now+".ANobj",
+           TIME=IRIS_CSCRATCH_DIR+now+".slurmdone")
+                with open("run_me.py", "w") as test:
                     test.write(pythonscript)
                 sbatchscript = '''#!/bin/bash
 #SBATCH -p short
 #SBATCH -n 4
-#SBATCH -N 1
 #SBATCH -t 5
 #SBATCH --mem-per-cpu=4G
-#SBATCH -o PyFusionGUI-%j.out
+#SBATCH -o sbatch_output/PyFusionGUI-%j.out
 #SBATCH --export=ALL
 echo "Starting job on worker node"
-/fusion/usc/opt/python/2.7.11/bin/python2.7 {FILE_NAME}
-echo "end"
-'''.format(FILE_NAME="TEST.PY")
-                with open("SBATCH_TEST.SBATCH", "w") as sbatch:
+/fusion/usc/opt/python/2.7.11/bin/python2.7 run_me.py
+rm PyFusionGUI-%j.out
+'''
+                with open("sbatch_cluster.sbatch", "w") as sbatch:
                     sbatch.write(sbatchscript)
-                os.system("sbatch SBATCH_TEST.SBATCH")
+                os.system("sbatch sbatch_cluster.sbatch")
                 win = ClusteringWindow(master=self.root, slurm_start_time=now)
 
 
