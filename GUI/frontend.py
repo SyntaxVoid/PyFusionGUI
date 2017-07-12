@@ -82,14 +82,10 @@ class ClusteringWindow:
         if self._cur <= 0:
             if self.slurm_active():
                 self._cur = self.default_wait_time
-                self.message.set(
-                    "Waiting for worker\nnode to complete.\nChecking again in\n{} seconds".format(self._cur))
             else:
                 self.root.event_generate("<<slurm_clustering_complete>>", when="tail")
                 return
-        else:
-            self._cur -= 1
-            self.message.set("Waiting for worker\nnode to complete.\nChecking again in\n{} seconds".format(self._cur))
+        self.message.set("Waiting for worker\nnode to complete.\nChecking again in\n{} seconds".format(self._cur))
         self.root.after(1000, self.countdown)
         return
 
