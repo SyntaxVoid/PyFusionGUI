@@ -971,6 +971,7 @@ echo "end"
                 with open("SBATCH_TEST.SBATCH", "w") as sbatch:
                     sbatch.write(sbatchscript)
                 os.system("sbatch SBATCH_TEST.SBATCH")
+                win = ClusteringWindow(master=self.root, slurm_start_time=now)
 
 
 
