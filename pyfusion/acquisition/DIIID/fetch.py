@@ -104,7 +104,7 @@ class DIIIDMultiChannelFetcher(MultiChannelFetcher):
         meta_dict={}
         from scipy.io import netcdf
         home = os.environ['HOME']
-        os.system('mkdir {}/tmp_pyfusion/'.format(home))
+        os.system('mkdir -p {}/tmp_pyfusion/'.format(home))
         fname = '{}/tmp_pyfusion/{}.nc'.format(home,self.shot)
         if os.path.exists(fname):
             NC = netcdf.netcdf_file(fname,'r',version=2)
