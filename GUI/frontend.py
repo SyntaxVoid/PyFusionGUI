@@ -964,7 +964,7 @@ write_finished_file(\"{DONE_FILE}\")
 #SBATCH -o PyFusionGUI-%j.out
 #SBATCH --export=ALL
 echo "Starting job on worker node"
-/fusion/usc/opt/python/2.7.11/bin/python2.7 temp.py
+/fusion/usc/opt/python/2.7.11/bin/python2.7 SLURM/temp.py
 '''
                 with open("SLURM/sbatch_clustering.sbatch", "w") as sbatch:
                     sbatch.write(sbatchscript)
