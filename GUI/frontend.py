@@ -69,6 +69,7 @@ class ClusteringWindow:
             if slurm_start_time is not None:
                 self.slurm_done_file = IRIS_CSCRATCH_DIR+self.slurm_start_time+".slurmdone"
                 self.ANobj_file = IRIS_CSCRATCH_DIR+self.slurm_start_time+".ANobj"
+                self.error_file = os.path.join(PYFUSION_DIR, "errors.txt")
                 self._cur = self.default_wait_time
                 self.message.set("Waiting for worker\nnode to complete.\nChecking again in\n{} seconds."\
                                  .format(self._cur))
@@ -84,6 +85,10 @@ class ClusteringWindow:
         if self._cur <= 0:
             if self.slurm_active():
                 self._cur = self.default_wait_time
+            if os.stat(self.error_file).st_size != 0:
+                self.message.set("Unexpected SLURM error!\nCheck SLURM output for details.")
+                ok = tk.Button(master=self.root, text="OK", font=(font_name, 13), command=self.root.destroy)
+                ok.grid(row=1, column=0, sticky=tk.N)
             else:
                 self.root.event_generate("<<slurm_clustering_complete>>", when="tail")
                 return
@@ -954,7 +959,7 @@ write_finished_file(\"{DONE_FILE}\")
 '''.format(ANALYSIS_OBJECT=self.settings_to_analysis_object_str(),
            ANOBJ_FILE=IRIS_CSCRATCH_DIR+now+".ANobj",
            DONE_FILE=IRIS_CSCRATCH_DIR+now+".slurmdone")
-                with open("SLURM/temp.py", "w") as test:
+                with open("/home/%u/PyFusionGUI/PyFusionGUI/SLURM/temp.py", "w") as test:
                     test.write(pythonscript)
                 sbatchscript = '''#!/bin/bash
 #SBATCH -p short
@@ -962,15 +967,17 @@ write_finished_file(\"{DONE_FILE}\")
 #SBATCH -N 1
 #SBATCH -t 5
 #SBATCH --mem-per-cpu=4G
-#SBATCH -o PyFusionGUI-%j.out
+#SBATCH -o /home/%u/PyFusionGUI/PyFusionGUI/SLURM/PyFusionGUI-%j.out
 #SBATCH --export=ALL
-#SBATCH -e errors.txt
+rm -f /home/%u/PyFusionGUI/PyFusionGUI/SLURM/errors.txt
+#SBATCH -e /home/%u/PyFusionGUI/PyFusionGUI/SLURM/errors.txt
 echo "Starting job on worker node"
-/fusion/usc/opt/python/2.7.11/bin/python2.7 SLURM/temp.py
+/fusion/usc/opt/python/2.7.11/bin/python2.7 /home/%u/PyFusionGUI/PyFusionGUI/SLURM/temp.py
+rm -f /home/%u/PyFusionGUI/PyFusionGUI/SLURM/errors.txt
 '''
-                with open("SLURM/sbatch_clustering.sbatch", "w") as sbatch:
+                with open("/home/%u/PyFusionGUI/PyFusionGUI/SLURM/sbatch_clustering.sbatch", "w") as sbatch:
                     sbatch.write(sbatchscript)
-                os.system("sbatch SLURM/sbatch_clustering.sbatch")
+                os.system("sbatch /home/%u/PyFusionGUI/PyFusionGUI/SLURM/sbatch_clustering.sbatch")
                 win = ClusteringWindow(master=self.root, slurm_start_time=now)
 
 
