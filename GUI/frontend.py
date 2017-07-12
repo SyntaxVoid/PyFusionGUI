@@ -959,7 +959,7 @@ write_finished_file(\"{DONE_FILE}\")
 '''.format(ANALYSIS_OBJECT=self.settings_to_analysis_object_str(),
            ANOBJ_FILE=IRIS_CSCRATCH_DIR+now+".ANobj",
            DONE_FILE=IRIS_CSCRATCH_DIR+now+".slurmdone")
-                with open("/home/%u/PyFusionGUI/PyFusionGUI/SLURM/temp.py", "w") as test:
+                with open(os.path.join(SLURM_DIR, "temp.py"), "w") as test:
                     test.write(pythonscript)
                 sbatchscript = '''#!/bin/bash
 #SBATCH -p short
@@ -975,9 +975,9 @@ echo "Starting job on worker node"
 /fusion/usc/opt/python/2.7.11/bin/python2.7 /home/%u/PyFusionGUI/PyFusionGUI/SLURM/temp.py
 rm -f /home/%u/PyFusionGUI/PyFusionGUI/SLURM/errors.txt
 '''
-                with open("/home/%u/PyFusionGUI/PyFusionGUI/SLURM/sbatch_clustering.sbatch", "w") as sbatch:
+                with open(os.path.join(SLURM_DIR,"sbatch_clustering.sbatch"), "w") as sbatch:
                     sbatch.write(sbatchscript)
-                os.system("sbatch /home/%u/PyFusionGUI/PyFusionGUI/SLURM/sbatch_clustering.sbatch")
+                os.system("sbatch {}".format(os.path.join(SLURM_DIR, "sbatch_clustering.sbatch")))
                 win = ClusteringWindow(master=self.root, slurm_start_time=now)
 
 

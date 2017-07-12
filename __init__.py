@@ -7,9 +7,10 @@ from getpass import getuser
 # sure the PARENT directory of PyFusion is listed in your Python path to import.
 USERNAME = getuser()
 IRIS_CSCRATCH_DIR = r"/cscratch/{u}/".format(u=USERNAME)
+
 PROJECT_ROOT_DIR = os.path.dirname(__file__)
 ANALYSIS_DIR = os.path.join(PROJECT_ROOT_DIR, "Analysis")
 GUI_DIR = os.path.join(PROJECT_ROOT_DIR, "GUI")
 PYFUSION_DIR = os.path.join(PROJECT_ROOT_DIR, "pyfusion")
 UTILITIES_DIR = os.path.join(PROJECT_ROOT_DIR, "Utilities")
-PICKLE_SAVE_DIR = os.path.join(PROJECT_ROOT_DIR, "SaveObjectsHere")
+SLURM_DIR = os.path.join(PROJECT_ROOT_DIR, "SLURM")
