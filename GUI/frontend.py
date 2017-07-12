@@ -957,7 +957,7 @@ write_finished_file(".{TIME}")
 #SBATCH -N 1
 #SBATCH -t 5
 #SBATCH --mem-per-cpu=4G
-#SBATCH -o sbatch_output/PyFusionGUI-%j.out
+#SBATCH -o PyFusionGUI-%j.out
 #SBATCH --export=ALL
 echo "Starting job on worker node"
 /fusion/usc/opt/python/2.7.11/bin/python2.7 run_me.py
