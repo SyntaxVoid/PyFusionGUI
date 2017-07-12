@@ -6,7 +6,7 @@ import random
 import os
 from collections import OrderedDict
 import threading
-import backend
+from datetime import datetime
 
 # Anaconda
 import matplotlib.pyplot as plt
@@ -19,6 +19,7 @@ from pyfusion import DEFAULT_CONFIG_FILE
 # My Additions
 from Utilities import jtools as jt
 from Analysis import analysis
+import backend
 
 # tkinter
 try: # Will work with python 3
@@ -43,32 +44,74 @@ class ErrorWindow:
 
 
 class ClusteringWindow:
-    def __init__(self, master):
-        self.AN = None
+    def __init__(self, master, slurm_start_time=None, ANobj_restore=None):
         self.root = tk.Toplevel(master=master)
         self.message_frame = tk.Frame(master=self.root)
         self.message_frame.grid(row=0, column=0, sticky=tk.N)
         self.buttons_frame = tk.Frame(master=self.root, bd=5, relief=tk.SUNKEN)
         self.buttons_frame.grid(row=1, column=0, sticky=tk.N)
         self.root.resizable(height=False, width=False)
-        self.root.title("Clustering in Progress")
-
-        self.message = tk.StringVar(master=self.message_frame, value="Now clustering.\nPlease wait.")
+        self.message = tk.StringVar(master=self.message_frame)
         self.label = tk.Label(master=self.message_frame, textvariable=self.message, font=(font_name, 24))
         self.label.grid(row=0, column=0, sticky=tk.N)
         self.root.grab_set()
         self.root.wm_protocol("WM_DELETE_WINDOW", self.x_no_close)
         self.root.bind("<<clustering_complete>>", self.clustering_complete)
         self.root.bind("<<clustering_failed>>", self.clustering_failed)
+        self.root.bind("<<slurm_clustering_complete>>", self.slurm_clustering_complete)
+        if ANobj_restore is None:
+            self.default_wait_time = 10  # Wait 10 seconds
+            self.AN = None
+            self.slurm_start_time = slurm_start_time
+            self.root.title("Clustering in Progress")
+            if self.slurm_start_time is None:
+                self.message.set("Now clustering.\nPlease wait.")
+            if slurm_start_time is not None:
+                self._cur = self.default_wait_time
+                self.message.set("Waiting for worker\nnode to complete.\nChecking again in\n{} seconds."\
+                                 .format(self._cur))
+                self.root.after(1000, self.countdown)
+        else:
+            self.AN = ANobj_restore
+            self.root.title("Analysis Object Restored")
+            self.message.set("Analysis object has been restored.\nSelect an option to continue.")
+            self.root.event_generate("<<clustering_complete>>", when="tail")
+
+    def countdown(self):
+        self._cur -= 1
+        if self._cur <= 0:
+            if self.slurm_active():
+                self._cur = self.default_wait_time
+                self.message.set(
+                    "Waiting for worker\nnode to complete.\nChecking again in\n{} seconds".format(self._cur))
+            else:
+                self.root.event_generate("<<slurm_clustering_complete>>", when="tail")
+                return
+        else:
+            self._cur -= 1
+            self.message.set("Waiting for worker\nnode to complete.\nChecking again in\n{} seconds".format(self._cur))
+        self.root.after(1000, self.countdown)
+        return
+
+    def slurm_active(self):
+        return os.path.isfile(".{}".format(self.slurm_start_time))
+
+    def slurm_clustering_complete(self, e):
+        self.root.title("Slurm Clustering Complete!")
+        self.root.wm_protocol("WM_DELETE_WINDOW", self.x_close)
+        self.message.set("Slurm clustering complete!\nYou can now load your\nAnalysis object file from\nIDKYET.derp.")
+        self.ok_button = tk.Button(master=self.root, text="OK", command=self.root.destroy)
+        self.ok_button.grid(row=1, column=0)
+        return
 
     def clustering_complete(self, e):
         # When clustering is complete, a window should pop up asking the user what they want to do.
         # Whether they want to save the actual objects, save the plots, show the plots or to close.
         size = {"height": 2, "width": 16}
-        self.root.title("Clustering Complete!")
+        self.root.title("Analysis object loaded!")
         self.root.wm_protocol("WM_DELETE_WINDOW", self.x_close)
-        self.message.set("Clustering complete!\nPlease select an option.")
-        self.root.resizable(width=False, height=False)
+        self.message.set("Analysis object is loaded!\nPlease select an option.")
+
         object_save_button = tk.Button(master=self.buttons_frame,
                                        text="Save Analysis\nObject",
                                        font=(font_name, 18),
@@ -644,6 +687,7 @@ class PyFusionWindow:
         self.root.bind("<<clustering_failed>>", self.clustering_failed)
         self.root.bind("<<clustering_complete>>", self.clustering_complete)
         self.root.bind("<<clustering_in_progress>>", self.clustering_in_progress)
+        self.root.bind("<<clustering_restored>>", self.clustering_restored)
 
         # ====================================== #
         # ====================================== #
@@ -665,6 +709,11 @@ class PyFusionWindow:
         self.value_dict["cutoff_value"] = self.cutoff_val_var
         self.value_dict["filter_items"] = self.filter_item_var
 
+        return
+
+    def clustering_restored(self, e):
+        win = ClusteringWindow(master=self.root)
+        win.root.event_generate()
         return
 
     def clustering_failed(self, e):
@@ -876,48 +925,52 @@ filter_items: EM_VMM_kappas'''
         return None
 
     def run_clustering(self):
-        if not self.use_worker_node_val:
-            def callback():
-                try:
-                    self.AN = self.settings_to_analysis_object()
-                    win.AN = self.AN
-                    win.root.event_generate("<<clustering_complete>>", when="tail")
-                    self.root.event_generate("<<clustering_complete>>", when="tail")
-                except:
-                    win.root.event_generate("<<clustering_failed>>", when="tail")
-                    self.root.event_generate("<<clustering_failed>>", when="tail")
-                return
+        if self.valid_values():
+            if not self.use_worker_node_val:
+                def callback():
+                    try:
+                        self.AN = self.settings_to_analysis_object()
+                        win.AN = self.AN
+                        win.root.event_generate("<<clustering_complete>>", when="tail")
+                        self.root.event_generate("<<clustering_complete>>", when="tail")
+                    except:
+                        win.root.event_generate("<<clustering_failed>>", when="tail")
+                        self.root.event_generate("<<clustering_failed>>", when="tail")
+                    return
 
-            if self.valid_values():
                 self.root.event_generate("<<clustering_in_progress>>", when="tail")
                 win = ClusteringWindow(master=self.root)
                 t = threading.Thread(target=callback)
                 t.start()
-            return None
-        if self.use_worker_node_val:
-            # Need to create a job script AND!? a python script for SLURM to run. Two scripts, really?...
-            pythonscript = '''import time
-print("This is a test script")
-for i in range(5):
-    print(i)
-    time.sleep(1)'''
-            with open("TEST.PY", "w") as test:
-                test.write(pythonscript)
-            sbatchscript = '''#!/bin/bash
+                return None
+            if self.use_worker_node_val:
+                # Need to create a job script and a python script for SLURM.
+                now = datetime.now().strftime("%Y%m%d%H%M%S")
+                pythonscript = '''from PyFusionGUI.Analysis.analysis import *
+from PyFusionGUI.Utilities.jtools import *
+A1 = {ANALYSIS_OBJECT}
+A1.save(ANOBJ_FILE)
+write_finished_file(".{TIME}")
+'''.format(ANALYSIS_OBJECT=self.settings_to_analysis_object_str(),
+           ANOBJ_FILE=now+".ANobj",
+           TIME=now)
+                with open("TEST.PY", "w") as test:
+                    test.write(pythonscript)
+                sbatchscript = '''#!/bin/bash
 #SBATCH -p short
-#SBATCH -n 5
+#SBATCH -n 20
 #SBATCH -N 1
-#SBATCH -t 20
-#SBATCH --mem-per-cpu=100M
+#SBATCH -t 
+#SBATCH --mem-per-cpu=4G
 #SBATCH -o PyFusionGUI-%j.out
 #SBATCH --export=ALL
 echo "Starting job on worker node"
 /fusion/usc/opt/python/2.7.11/bin/python2.7 {FILE_NAME}
-echo "Done. Output written to PyFusionGUI-%j.out"
+echo "end"
 '''.format(FILE_NAME="TEST.PY")
-            with open("SBATCH_TEST.SBATCH", "w") as sbatch:
-                sbatch.write(sbatchscript)
-            os.system("sbatch SBATCH_TEST.SBATCH")
+                with open("SBATCH_TEST.SBATCH", "w") as sbatch:
+                    sbatch.write(sbatchscript)
+                os.system("sbatch SBATCH_TEST.SBATCH")
 
 
 

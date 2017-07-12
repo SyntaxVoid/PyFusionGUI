@@ -19,6 +19,10 @@ class CycledList(list):
     def __getitem__(self, key):
         return super(CycledList, self).__getitem__(np.mod(key, len(self)))
 
+def write_finished_file(f):
+    with open(f, "w") as out:
+        out.write("This file exists to confirm that SLURM completed the job successfully.")
+
 def midpoint(x1, x2):
     # Returns the number halfway between x1 and x2
     return (x1+x2)/2
