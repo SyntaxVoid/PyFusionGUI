@@ -708,8 +708,7 @@ class PyFusionWindow:
         return
 
     def clustering_restored(self, e):
-        win = ClusteringWindow(master=self.root)
-        win.root.event_generate()
+        win = ClusteringWindow(master=self.root, ANobj_restore=self.AN)
         return
 
     def clustering_failed(self, e):
@@ -741,7 +740,7 @@ class PyFusionWindow:
     def restore_clustering(self):
         fname = askopenfilename(initialdir=PICKLE_SAVE_DIR,
                                 filetypes=(("Analysis File Object", "*.ANobj"), ("All Files", "*.*")))
-        if fname == "":
+        if fname == "" or fname == ():
             return None
         try:
             self.AN = analysis.Analysis.restore(fname)
