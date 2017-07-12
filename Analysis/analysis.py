@@ -30,6 +30,10 @@ def stft_pickle_workaround(input_data):
     # using mp must be at the highest scope level (not inside a class) to operate correctly.
     return copy.deepcopy(input_data[0].get_stft(input_data[1]))
 
+def mag_pickle_workaround(input_data):
+    # get_mag(dev, shot, time_window, probe):
+    return copy.deepcopy(input_data[0].get_mag(input_data[1], input_data[2], input_data[3], input_data[4]))
+
 
 def stft_ece_pickle_workaround(input_data):
     # This looks a little funny. Because of how python treats multiprocessing, any function
@@ -148,11 +152,12 @@ class DataMining:
         # Output is formatted like: {"159243": magnitudes, "159244": magnitudes, ... }
         out = {}
         dev = pf.getDevice(self.shot_info["device"])
-        iter = itertools.izip(itertools.repeat(dev),
+        iter = itertools.izip(itertools.repeat(self),
+                              itertools.repeat(dev),
                               self.shot_info["shots"],
                               self.shot_info["time_windows"],
                               itertools.repeat(self.shot_info["probes"]))
-        func_wrapper = self.get_mag
+        func_wrapper = mag_pickle_workaround
         if self.n_cpus > 1:
             pool = Pool(processes=self.n_cpus)
             ans = pool.map(func_wrapper, iter)
