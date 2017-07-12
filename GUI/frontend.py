@@ -90,7 +90,7 @@ class ClusteringWindow:
         return
 
     def slurm_active(self):
-        return os.path.isfile(".{}".format(self.slurm_start_time))
+        return not os.path.isfile(".{}".format(self.slurm_start_time))
 
     def slurm_clustering_complete(self, e):
         self.root.title("Slurm Clustering Complete!")
