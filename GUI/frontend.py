@@ -1025,7 +1025,7 @@ echo "end"
                                    'start': start, 'verbose': 0, 'method': method, "seeds": seeds}
             fft_settings = {"n_pts": n_peaks, "lower_freq": lower_freq, "upper_freq": upper_freq,
                             "cutoff_by": cutoff_by, "ave_kappa_cutoff": cutoff_value, "filter_item": filter_items}
-            DM = "DataMining(shots={shots}, time_windows={time_windows}, probes={probes},"\
+            DM = "DataMining(shots={shots}, time_windows={time_windows}, probes=\"{probes}\","\
                                      "datamining_settings={datamining_settings}, fft_settings={fft_settings},"\
                                      "n_cpus={n_cpus})".format(shots=shots, time_windows=time_windows, probes=probes,
                                                                datamining_settings=datamining_settings,
