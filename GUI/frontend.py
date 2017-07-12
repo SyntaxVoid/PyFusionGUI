@@ -914,11 +914,11 @@ for i in range(5):
 echo "Starting job on worker node"
 /fusion/usc/opt/python/2.7.11/bin/python2.7 {FILE_NAME}
 echo "Done. Output written to PyFusionGUI-%j.out"
-'''.format("TEST.PY")
+'''.format(FILE_NAME="TEST.PY")
             with open("SBATCH_TEST.SBATCH", "w") as sbatch:
                 sbatch.write(sbatchscript)
             os.system("sbatch SBATCH_TEST.SBATCH")
-            
+
 
 
     def run_point_analysis(self):
