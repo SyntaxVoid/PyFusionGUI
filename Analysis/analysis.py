@@ -105,6 +105,9 @@ class DataMining:
                 raise pickle.PickleError("Incorrect pickle file format.")
         return
 
+
+
+
     def __repr__(self):
         # Used to display something user friendly when executing print(<analysis_object>)
         return "<<DataMining object for shots {}>>".format(sorted(self.shot_info["shots"]))
@@ -145,9 +148,27 @@ class DataMining:
         # Output is formatted like: {"159243": magnitudes, "159244": magnitudes, ... }
         out = {}
         dev = pf.getDevice(self.shot_info["device"])
-        for sh, tw in zip(self.shot_info["shots"], self.shot_info["time_windows"]):
-            out[str(sh)] = dev.acq.getdata(sh, self.shot_info["probes"]).reduce_time(tw)
-        return out
+        iter = itertools.izip(itertools.repeat(dev),
+                              self.shot_info["shots"],
+                              self.shot_info["time_windows"],
+                              itertools.repeat(self.shot_info["probes"]))
+        func_wrapper = self.get_mag
+        if self.n_cpus > 1:
+            pool = Pool(processes=self.n_cpus)
+            ans = pool.map(func_wrapper, iter)
+            pool.close()
+            pool.join()
+        else:
+            ans = map(func_wrapper, iter)
+        for shot, result in zip(self.shot_info["shots"], ans):
+            out[str(shot)] = result
+        #for sh, tw in zip(self.shot_info["shots"], self.shot_info["time_windows"]):
+        #    out[str(sh)] = dev.acq.getdata(sh, self.shot_info["probes"]).reduce_time(tw)
+        #return out
+
+    @staticmethod
+    def get_mag(dev, shot, time_window, probe):
+        return dev.acq.getdata(shot, probe).reduce_time(time_window)
 
     def return_raw_ffts(self):
         # Returns the FFT's of every shot and in the form of a dictionary

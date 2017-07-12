@@ -588,6 +588,7 @@ class PyFusionWindow:
         self.use_worker_node_checkbox = tk.Checkbutton(master=self.col_1_frame,
                                                        text="Use Iris\nWorker Node", font=(font_name, 13),
                                                        variable=self.use_worker_node_val, bd=5, relief=tk.SUNKEN)
+        self.use_worker_node_checkbox.config(state=tk.DISABLED)
         self.use_worker_node_checkbox.grid(row=1, column=0, sticky=tk.NE)
 
         # ======================================
@@ -750,7 +751,7 @@ class PyFusionWindow:
             self._restore_settings_from_loaded_object()
             self.using_analysis_var.set("Using analysis object from\n{}".format(jt.break_path(fname, 24)))
             self.using_analysis_label.config(fg="dark green")
-            win = ClusteringWindow(master=self.root,ANobj_restore=self.AN)
+            win = ClusteringWindow(master=self.root, ANobj_restore=self.AN)
         except:
             ErrorWindow(self.root, "Incorrect file format.")
         return None
