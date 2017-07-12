@@ -60,7 +60,7 @@ class ClusteringWindow:
         self.root.bind("<<clustering_failed>>", self.clustering_failed)
         self.root.bind("<<slurm_clustering_complete>>", self.slurm_clustering_complete)
         if ANobj_restore is None:
-            self.default_wait_time = 5  # Wait 10 seconds
+            self.default_wait_time = 5  # Wait 5 seconds before checking status
             self.AN = None
             self.slurm_start_time = slurm_start_time
             self.root.title("Clustering in Progress")
@@ -99,7 +99,7 @@ class ClusteringWindow:
         self.root.wm_protocol("WM_DELETE_WINDOW", self.x_close)
         self.message.set("SLURM clustering complete!\nYou can now load your\nAnalysis object file from\n{}"\
                          .format(jt.break_path(self.ANobj_file, 23)))
-        self.ok_button = tk.Button(master=self.root, text="OK", command=self.root.destroy)
+        self.ok_button = tk.Button(master=self.root, text="OK", command=self.root.destroy, font=(font_name, 13))
         self.ok_button.grid(row=1, column=0)
         return
 
@@ -750,6 +750,7 @@ class PyFusionWindow:
             self._restore_settings_from_loaded_object()
             self.using_analysis_var.set("Using analysis object from\n{}".format(jt.break_path(fname, 24)))
             self.using_analysis_label.config(fg="dark green")
+            win = ClusteringWindow(master=self.root,ANobj_restore=self.AN)
         except:
             ErrorWindow(self.root, "Incorrect file format.")
         return None
