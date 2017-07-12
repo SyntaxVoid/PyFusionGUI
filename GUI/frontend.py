@@ -60,7 +60,7 @@ class ClusteringWindow:
         self.root.bind("<<clustering_failed>>", self.clustering_failed)
         self.root.bind("<<slurm_clustering_complete>>", self.slurm_clustering_complete)
         if ANobj_restore is None:
-            self.default_wait_time = 10  # Wait 10 seconds
+            self.default_wait_time = 5  # Wait 10 seconds
             self.AN = None
             self.slurm_start_time = slurm_start_time
             self.root.title("Clustering in Progress")
@@ -68,6 +68,7 @@ class ClusteringWindow:
                 self.message.set("Now clustering.\nPlease wait.")
             if slurm_start_time is not None:
                 self.slurm_done_file = IRIS_CSCRATCH_DIR+self.slurm_start_time+".slurmdone"
+                self.ANobj_file = IRIS_CSCRATCH_DIR+self.slurm_start_time+".ANobj"
                 self._cur = self.default_wait_time
                 self.message.set("Waiting for worker\nnode to complete.\nChecking again in\n{} seconds."\
                                  .format(self._cur))
@@ -98,7 +99,7 @@ class ClusteringWindow:
         self.root.title("SLURM Clustering Complete!")
         self.root.wm_protocol("WM_DELETE_WINDOW", self.x_close)
         self.message.set("SLURM clustering complete!\nYou can now load your\nAnalysis object file from\n{}"\
-                         .format(jt.break_path(self.slurm_done_file, 23)))
+                         .format(jt.break_path(self.ANobj_file, 23)))
         self.ok_button = tk.Button(master=self.root, text="OK", command=self.root.destroy)
         self.ok_button.grid(row=1, column=0)
         return
@@ -952,7 +953,7 @@ write_finished_file(\"{DONE_FILE}\")
 '''.format(ANALYSIS_OBJECT=self.settings_to_analysis_object_str(),
            ANOBJ_FILE=IRIS_CSCRATCH_DIR+now+".ANobj",
            DONE_FILE=IRIS_CSCRATCH_DIR+now+".slurmdone")
-                with open("run_me.py", "w") as test:
+                with open("temp.py", "w") as test:
                     test.write(pythonscript)
                 sbatchscript = '''#!/bin/bash
 #SBATCH -p short
@@ -963,11 +964,11 @@ write_finished_file(\"{DONE_FILE}\")
 #SBATCH -o PyFusionGUI-%j.out
 #SBATCH --export=ALL
 echo "Starting job on worker node"
-/fusion/usc/opt/python/2.7.11/bin/python2.7 run_me.py
+/fusion/usc/opt/python/2.7.11/bin/python2.7 temp.py
 '''
-                with open("sbatch_cluster.sbatch", "w") as sbatch:
+                with open("sbatch_clustering.sbatch", "w") as sbatch:
                     sbatch.write(sbatchscript)
-                os.system("sbatch sbatch_cluster.sbatch")
+                os.system("sbatch sbatch_clustering.sbatch")
                 win = ClusteringWindow(master=self.root, slurm_start_time=now)
 
 
