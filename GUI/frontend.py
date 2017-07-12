@@ -69,7 +69,7 @@ class ClusteringWindow:
             if slurm_start_time is not None:
                 self.slurm_done_file = IRIS_CSCRATCH_DIR+self.slurm_start_time+".slurmdone"
                 self.ANobj_file = IRIS_CSCRATCH_DIR+self.slurm_start_time+".ANobj"
-                self.error_file = os.path.join(PYFUSION_DIR, "errors.txt")
+                self.error_file = os.path.join(SLURM_DIR, "errors.txt")
                 self._cur = self.default_wait_time
                 self.message.set("Waiting for worker\nnode to complete.\nChecking again in\n{} seconds."\
                                  .format(self._cur))
