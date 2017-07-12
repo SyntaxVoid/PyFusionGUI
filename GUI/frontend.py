@@ -960,7 +960,7 @@ write_finished_file(".{TIME}")
 #SBATCH -p short
 #SBATCH -n 20
 #SBATCH -N 1
-#SBATCH -t 
+#SBATCH -t 5
 #SBATCH --mem-per-cpu=4G
 #SBATCH -o PyFusionGUI-%j.out
 #SBATCH --export=ALL
