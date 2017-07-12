@@ -371,8 +371,10 @@ class PyFusionWindow:
         # ==       DATAMINING SETTINGS        ==
         # ======================================
         # ======================================
-        self.dms_frame = tk.Frame(master=self.root, bd=5, relief=tk.SUNKEN)
-        self.dms_frame.grid(padx=7, pady=15, row=0, column=1, sticky=tk.N + tk.E)
+        self.col_1_frame = tk.Frame(master=self.root)
+        self.col_1_frame.grid(row=0, column=1, sticky=tk.N)
+        self.dms_frame = tk.Frame(master=self.col_1_frame, bd=5, relief=tk.SUNKEN)
+        self.dms_frame.grid(row=0, column=0)
         self.dms_info = tk.Label(master=self.dms_frame,
                                  text="Datamining Settings",
                                  font=(font_name, 20))
@@ -540,6 +542,12 @@ class PyFusionWindow:
                                           textvariable=self.filter_item_var)
         self.filter_item_entry.grid(row=11, column=4, padx=5, sticky=tk.W)
 
+        self.use_worker_node_val = tk.IntVar(master=self.root, value=1)
+        self.use_worker_node_checkbox = tk.Checkbutton(master=self.col_1_frame,
+                                                       text="Use Iris\nWorker Node", font=(font_name, 13),
+                                                       variable=self.use_worker_node_val, bd=5, relief=tk.SUNKEN)
+        self.use_worker_node_checkbox.grid(row=1, column=0, sticky=tk.NE)
+
         # ======================================
         # ======================================
         # ==        SETTINGS BUTTONS          ==
@@ -593,7 +601,6 @@ class PyFusionWindow:
                                                font=(font_name, 13), width=14,
                                                command=self.run_clustering)
         self.run_clustering_button.grid(row=2, column=0, sticky=tk.N)
-
 
         self.run_point_analysis_button = tk.Button(master=self.analysis_frame,
                                                    text="Pinpoint Analysis",
@@ -869,31 +876,50 @@ filter_items: EM_VMM_kappas'''
         return None
 
     def run_clustering(self):
+        if not self.use_worker_node_val:
+            def callback():
+                try:
+                    self.AN = self.settings_to_analysis_object()
+                    win.AN = self.AN
+                    win.root.event_generate("<<clustering_complete>>", when="tail")
+                    self.root.event_generate("<<clustering_complete>>", when="tail")
+                except:
+                    win.root.event_generate("<<clustering_failed>>", when="tail")
+                    self.root.event_generate("<<clustering_failed>>", when="tail")
+                return
 
-        def callback():
-            try:
-                self.AN = self.settings_to_analysis_object()
-                win.AN = self.AN
-                win.root.event_generate("<<clustering_complete>>", when="tail")
-                self.root.event_generate("<<clustering_complete>>", when="tail")
-            except:
-                win.root.event_generate("<<clustering_failed>>", when="tail")
-                self.root.event_generate("<<clustering_failed>>", when="tail")
-            #if self.AN is None:
-            #    win.root.event_generate("<<clustering_failed>>", when="tail")
-            #else:
-            #    win.root.event_generate("<<clustering_complete>>", when="tail")
-            #    self.using_analysis_var.set("Using analysis object created\n"
-            #                                "from custom user settings.")
-            #    self.using_analysis_label.config(fg="dark green")
-            return
+            if self.valid_values():
+                self.root.event_generate("<<clustering_in_progress>>", when="tail")
+                win = ClusteringWindow(master=self.root)
+                t = threading.Thread(target=callback)
+                t.start()
+            return None
+        if self.use_worker_node_val:
+            # Need to create a job script AND!? a python script for SLURM to run. Two scripts, really?...
+            pythonscript = '''import time
+print("This is a test script")
+for i in range(5):
+    print(i)
+    time.sleep(1)'''
+            with open("TEST.PY", "w") as test:
+                test.write(pythonscript)
+            sbatchscript = '''#!/bin/bash
+#SBATCH -p short
+#SBATCH -n 20
+#SBATCH -N 1
+#SBATCH -t 20
+#SBATCH --mem-per-cpu=5G
+#SBATCH -o PyFusionGUI-%j.out
+#SBATCH --export=ALL
+echo "Starting job on worker node"
+/fusion/usc/opt/python/2.7.11/bin/python2.7 {FILE_NAME}
+echo "Done. Output written to PyFusionGUI-%j.out"
+'''.format("TEST.PY")
+            with open("SBATCH_TEST.SBATCH", "w") as sbatch:
+                sbatch.write(sbatchscript)
+            os.system("sbatch SBATCH_TEST.SBATCH")
+            
 
-        if self.valid_values():
-            self.root.event_generate("<<clustering_in_progress>>", when="tail")
-            win = ClusteringWindow(master=self.root)
-            t = threading.Thread(target=callback)
-            t.start()
-        return None
 
     def run_point_analysis(self):
         # A window needs to popup asking the user for a frequency and time.
@@ -912,6 +938,45 @@ filter_items: EM_VMM_kappas'''
             defaults = [object_settings["shots"].split(",")[0], object_settings["times"], object_settings["freq_range"]]
         PinpointWindow(master=self.root, defaults=defaults, pf_window=self, previous_analysis=self.AN)
         return
+
+
+    def settings_to_analysis_object_str(self):
+        DMstr = self.settings_to_datamining_object_str()
+        return self.datamining_str_to_analysis_object_str(DMstr)
+
+    @staticmethod
+    def datamining_str_to_analysis_object_str(DM):
+        "Analysis(DM={})".format(DM)
+        return "Analysis(DM={})".format(DM)
+
+    def settings_to_datamining_object_str(self):
+        if self.valid_values():
+            shots = jt.shot_str_parser(self.value_dict["shots"].get())
+            time_windows = jt.time_window_parser(self.value_dict["times"].get())
+            probes = self.value_dict["probe_array"].get()
+            n_cpus = int(self.value_dict["n_cpus"].get())
+            n_clusters = int(self.value_dict["n_clusters"].get())
+            n_iterations = int(self.value_dict["n_iterations"].get())
+            start = self.value_dict["start"].get()
+            method = self.value_dict["method"].get()
+            freq_range = jt.time_window_parser(self.value_dict["freq_range"].get())
+            lower_freq = freq_range[0]
+            upper_freq = freq_range[1]
+            seeds = int(self.value_dict["seed"].get())
+            n_peaks = int(self.value_dict["n_peaks"].get())
+            cutoff_by = self.value_dict["cutoff_by"].get()
+            cutoff_value = int(self.value_dict["cutoff_value"].get())
+            filter_items = self.value_dict["filter_items"].get()
+            datamining_settings = {'n_clusters': n_clusters, 'n_iterations': n_iterations,
+                                   'start': start, 'verbose': 0, 'method': method, "seeds": seeds}
+            fft_settings = {"n_pts": n_peaks, "lower_freq": lower_freq, "upper_freq": upper_freq,
+                            "cutoff_by": cutoff_by, "ave_kappa_cutoff": cutoff_value, "filter_item": filter_items}
+            DM = "analysis.DataMining(shots={shots}, time_windows={time_windows}, probes={probes},"\
+                                     "datamining_settings={datamining_settings}, fft_settings={fft_settings},"\
+                                     "n_cpus={n_cpus})".format(shots=shots, time_windows=time_windows, probes=probes,
+                                                               datamining_settings=datamining_settings,
+                                                               fft_settings=fft_settings,n_cpus=n_cpus)
+            return DM
 
     def settings_to_analysis_object(self):
         # Takes the current settings and creates an Analysis object from Analysis/analysis.py

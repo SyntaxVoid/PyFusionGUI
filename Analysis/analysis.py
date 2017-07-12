@@ -7,8 +7,6 @@ import pickle
 
 # Anaconda
 import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib as mpl
 
 # PyFusion
 import pyfusion as pf
@@ -20,7 +18,7 @@ from PyFusionGUI import *
 from Utilities import jtools as jt
 OutOfOrderError = jt.OutOfOrderException
 AnalysisError = jt.AnalysisError
-mpl.rcParams["axes.linewidth"] = 4.0
+
 pi = np.pi
 PLOT_COLORS = jt.CycledList(["#ff0000", "#ff9400", "#ffe100", "#bfff00",
                              "#2aff00", "#00ffa9", "#00f6ff", "#0090ff",
@@ -287,6 +285,8 @@ class Analysis:
         # Saves the current instance variables as a pickled object to "filename".
         # Since there are several different data structures within an analysis object,
         # they will be compressed into a single dictionary object and then pickled.
+        from time import strftime
+        time_string = strftime("%d-%m-%Y--%H-%M-%S")
         if filename is None:
             probes = self.DM.shot_info["probes"]
             if probes == "DIIID_toroidal_mag": pr = "TOR"
@@ -294,9 +294,10 @@ class Analysis:
             elif probes == "ECEF_array": pr = "ECE"
             elif probes == "ECEF_array_red": pr = "ECE_REDUCED"
             else: pr = probes
-            local_filename = str(self.DM.shot_info["shots"][0]) + "_" + \
-                             jt.time_window_to_filelike_str(self.DM.shot_info["time_windows"][0]) + \
-                             "_" + pr + ".ANobj"
+            local_filename = "PyFusionGUI_from_{}".format(time_string)
+            #local_filename = str(self.DM.shot_info["shots"][0]) + "_" + \
+            #                 jt.time_window_to_filelike_str(self.DM.shot_info["time_windows"][0]) + \
+            #                 "_" + pr + ".ANobj"
             filename = os.path.join(PICKLE_SAVE_DIR, local_filename)
         with open(filename, "wb") as pick:
             pickle.dump({"self": {"results": self.results,
@@ -305,10 +306,13 @@ class Analysis:
         return
 
     def return_specgrams(self):
-        fontsize = 35  # FixMe: More robust definition of fontsize... Not sure what to do now.
-        markersize = 5  # FixMe: More robust definition of markersize
+        import matplotlib.pyplot as plt  # These imports are here since this file will be imported into an
+        import matplotlib as mpl         # environment where matplotib cannot be imported
+        mpl.rcParams["axes.linewidth"] = 4.0
         n_shots = len(self.DM.shot_info["shots"])
         nrows, ncols = jt.squareish_grid(n_shots, swapxy=True)
+        fontsize = np.ceil(35/(ncols**0.25))  # FixMe: More robust definition of fontsize... Not sure what to do now.
+        markersize = 5  # FixMe: More robust definition of markersize
         figure1, axes1 = plt.subplots(nrows=nrows, ncols=ncols, sharex=True, sharey=True, edgecolor="k", facecolor="w")
         figure2, axes2 = plt.subplots(nrows=nrows, ncols=ncols, sharex=True, sharey=True, edgecolor="k", facecolor="w")
         axesf1 = axes1.flatten() if n_shots > 1 else np.array([axes1], dtype=object)
@@ -351,6 +355,9 @@ class Analysis:
         return (figure1, axes1), (figure2, axes2)
 
     def return_pinpoint_plots(self, shot, t0, f0, time_window=None, frequency_window=None, clusters=None):
+        import matplotlib.pyplot as plt
+        import matplotlib as mpl
+        mpl.rcParams["axes.linewidth"] = 4.0
         shot_index = self.DM.shot_info["shots"].index(int(shot))
         if clusters is None:
             clusters = []
@@ -468,7 +475,3 @@ if __name__ == '__main__':
     # AN1.save(filename="TESTANSAVE.ANobj")
     # # Restoring
     # AN2 = Analysis.restore(filename="TESTANSAVE.ANobj")
-    DM1 = DataMining(shots=shots, time_windows=time_windows, probes=probes)
-    AN1 = Analysis(DM=DM1)
-    plot1, plot2 = AN1.return_specgrams()
-    plt.show()
