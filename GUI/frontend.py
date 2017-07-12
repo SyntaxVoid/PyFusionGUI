@@ -90,6 +90,7 @@ class ClusteringWindow:
         return
 
     def slurm_active(self):
+        print(os.path.isfile(".{}".format(self.slurm_start_time)))
         return os.path.isfile(".{}".format(self.slurm_start_time))
 
     def slurm_clustering_complete(self, e):
@@ -945,7 +946,7 @@ filter_items: EM_VMM_kappas'''
                 pythonscript = '''from PyFusionGUI.Analysis.analysis import *
 from PyFusionGUI.Utilities.jtools import *
 A1 = {ANALYSIS_OBJECT}
-A1.save(ANOBJ_FILE)
+A1.save({ANOBJ_FILE})
 write_finished_file(".{TIME}")
 '''.format(ANALYSIS_OBJECT=self.settings_to_analysis_object_str(),
            ANOBJ_FILE=now+".ANobj",
