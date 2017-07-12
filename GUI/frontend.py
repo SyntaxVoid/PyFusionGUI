@@ -968,7 +968,7 @@ echo "Starting job on worker node"
 '''
                 with open("SLURM/sbatch_clustering.sbatch", "w") as sbatch:
                     sbatch.write(sbatchscript)
-                os.system("sbatch sbatch_clustering.sbatch")
+                os.system("sbatch SLURMsbatch_clustering.sbatch")
                 win = ClusteringWindow(master=self.root, slurm_start_time=now)
 
 
