@@ -67,6 +67,7 @@ class ClusteringWindow:
             if self.slurm_start_time is None:
                 self.message.set("Now clustering.\nPlease wait.")
             if slurm_start_time is not None:
+                self.slurm_done_file = IRIS_CSCRATCH_DIR+self.slurm_start_time+".slurmdone"
                 self._cur = self.default_wait_time
                 self.message.set("Waiting for worker\nnode to complete.\nChecking again in\n{} seconds."\
                                  .format(self._cur))
@@ -90,13 +91,13 @@ class ClusteringWindow:
         return
 
     def slurm_active(self):
-        print(IRIS_CSCRATCH_DIR+self.slurm_start_time+".slurmdone")
-        return not os.path.isfile(IRIS_CSCRATCH_DIR+self.slurm_start_time+".slurmdone")
+        return not os.path.isfile(self.slurm_done_file)
 
     def slurm_clustering_complete(self, e):
-        self.root.title("Slurm Clustering Complete!")
+        self.root.title("SLURM Clustering Complete!")
         self.root.wm_protocol("WM_DELETE_WINDOW", self.x_close)
-        self.message.set("Slurm clustering complete!\nYou can now load your\nAnalysis object file from\nIDKYET.derp.")
+        self.message.set("SLURM clustering complete!\nYou can now load your\nAnalysis object file from\n{}"\
+                         .format(jt.break_path(self.slurm_done_file, 23)))
         self.ok_button = tk.Button(master=self.root, text="OK", command=self.root.destroy)
         self.ok_button.grid(row=1, column=0)
         return
