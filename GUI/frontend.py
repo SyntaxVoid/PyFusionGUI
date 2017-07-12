@@ -90,6 +90,7 @@ class ClusteringWindow:
         return
 
     def slurm_active(self):
+        print(IRIS_CSCRATCH_DIR+self.slurm_start_time+".slurmdone")
         return not os.path.isfile(IRIS_CSCRATCH_DIR+self.slurm_start_time+".slurmdone")
 
     def slurm_clustering_complete(self, e):
