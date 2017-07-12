@@ -964,7 +964,7 @@ write_finished_file(\"{DONE_FILE}\")
 #SBATCH --mem-per-cpu=4G
 #SBATCH -o PyFusionGUI-%j.out
 #SBATCH --export=ALL
-#SBATCH -error 
+#SBATCH -e errors.txt
 echo "Starting job on worker node"
 /fusion/usc/opt/python/2.7.11/bin/python2.7 SLURM/temp.py
 '''
