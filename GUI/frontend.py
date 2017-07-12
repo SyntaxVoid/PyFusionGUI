@@ -92,7 +92,6 @@ class ClusteringWindow:
         return
 
     def slurm_active(self):
-        print(self.slurm_done_file)
         return not os.path.isfile(self.slurm_done_file)
 
     def slurm_clustering_complete(self, e):
@@ -968,7 +967,7 @@ echo "Starting job on worker node"
 '''
                 with open("SLURM/sbatch_clustering.sbatch", "w") as sbatch:
                     sbatch.write(sbatchscript)
-                os.system("sbatch SLURMsbatch_clustering.sbatch")
+                os.system("sbatch SLURM/sbatch_clustering.sbatch")
                 win = ClusteringWindow(master=self.root, slurm_start_time=now)
 
 
