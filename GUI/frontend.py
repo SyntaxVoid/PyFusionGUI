@@ -91,6 +91,7 @@ class ClusteringWindow:
         return
 
     def slurm_active(self):
+        print(self.slurm_done_file)
         return not os.path.isfile(self.slurm_done_file)
 
     def slurm_clustering_complete(self, e):
