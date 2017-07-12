@@ -908,7 +908,7 @@ for i in range(5):
 #SBATCH -n 20
 #SBATCH -N 1
 #SBATCH -t 20
-#SBATCH --mem-per-cpu=5G
+#SBATCH --mem-per-cpu=100M
 #SBATCH -o PyFusionGUI-%j.out
 #SBATCH --export=ALL
 echo "Starting job on worker node"
