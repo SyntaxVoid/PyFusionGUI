@@ -905,7 +905,7 @@ for i in range(5):
                 test.write(pythonscript)
             sbatchscript = '''#!/bin/bash
 #SBATCH -p short
-#SBATCH -n 20
+#SBATCH -n 5
 #SBATCH -N 1
 #SBATCH -t 20
 #SBATCH --mem-per-cpu=100M
