@@ -946,10 +946,10 @@ filter_items: EM_VMM_kappas'''
 from PyFusionGUI.Utilities.jtools import *
 A1 = {ANALYSIS_OBJECT}
 A1.save(\"{ANOBJ_FILE}\")
-write_finished_file(\".{TIME}\")
+write_finished_file(\"{DONE_FILE}\")
 '''.format(ANALYSIS_OBJECT=self.settings_to_analysis_object_str(),
            ANOBJ_FILE=IRIS_CSCRATCH_DIR+now+".ANobj",
-           TIME=IRIS_CSCRATCH_DIR+now+".slurmdone")
+           DONE_FILE=IRIS_CSCRATCH_DIR+now+".slurmdone")
                 with open("run_me.py", "w") as test:
                     test.write(pythonscript)
                 sbatchscript = '''#!/bin/bash
@@ -962,7 +962,6 @@ write_finished_file(\".{TIME}\")
 #SBATCH --export=ALL
 echo "Starting job on worker node"
 /fusion/usc/opt/python/2.7.11/bin/python2.7 run_me.py
-rm PyFusionGUI-%j.out
 '''
                 with open("sbatch_cluster.sbatch", "w") as sbatch:
                     sbatch.write(sbatchscript)
