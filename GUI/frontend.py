@@ -958,7 +958,7 @@ write_finished_file(".{TIME}")
                     test.write(pythonscript)
                 sbatchscript = '''#!/bin/bash
 #SBATCH -p short
-#SBATCH -n 20
+#SBATCH -n 4
 #SBATCH -N 1
 #SBATCH -t 5
 #SBATCH --mem-per-cpu=4G
