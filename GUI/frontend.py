@@ -85,10 +85,11 @@ class ClusteringWindow:
         if self._cur <= 0:
             if self.slurm_active():
                 self._cur = self.default_wait_time
-            if os.stat(self.error_file).st_size != 0:
-                self.message.set("Unexpected SLURM error!\nCheck SLURM output for details.")
-                ok = tk.Button(master=self.root, text="OK", font=(font_name, 13), command=self.root.destroy)
-                ok.grid(row=1, column=0, sticky=tk.N)
+            if os.path.isfile(self.error_file):
+                if os.stat(self.error_file).st_size != 0:
+                    self.message.set("Unexpected SLURM error!\nCheck SLURM output for details.")
+                    ok = tk.Button(master=self.root, text="OK", font=(font_name, 13), command=self.root.destroy)
+                    ok.grid(row=1, column=0, sticky=tk.N)
             else:
                 self.root.event_generate("<<slurm_clustering_complete>>", when="tail")
                 return
