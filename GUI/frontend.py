@@ -960,7 +960,7 @@ write_finished_file(".{TIME}")
 #SBATCH --export=ALL
 echo "Starting job on worker node"
 /fusion/usc/opt/python/2.7.11/bin/python2.7 run_me.py
-rm PyFusionGUI-%j.out
+## rm PyFusionGUI-%j.out
 '''
                 with open("sbatch_cluster.sbatch", "w") as sbatch:
                     sbatch.write(sbatchscript)
