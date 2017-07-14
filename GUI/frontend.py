@@ -975,7 +975,9 @@ rm -f /home/%u/PyFusionGUI/PyFusionGUI/SLURM/errors.txt
 '''
                 with open(os.path.join(SLURM_DIR,"sbatch_clustering.sbatch"), "w") as sbatch:
                     sbatch.write(sbatchscript)
-                slurm_output = subprocess.check_output("sbatch {}".format(os.path.join(SLURM_DIR, "sbatch_clustering.sbatch")))
+                command = "sbatch {}".format(os.path.join(SLURM_DIR, "sbatch_clustering.sbatch"))
+                print(command)
+                slurm_output = subprocess.check_output(command)
                 #os.system("sbatch {}".format(os.path.join(SLURM_DIR, "sbatch_clustering.sbatch")))
                 jobid = jt.slurm_id_from_output(slurm_output)
                 win = ClusteringWindow(master=self.root, slurm_start_time=now, jobid=jobid)
