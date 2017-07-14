@@ -84,10 +84,20 @@ class ClusteringWindow:
     def countdown(self):
         self._cur -= 1
         if self._cur <= 0:
-            if self.slurm_active():
+            sjobexitmod_output = subprocess.check_output("sjobexitmod -l {}".format(self.jobid), shell=True)
+            exit_state = jt.get_slurm_exit_state(sjobexitmod_output)
+            if exit_state == "PENDING":
                 self._cur = self.default_wait_time
-            else:
+            elif exit_state == "RUNNING":
+                self._cur = self.default_wait_time
+            elif exit_state == "COMPLETED":
                 self.root.event_generate("<<slurm_clustering_complete>>", when="tail")
+                return
+            elif exit_state == "FAILED":
+                self.message.set("Unexpected error! Check the\noutput file for details.\n{}".format(
+                    jt.break_path(os.path.join(SLURM_DIR, "PyFusionGUI-{}.out".format(self.jobid)), 27)))
+                ok = tk.Button(master=self.root, text="OK", font=(font_name, 13), command=self.root.destroy)
+                ok.grid(row=1, column=0, sticky=tk.N)
                 return
         self.message.set("Waiting for worker\nnode to complete.\nChecking again in\n{} seconds".format(self._cur))
         self.root.after(1000, self.countdown)
@@ -95,7 +105,7 @@ class ClusteringWindow:
 
     def slurm_active(self):
         squeue_output = subprocess.check_output("squeue -j {}".format(self.jobid), shell=True)
-        return jt.check_slurm_for_id(squeue_output, self.jobid)
+        return jt.check_slurm_for_job(squeue_output)
 
     def slurm_clustering_complete(self, e):
         self.root.title("SLURM Clustering Complete!")

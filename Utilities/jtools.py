@@ -25,13 +25,26 @@ def slurm_id_from_output(sbatch_output):
         return -1
     return sbatch_output.strip().split()[-1]
 
-def check_slurm_for_id(squeue_output, id):
+def check_slurm_for_job(squeue_output):
     jobs = squeue_output.strip().split("\n")[1:]
-    for job in jobs:
-        job_id = job.strip().split()[0]
-        if job_id == id:
-            return True
-    return False
+    if jobs == []:
+        return False
+    return True
+    # for job in jobs:
+    #     job_id = job.strip().split()[0]
+    #     if job_id == id:
+    #         return True
+    # return False
+
+def get_slurm_exit_state(sjobexitmod_output):
+    # Example output looks like below. sjobexitmod -l 713466
+    #       JobID    Account   NNodes        NodeList      State ExitCode DerivedExitCode        Comment
+    #------------ ---------- -------- --------------- ---------- -------- --------------- --------------
+    # 713466            users        1          iris22  COMPLETED      0:0             0:0
+
+    job = sjobexitmod_output.strip().split("\n"[2:])[0]
+    exit_state = job.strip().split()[4]
+    return exit_state
 
 def write_finished_file(f):
     with open(f, "w") as out:
