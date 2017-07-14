@@ -615,9 +615,10 @@ filter_items: EM_VMM_kappas'''
         try:
             self.AN = analysis.Analysis.restore(fname)
             self._restore_settings_from_loaded_object()
-            self.using_analysis_var.set("Using analysis object from\n{}".format(jt.break_path(fname, 24)))
-            self.using_analysis_label.config(fg="dark green")
-            win = ClusteringWindow(master=self.root, ANobj_restore=self.AN)
+            self.root.event_generate("<<clustering_restored>>", when="tail")
+            #self.using_analysis_var.set("Using analysis object from\n{}".format(jt.break_path(fname, 24)))
+            #self.using_analysis_label.config(fg="dark green")
+            #win = ClusteringWindow(master=self.root, ANobj_restore=self.AN)
         except:
             ErrorWindow(self.root, "Incorrect file format.")
         return None
