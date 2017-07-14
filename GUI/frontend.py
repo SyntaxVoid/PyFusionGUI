@@ -45,7 +45,8 @@ class ErrorWindow:
 
 class ClusteringWindow:
     def __init__(self, master, slurm_start_time=None, jobid=None, ANobj_restore=None):
-        self.root = tk.Toplevel(master=master)
+        self.master = master
+        self.root = tk.Toplevel(master=self.master)
         self.message_frame = tk.Frame(master=self.root)
         self.message_frame.grid(row=0, column=0, sticky=tk.N)
         self.buttons_frame = tk.Frame(master=self.root, bd=5, relief=tk.SUNKEN)
@@ -72,14 +73,32 @@ class ClusteringWindow:
                 self.ANobj_file = IRIS_CSCRATCH_DIR+self.slurm_start_time+".ANobj"
                 self.error_file = os.path.join(SLURM_DIR, "errors.txt")
                 self._cur = self.default_wait_time
-                self.message.set("Waiting for worker\nnode to complete\njob # {}.\nChecking again in\n{} seconds."\
-                                 .format(self.jobid, self._cur))
+                # self.message.set("Waiting for worker\nnode to complete\njob # {}.\nChecking again in\n{} seconds."\
+                #                  .format(self.jobid, self._cur))
+                self.cancel_button = tk.Button(master=self.root, text="Cancel", command=self.verify_cancel)
+                self.cancel_button.grid(row=1, column=0, sticky=tk.N)
                 self.root.after(1000, self.countdown)
         else:
             self.AN = ANobj_restore
             self.root.title("Analysis Object Restored")
             self.message.set("Analysis object has been restored.\nSelect an option to continue.")
             self.root.event_generate("<<clustering_complete>>", when="tail")
+
+    def verify_cancel(self):
+        win = tk.Toplevel(master=self.root)
+        win.resizable(width=False, height=False)
+        label = tk.Label(master=win, text="Do you really wish to cancel?", font=(font_name, 13))
+        label.grid(row=0, column=0, columnspan=2, sticky=tk.N)
+        yes = tk.Button(master=win, text="Yes", font=(font_name, 18), command=self.yes_cancel)
+        yes.grid(row=1, column=0, sticky=tk.N)
+        no = tk.Button(master=win, text="No", font=(font_name, 18), command=self.root.destroy)
+        no.grid(row=1, column=1, sticky=tk.N)
+        return
+
+
+    def yes_cancel(self):
+        subprocess.check_output("scancel -j {}".format(self.jobid))
+        return
 
     def countdown(self):
         self._cur -= 1
@@ -95,10 +114,11 @@ class ClusteringWindow:
                 self.root.event_generate("<<slurm_clustering_complete>>", when="tail")
                 return
             elif exit_state == "FAILED":
-                self.message.set("Unexpected error! Check the\noutput file for details.\n{}".format(
-                    jt.break_path(os.path.join(SLURM_DIR, "PyFusionGUI-{}.out".format(self.jobid)), 27)))
-                ok = tk.Button(master=self.root, text="OK", font=(font_name, 13), command=self.root.destroy)
-                ok.grid(row=1, column=0, sticky=tk.N)
+                self.root.event_generate("<<clustering_failed>>", when="tail")
+                #self.message.set("Unexpected error! Check the\noutput file for details.\n{}".format(
+                #    jt.break_path(os.path.join(SLURM_DIR, "PyFusionGUI-{}.out".format(self.jobid)), 27)))
+                #ok = tk.Button(master=self.root, text="OK", font=(font_name, 13), command=self.root.destroy)
+                #ok.grid(row=1, column=0, sticky=tk.N)
                 return
             else:
                 print("Nothing!")
@@ -115,7 +135,7 @@ class ClusteringWindow:
         self.root.wm_protocol("WM_DELETE_WINDOW", self.x_close)
         self.message.set("SLURM clustering complete!\nYou can now load your\nAnalysis object file from\n{}"\
                          .format(jt.break_path(self.ANobj_file, 23)))
-        self.ok_button = tk.Button(master=self.root, text="OK", command=self.root.destroy, font=(font_name, 13))
+        self.ok_button = tk.Button(master=self.root, text="OK", command=self.root.destroy, font=(font_name, 18))
         self.ok_button.grid(row=1, column=0)
         return
 
@@ -156,6 +176,7 @@ class ClusteringWindow:
                                    text="OK", font=(font_name, 18),
                                    command=self.root.destroy)
         self.ok_button.grid(row=0, column=0, sticky=tk.N)
+        self.master.event_generate("<<clustering_failed>>", when="tail")
         return
 
     def save_objects(self):
