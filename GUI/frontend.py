@@ -86,6 +86,7 @@ class ClusteringWindow:
         if self._cur <= 0:
             sjobexitmod_output = subprocess.check_output("sjobexitmod -l {}".format(self.jobid), shell=True)
             exit_state = jt.get_slurm_exit_state(sjobexitmod_output)
+            self.message.set(exit_state)
             if exit_state == "PENDING":
                 self._cur = self.default_wait_time
             elif exit_state == "RUNNING":
@@ -99,6 +100,8 @@ class ClusteringWindow:
                 ok = tk.Button(master=self.root, text="OK", font=(font_name, 13), command=self.root.destroy)
                 ok.grid(row=1, column=0, sticky=tk.N)
                 return
+            else:
+                print("Nothing!")
         self.message.set("Waiting for worker\nnode to complete.\nChecking again in\n{} seconds".format(self._cur))
         self.root.after(1000, self.countdown)
         return
