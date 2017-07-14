@@ -72,8 +72,8 @@ class ClusteringWindow:
                 self.ANobj_file = IRIS_CSCRATCH_DIR+self.slurm_start_time+".ANobj"
                 self.error_file = os.path.join(SLURM_DIR, "errors.txt")
                 self._cur = self.default_wait_time
-                self.message.set("Waiting for worker\nnode to complete.\nChecking again in\n{} seconds."\
-                                 .format(self._cur))
+                self.message.set("Waiting for worker\nnode to complete\njob # {}.\nChecking again in\n{} seconds."\
+                                 .format(self.jobid, self._cur))
                 self.root.after(1000, self.countdown)
         else:
             self.AN = ANobj_restore
@@ -976,7 +976,7 @@ A1.save(\"{ANOBJ_FILE}\")
 #SBATCH -n 4
 #SBATCH -N 1
 #SBATCH -t 5
-#SBATCH --mem-per-cpu=4G
+#SBATCH --mem-per-cpu=25G
 #SBATCH -o /home/%u/PyFusionGUI/PyFusionGUI/SLURM/PyFusionGUI-%j.out
 #SBATCH --export=ALL
 set -e
@@ -990,6 +990,7 @@ echo "Starting job on worker node"
                     "sbatch {}".format(os.path.join(SLURM_DIR, "sbatch_clustering.sbatch")), shell=True)
                 #os.system("sbatch {}".format(os.path.join(SLURM_DIR, "sbatch_clustering.sbatch")))
                 jobid = jt.slurm_id_from_output(slurm_output)
+                self.root.event_generate("<<clustering_in_progress>>", when="tail")
                 win = ClusteringWindow(master=self.root, slurm_start_time=now, jobid=jobid)
 
 
