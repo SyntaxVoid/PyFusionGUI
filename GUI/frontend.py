@@ -47,7 +47,7 @@ class ClusteringWindow:
     def __init__(self, master, slurm_start_time=None, jobid=None, ANobj_restore=None):
         self.master = master
         self.root = tk.Toplevel(master=self.master)
-        self.root.geometry("500x500")
+        self.root.geometry("250x250")
         self.root.resizable(height=False, width=False)
         self.message_frame = tk.Frame(master=self.root)
         self.message_frame.grid(row=0, column=0, sticky=tk.N)
@@ -99,6 +99,7 @@ class ClusteringWindow:
 
     def yes_cancel(self):
         subprocess.check_output("scancel {}".format(self.jobid), shell=True)
+        self.master.event_generate("<<clustering_failed>>", when="tail")
         self.root.destroy()
         return
 
