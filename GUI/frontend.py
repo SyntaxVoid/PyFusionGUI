@@ -970,6 +970,7 @@ A1.save(\"{ANOBJ_FILE}\")
            ANOBJ_FILE=IRIS_CSCRATCH_DIR+now+".ANobj")
                 with open(os.path.join(SLURM_DIR, "temp.py"), "w") as test:
                     test.write(pythonscript)
+                print(os.path.join(SLURM_DIR, "temp.py"))
                 sbatchscript = '''#!/bin/bash
 #SBATCH -p short
 #SBATCH -n 4
@@ -982,7 +983,7 @@ set -e
 echo "Starting job on worker node"
 /fusion/usc/opt/python/2.7.11/bin/python2.7 {SCRIPT}
 '''.format(SCRIPT=os.path.join(SLURM_DIR, "temp.py"))
-                print(os.path.join(SLURM_DIR, "temp.py"))
+
                 with open(os.path.join(SLURM_DIR,"sbatch_clustering.sbatch"), "w") as sbatch:
                     sbatch.write(sbatchscript)
                 slurm_output = subprocess.check_output(
