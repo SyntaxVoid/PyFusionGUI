@@ -102,7 +102,7 @@ class ClusteringWindow:
                 return
             else:
                 print("Nothing!")
-        self.message.set("Waiting for worker\nnode to complete.\nChecking again in\n{} seconds".format(self._cur))
+        self.message.set("Waiting for worker\nnode to complete\njob # {}.\nChecking again in\n{} seconds".format(self.jobid, self._cur))
         self.root.after(1000, self.countdown)
         return
 
