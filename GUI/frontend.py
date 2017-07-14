@@ -47,7 +47,7 @@ class ClusteringWindow:
     def __init__(self, master, slurm_start_time=None, jobid=None, ANobj_restore=None):
         self.master = master
         self.root = tk.Toplevel(master=self.master)
-        #self.root.geometry("220x200")
+        self.root.geometry("220x200")
         self.root.resizable(height=False, width=False)
         self.message_frame = tk.Frame(master=self.root)
         self.message_frame.grid(row=0, column=0, sticky=tk.N)
@@ -123,7 +123,7 @@ class ClusteringWindow:
             elif exit_state == "CANCELLED+":
                 self.root.event_generate("<<clustering_failed>>", when="tail")
             else:
-                print("UNKNOWN EXIT STATE: {}\nCONTACT ADMINISTRATOR")
+                print("UNKNOWN EXIT STATE: ({})\nCONTACT j.gresl12@gmail.com".format(exit_state))
         self.message.set("Waiting for worker\nnode to complete\njob # {}.\nChecking again in\n{} seconds".format(self.jobid, self._cur))
         self.root.after(1000, self.countdown)
         return
@@ -135,7 +135,7 @@ class ClusteringWindow:
     def slurm_clustering_complete(self, e):
         self.root.title("SLURM Clustering Complete!")
         self.root.wm_protocol("WM_DELETE_WINDOW", self.x_close)
-        #self.root.geometry("220x240")
+        self.root.geometry("290x350")
         self.message.set("SLURM clustering complete!\nYou can now load your\nAnalysis object file from\n{}"\
                          .format(jt.break_path(self.ANobj_file, 23)))
         self.cancel_button.destroy()
@@ -995,7 +995,6 @@ A1.save(\"{ANOBJ_FILE}\")
            ANOBJ_FILE=IRIS_CSCRATCH_DIR+now+".ANobj")
                 with open(os.path.join(SLURM_DIR, "temp.py"), "w") as test:
                     test.write(pythonscript)
-                print(os.path.join(SLURM_DIR, "temp.py"))
                 sbatchscript = '''#!/bin/bash
 #SBATCH -p short
 #SBATCH -n 4
