@@ -51,7 +51,7 @@ class ClusteringWindow:
         self.message_frame.grid(row=0, column=0, sticky=tk.N)
         self.buttons_frame = tk.Frame(master=self.root, bd=5, relief=tk.SUNKEN)
         self.buttons_frame.grid(row=1, column=0, sticky=tk.N)
-        self.root.resizable(height=False, width=False)
+        # self.root.resizable(height=False, width=False)
         self.message = tk.StringVar(master=self.message_frame)
         self.label = tk.Label(master=self.message_frame, textvariable=self.message, font=(font_name, 24))
         self.label.grid(row=0, column=0, sticky=tk.N)
@@ -97,7 +97,7 @@ class ClusteringWindow:
 
 
     def yes_cancel(self):
-        subprocess.check_output("scancel -j {}".format(self.jobid))
+        subprocess.check_output("scancel -j {}".format(self.jobid), shell=True)
         return
 
     def countdown(self):
