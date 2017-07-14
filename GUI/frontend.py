@@ -74,8 +74,6 @@ class ClusteringWindow:
                 self.ANobj_file = IRIS_CSCRATCH_DIR+self.slurm_start_time+".ANobj"
                 self.error_file = os.path.join(SLURM_DIR, "errors.txt")
                 self._cur = self.default_wait_time
-                # self.message.set("Waiting for worker\nnode to complete\njob # {}.\nChecking again in\n{} seconds."\
-                #                  .format(self.jobid, self._cur))
                 self.cancel_button = tk.Button(master=self.root, text="Cancel", command=self.verify_cancel)
                 self.cancel_button.grid(row=1, column=0, sticky=tk.N)
                 self.root.after(1000, self.countdown)
@@ -135,12 +133,18 @@ class ClusteringWindow:
     def slurm_clustering_complete(self, e):
         self.root.title("SLURM Clustering Complete!")
         self.root.wm_protocol("WM_DELETE_WINDOW", self.x_close)
-        self.root.geometry("290x350")
+        self.root.geometry("310x350")
         self.message.set("SLURM clustering complete!\nYou can now load your\nAnalysis object file from\n{}"\
                          .format(jt.break_path(self.ANobj_file, 23)))
         self.cancel_button.destroy()
-        ok_button = tk.Button(master=self.root, text="OK", command=self.root.destroy, font=(font_name, 18))
+        ok_button = tk.Button(master=self.root, text="OK", command=self.successfull_close, font=(font_name, 18))
         ok_button.grid(row=1, column=0)
+        return
+
+    def successfull_close(self):
+        self.master.AN = analysis.Analysis.restore(self.ANobj_file)
+        self.master.event_generate("<<clustering_restored>>", when="tail")
+        self.root.destroy()
         return
 
     def clustering_complete(self, e):
