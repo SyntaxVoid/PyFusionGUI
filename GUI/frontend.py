@@ -132,19 +132,13 @@ class ClusteringWindow:
 
     def slurm_clustering_complete(self, e):
         self.root.title("SLURM Clustering Complete!")
-        self.root.wm_protocol("WM_DELETE_WINDOW", self.x_close)
-        self.root.geometry("310x350")
+        self.root.wm_protocol("WM_DELETE_WINDOW", self.root.destroy)
+        self.root.geometry("330x350")
         self.message.set("SLURM clustering complete!\nYou can now load your\nAnalysis object file from\n{}"\
                          .format(jt.break_path(self.ANobj_file, 23)))
         self.cancel_button.destroy()
-        ok_button = tk.Button(master=self.root, text="OK", command=self.successfull_close, font=(font_name, 18))
+        ok_button = tk.Button(master=self.root, text="OK", command=self.root.destroy, font=(font_name, 18))
         ok_button.grid(row=1, column=0)
-        return
-
-    def successfull_close(self):
-        self.master.AN = analysis.Analysis.restore(self.ANobj_file)
-        self.master.event_generate("<<clustering_restored>>", when="tail")
-        self.root.destroy()
         return
 
     def clustering_complete(self, e):
@@ -152,7 +146,7 @@ class ClusteringWindow:
         # Whether they want to save the actual objects, save the plots, show the plots or to close.
         size = {"height": 2, "width": 16}
         self.root.title("Analysis object loaded!")
-        self.root.wm_protocol("WM_DELETE_WINDOW", self.x_close)
+        self.root.wm_protocol("WM_DELETE_WINDOW", self.root.destroy)
         self.message.set("Analysis object is loaded!\nPlease select an option.")
 
         object_save_button = tk.Button(master=self.buttons_frame,
@@ -177,7 +171,7 @@ class ClusteringWindow:
 
     def clustering_failed(self, e):
         self.root.title("Clustering Failed!")
-        self.root.wm_protocol("WM_DELETE_WINDOW", self.x_close)
+        self.root.wm_protocol("WM_DELETE_WINDOW", self.root.destroy)
         self.message.set("Clustering Failed!")
         self.label.config(fg="red")
         self.ok_button = tk.Button(master=self.buttons_frame,
@@ -200,22 +194,6 @@ class ClusteringWindow:
         plt.show()
         return
 
-    @staticmethod
-    def x_no_close():
-        # Uncomment this when I figure out how to cancel the analysis that is already in progress.
-        #  popup = tk.Toplevel(master=self.root)
-        # popup.resizable(width=False, height=False)
-        # message = tk.Label(master=popup, text="Do you really wish to close?", font=font)
-        # message.grid(row=0, column=0, columnspan=2, sticky=tk.N)
-        # yes = tk.Button(master=popup, text="Yes", command=self.root.destroy, font=font)
-        # yes.grid(row=1, column=0, sticky=tk.N)
-        # no = tk.Button(master=popup, text="No", command=popup.destroy, font=font)
-        # no.grid(row=1, column=1, sticky=tk.N)
-        return
-
-    def x_close(self):
-        self.root.destroy()
-        return
 
 class PinpointWindow:
     def __init__(self, master, defaults, pf_window, previous_analysis=None):
@@ -734,6 +712,7 @@ class PyFusionWindow:
         self.root.bind("<<clustering_in_progress>>", self.clustering_in_progress)
         self.root.bind("<<clustering_restored>>", self.clustering_restored)
 
+
         # ====================================== #
         # ====================================== #
         # ==      SAVING INITIAL VALUES       == #
@@ -757,7 +736,6 @@ class PyFusionWindow:
         return
 
     def clustering_restored(self, e):
-        print(self.AN)
         win = ClusteringWindow(master=self.root, ANobj_restore=self.AN)
         return
 
