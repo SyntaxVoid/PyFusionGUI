@@ -707,10 +707,7 @@ echo "Starting job on worker node"
     def check_and_load_analysis_object(self, jobid, ANobj_file):
         # Checks SLURM to see if the analysis is done yet, and if it is, it will load it into
         # working memory.
-        print("DEBUG::::: Checking for file...")
-        print("DEBUG::::: {} : {}".format(jobid, ANobj_file))
         sjobexitmod_output = subprocess.check_output("sjobexitmod -l {}".format(jobid), shell=True)
-        print("DEBUG:::::", sjobexitmod_output)
         exit_state = jt.get_slurm_exit_state(sjobexitmod_output)
         if exit_state == "PENDING" or exit_state == "assigned" or exit_state == "RUNNING":
             pass
