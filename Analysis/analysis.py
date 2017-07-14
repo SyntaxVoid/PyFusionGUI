@@ -142,7 +142,7 @@ class DataMining:
             local_filename = str(self.shot_info["shots"][0]) + "_" + \
                              jt.time_window_to_filelike_str(self.shot_info["time_windows"][0]) + "_" + \
                              pr + ".DMobj"
-            filename = os.path.join(PICKLE_SAVE_DIR, local_filename)
+            filename = os.path.join(IRIS_CSCRATCH_DIR, local_filename)
         with open(filename, "wb") as pick:
             pickle.dump(self.__dict__, pick)
         return
@@ -315,16 +315,8 @@ class Analysis:
         time_string = strftime("%d-%m-%Y--%H-%M-%S")
         if filename is None:
             probes = self.DM.shot_info["probes"]
-            if probes == "DIIID_toroidal_mag": pr = "TOR"
-            elif probes == "DIIID_poloidal322_mag": pr = "POL"
-            elif probes == "ECEF_array": pr = "ECE"
-            elif probes == "ECEF_array_red": pr = "ECE_REDUCED"
-            else: pr = probes
             local_filename = "PyFusionGUI_from_{}".format(time_string)
-            #local_filename = str(self.DM.shot_info["shots"][0]) + "_" + \
-            #                 jt.time_window_to_filelike_str(self.DM.shot_info["time_windows"][0]) + \
-            #                 "_" + pr + ".ANobj"
-            filename = os.path.join(PICKLE_SAVE_DIR, local_filename)
+            filename = os.path.join(IRIS_CSCRATCH_DIR, local_filename)
         with open(filename, "wb") as pick:
             pickle.dump({"self": {"results": self.results,
                                   "feature_object": self.feature_object,

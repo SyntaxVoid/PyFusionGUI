@@ -19,6 +19,20 @@ class CycledList(list):
     def __getitem__(self, key):
         return super(CycledList, self).__getitem__(np.mod(key, len(self)))
 
+def slurm_id_from_output(sbatch_output):
+    # Assuming the slurm output is formatted like: Submitted batch job <job_id>
+    if not sbatch_output.startswith("Submitted batch job"):
+        return -1
+    return sbatch_output.strip().split()[-1]
+
+def check_slurm_for_id(squeue_output, id):
+    jobs = squeue_output.strip().split("\n")[1:]
+    for job in jobs:
+        job_id = job.strip().split()[0]
+        if job_id == id:
+            return True
+    return False
+
 def write_finished_file(f):
     with open(f, "w") as out:
         out.write("This file exists to confirm that SLURM completed the job successfully.")

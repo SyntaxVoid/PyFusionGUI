@@ -4,13 +4,13 @@
 # Python
 import random
 import os
+import subprocess
 from collections import OrderedDict
 import threading
 from datetime import datetime
 
 # Anaconda
 import matplotlib.pyplot as plt
-import numpy as np
 
 # PyFusion
 from PyFusionGUI import *  # This contains the default file locations of import directories.
@@ -44,7 +44,7 @@ class ErrorWindow:
 
 
 class ClusteringWindow:
-    def __init__(self, master, slurm_start_time=None, ANobj_restore=None):
+    def __init__(self, master, slurm_start_time=None, jobid=None, ANobj_restore=None):
         self.root = tk.Toplevel(master=master)
         self.message_frame = tk.Frame(master=self.root)
         self.message_frame.grid(row=0, column=0, sticky=tk.N)
@@ -63,6 +63,7 @@ class ClusteringWindow:
             self.default_wait_time = 5  # Wait 5 seconds before checking status
             self.AN = None
             self.slurm_start_time = slurm_start_time
+            self.jobid = jobid
             self.root.title("Clustering in Progress")
             if self.slurm_start_time is None:
                 self.message.set("Now clustering.\nPlease wait.")
@@ -82,11 +83,6 @@ class ClusteringWindow:
 
     def countdown(self):
         self._cur -= 1
-        if os.path.isfile(self.error_file):
-            if os.stat(self.error_file).st_size != 0:
-                self.message.set("Unexpected SLURM error!\nCheck SLURM output for details.")
-                ok = tk.Button(master=self.root, text="OK", font=(font_name, 13), command=self.root.destroy)
-                ok.grid(row=1, column=0, sticky=tk.N)
         if self._cur <= 0:
             if self.slurm_active():
                 self._cur = self.default_wait_time
@@ -98,7 +94,8 @@ class ClusteringWindow:
         return
 
     def slurm_active(self):
-        return not os.path.isfile(self.slurm_done_file)
+        squeue_output = subprocess.check_output("squeue -j {}".format(self.jobid))
+        return jt.check_slurm_for_id(squeue_output, self.jobid)
 
     def slurm_clustering_complete(self, e):
         self.root.title("SLURM Clustering Complete!")
@@ -149,7 +146,7 @@ class ClusteringWindow:
         return
 
     def save_objects(self):
-        fname = asksaveasfilename(initialdir=PICKLE_SAVE_DIR,
+        fname = asksaveasfilename(initialdir=IRIS_CSCRATCH_DIR,
                               filetypes=(("Analysis Object File", "*.ANobj"), ("All Files", "*.*")))
         if fname == "":
             return None
@@ -978,8 +975,11 @@ rm -f /home/%u/PyFusionGUI/PyFusionGUI/SLURM/errors.txt
 '''
                 with open(os.path.join(SLURM_DIR,"sbatch_clustering.sbatch"), "w") as sbatch:
                     sbatch.write(sbatchscript)
-                os.system("sbatch {}".format(os.path.join(SLURM_DIR, "sbatch_clustering.sbatch")))
-                win = ClusteringWindow(master=self.root, slurm_start_time=now)
+                slurm_output = subprocess.check_output(
+                    "sbatch {}".format(os.path.join(SLURM_DIR, "sbatch_clustering.sbatch")))
+                #os.system("sbatch {}".format(os.path.join(SLURM_DIR, "sbatch_clustering.sbatch")))
+                jobid = jt.slurm_id_from_output(slurm_output)
+                win = ClusteringWindow(master=self.root, slurm_start_time=now, jobid=jobid)
 
 
 
