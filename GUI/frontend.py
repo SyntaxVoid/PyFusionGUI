@@ -963,10 +963,8 @@ filter_items: EM_VMM_kappas'''
 from PyFusionGUI.Utilities.jtools import *
 A1 = {ANALYSIS_OBJECT}
 A1.save(\"{ANOBJ_FILE}\")
-write_finished_file(\"{DONE_FILE}\")
 '''.format(ANALYSIS_OBJECT=self.settings_to_analysis_object_str(),
-           ANOBJ_FILE=IRIS_CSCRATCH_DIR+now+".ANobj",
-           DONE_FILE=IRIS_CSCRATCH_DIR+now+".slurmdone")
+           ANOBJ_FILE=IRIS_CSCRATCH_DIR+now+".ANobj")
                 with open(os.path.join(SLURM_DIR, "temp.py"), "w") as test:
                     test.write(pythonscript)
                 sbatchscript = '''#!/bin/bash
@@ -977,11 +975,9 @@ write_finished_file(\"{DONE_FILE}\")
 #SBATCH --mem-per-cpu=4G
 #SBATCH -o /home/%u/PyFusionGUI/PyFusionGUI/SLURM/PyFusionGUI-%j.out
 #SBATCH --export=ALL
-rm -f /home/%u/PyFusionGUI/PyFusionGUI/SLURM/errors.txt
-#SBATCH -e /home/%u/PyFusionGUI/PyFusionGUI/SLURM/errors.txt
+set -e
 echo "Starting job on worker node"
 /fusion/usc/opt/python/2.7.11/bin/python2.7 /home/%u/PyFusionGUI/PyFusionGUI/SLURM/temp.py
-rm -f /home/%u/PyFusionGUI/PyFusionGUI/SLURM/errors.txt
 '''
                 with open(os.path.join(SLURM_DIR,"sbatch_clustering.sbatch"), "w") as sbatch:
                     sbatch.write(sbatchscript)
