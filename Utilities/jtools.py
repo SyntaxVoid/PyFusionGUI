@@ -42,7 +42,7 @@ def get_slurm_exit_state(sjobexitmod_output):
     #------------ ---------- -------- --------------- ---------- -------- --------------- --------------
     # 713466            users        1          iris22  COMPLETED      0:0             0:0
 
-    job = sjobexitmod_output.strip().split("\n"[2:])[0]
+    job = sjobexitmod_output.strip().split("\n")[2]
     exit_state = job.strip().split()[4]
     return exit_state
 
