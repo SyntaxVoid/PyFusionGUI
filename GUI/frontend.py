@@ -91,7 +91,7 @@ class ClusteringWindow:
         label.grid(row=0, column=0, columnspan=2, sticky=tk.N)
         yes = tk.Button(master=win, text="Yes", font=(font_name, 18), command=self.yes_cancel)
         yes.grid(row=1, column=0, sticky=tk.N)
-        no = tk.Button(master=win, text="No", font=(font_name, 18), command=self.root.destroy)
+        no = tk.Button(master=win, text="No", font=(font_name, 18), command=win.destroy)
         no.grid(row=1, column=1, sticky=tk.N)
         return
 
@@ -115,10 +115,6 @@ class ClusteringWindow:
                 return
             elif exit_state == "FAILED":
                 self.root.event_generate("<<clustering_failed>>", when="tail")
-                #self.message.set("Unexpected error! Check the\noutput file for details.\n{}".format(
-                #    jt.break_path(os.path.join(SLURM_DIR, "PyFusionGUI-{}.out".format(self.jobid)), 27)))
-                #ok = tk.Button(master=self.root, text="OK", font=(font_name, 13), command=self.root.destroy)
-                #ok.grid(row=1, column=0, sticky=tk.N)
                 return
             else:
                 print("Nothing!")
