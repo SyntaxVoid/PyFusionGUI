@@ -222,7 +222,7 @@ class PinpointWindow:
         self.previous_analysis = previous_analysis
         self.pf_window = pf_window
         self.root = tk.Toplevel(master=master)
-        self.root.geometry("410x350")
+        self.root.geometry("390x390")
         self.root.resizable(width=False, height=False)
         self.heading_label = tk.Label(master=self.root, text="Pinpoint Analysis", font=(font_name, 24))
         self.heading_label.grid(row=0, column=0, columnspan=2, sticky=tk.N)
@@ -757,6 +757,7 @@ class PyFusionWindow:
         return
 
     def clustering_restored(self, e):
+        print(self.AN)
         win = ClusteringWindow(master=self.root, ANobj_restore=self.AN)
         return
 
