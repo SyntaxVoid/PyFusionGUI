@@ -47,11 +47,11 @@ class ClusteringWindow:
     def __init__(self, master, slurm_start_time=None, jobid=None, ANobj_restore=None):
         self.master = master
         self.root = tk.Toplevel(master=self.master)
+        self.root.resizable(height=False, width=False)
         self.message_frame = tk.Frame(master=self.root)
         self.message_frame.grid(row=0, column=0, sticky=tk.N)
         self.buttons_frame = tk.Frame(master=self.root, bd=5, relief=tk.SUNKEN)
         self.buttons_frame.grid(row=1, column=0, sticky=tk.N)
-        # self.root.resizable(height=False, width=False)
         self.message = tk.StringVar(master=self.message_frame)
         self.label = tk.Label(master=self.message_frame, textvariable=self.message, font=(font_name, 24))
         self.label.grid(row=0, column=0, sticky=tk.N)
@@ -97,7 +97,7 @@ class ClusteringWindow:
 
 
     def yes_cancel(self):
-        subprocess.check_output("scancel -j {}".format(self.jobid), shell=True)
+        subprocess.check_output("scancel {}".format(self.jobid), shell=True)
         return
 
     def countdown(self):
@@ -106,7 +106,7 @@ class ClusteringWindow:
             sjobexitmod_output = subprocess.check_output("sjobexitmod -l {}".format(self.jobid), shell=True)
             exit_state = jt.get_slurm_exit_state(sjobexitmod_output)
             self.message.set(exit_state)
-            if exit_state == "PENDING":
+            if exit_state == "PENDING" or exit_state == "assigned":
                 self._cur = self.default_wait_time
             elif exit_state == "RUNNING":
                 self._cur = self.default_wait_time
@@ -116,8 +116,10 @@ class ClusteringWindow:
             elif exit_state == "FAILED":
                 self.root.event_generate("<<clustering_failed>>", when="tail")
                 return
+            elif exit_state == "CANCELED+":
+                self.root.event_generate("<<clustering_failed>>", when="tail")
             else:
-                print("Nothing!")
+                print("UNKNOWN EXIT STATE: {}\nCONTACT ADMINISTRATOR")
         self.message.set("Waiting for worker\nnode to complete\njob # {}.\nChecking again in\n{} seconds".format(self.jobid, self._cur))
         self.root.after(1000, self.countdown)
         return
