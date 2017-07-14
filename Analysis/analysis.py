@@ -167,6 +167,7 @@ class DataMining:
             ans = map(func_wrapper, iter)
         for shot, result in zip(self.shot_info["shots"], ans):
             out[str(shot)] = result
+        return out
         #for sh, tw in zip(self.shot_info["shots"], self.shot_info["time_windows"]):
         #    out[str(sh)] = dev.acq.getdata(sh, self.shot_info["probes"]).reduce_time(tw)
         #return out
