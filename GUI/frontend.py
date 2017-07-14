@@ -372,7 +372,7 @@ class PyFusionWindow:
         self.root = tk.Tk()
         self.root.resizable(width=False, height=False)
         self.root.title("PyFusion GUI v. 0")
-        self.root.geometry("960x500")
+        self.root.geometry("920x500")
         self.value_dict = OrderedDict()
 
         # ======================================
