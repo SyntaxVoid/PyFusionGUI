@@ -372,7 +372,7 @@ class PyFusionWindow:
         self.root = tk.Tk()
         self.root.resizable(width=False, height=False)
         self.root.title("PyFusion GUI v. 0")
-        self.root.geometry("1070x500")
+        self.root.geometry("1020x500")
         self.value_dict = OrderedDict()
 
         # ======================================
@@ -735,7 +735,7 @@ class PyFusionWindow:
         self.value_dict["filter_items"] = self.filter_item_var
         return
 
-    def slurm_clustering_complete(self):
+    def slurm_clustering_complete(self, e):
         self.using_analysis_var.set("Clustering on worker node\ncomplete. Please load an\nobject to continue.")
         self.using_analysis_label.config(fg="DarkOrange1")
         return
