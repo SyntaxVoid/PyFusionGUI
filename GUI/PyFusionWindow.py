@@ -701,7 +701,7 @@ echo "Starting job on worker node"
             self.root.event_generate("<<clustering_in_progress>>", when="tail")
             win = ClusteringWindow(master=self.root, slurm_start_time=now, jobid=jobid)
             win.start()
-            self.root.after(2000, self.check_and_load_analysis_object, jobid, IRIS_CSCRATCH_DIR + now + ".ANobj")
+            self.root.after(10000, self.check_and_load_analysis_object, jobid, IRIS_CSCRATCH_DIR + now + ".ANobj")
             return
 
     def check_and_load_analysis_object(self, jobid, ANobj_file):
