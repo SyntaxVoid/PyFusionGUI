@@ -88,7 +88,8 @@ class ClusteringWindow:
     def verify_cancel(self):
         win = tk.Toplevel(master=self.root)
         win.resizable(width=False, height=False)
-        label = tk.Label(master=win, text="Do you really wish to cancel?", font=(font_name, 13))
+        win.grab_set()
+        label = tk.Label(master=win, text="Do you really wish\nto cancel?", font=(font_name, 18))
         label.grid(row=0, column=0, columnspan=2, sticky=tk.N)
         yes = tk.Button(master=win, text="Yes", font=(font_name, 18), command=self.yes_cancel)
         yes.grid(row=1, column=0, sticky=tk.N)
@@ -119,7 +120,7 @@ class ClusteringWindow:
             elif exit_state == "FAILED":
                 self.root.event_generate("<<clustering_failed>>", when="tail")
                 return
-            elif exit_state == "CANCELED+":
+            elif exit_state == "CANCELLED+":
                 self.root.event_generate("<<clustering_failed>>", when="tail")
             else:
                 print("UNKNOWN EXIT STATE: {}\nCONTACT ADMINISTRATOR")
@@ -134,10 +135,12 @@ class ClusteringWindow:
     def slurm_clustering_complete(self, e):
         self.root.title("SLURM Clustering Complete!")
         self.root.wm_protocol("WM_DELETE_WINDOW", self.x_close)
+        self.root.geometry("220x240")
         self.message.set("SLURM clustering complete!\nYou can now load your\nAnalysis object file from\n{}"\
                          .format(jt.break_path(self.ANobj_file, 23)))
-        self.ok_button = tk.Button(master=self.root, text="OK", command=self.root.destroy, font=(font_name, 18))
-        self.ok_button.grid(row=1, column=0)
+        self.cancel_button.destroy()
+        ok_button = tk.Button(master=self.root, text="OK", command=self.root.destroy, font=(font_name, 18))
+        ok_button.grid(row=1, column=0)
         return
 
     def clustering_complete(self, e):
