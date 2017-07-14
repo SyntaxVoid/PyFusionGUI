@@ -121,7 +121,7 @@ class ClusteringWindow:
             elif exit_state == "CANCELLED+":
                 self.root.event_generate("<<clustering_failed>>", when="tail")
             else:
-                print("UNKNOWN EXIT STATE: ({})\nCONTACT j.gresl12@gmail.com".format(exit_state))
+                print("UNKNOWN EXIT STATE: ({})".format(exit_state))
         self.message.set("Waiting for worker\nnode to complete\njob # {}.\nChecking again in\n{} seconds".format(self.jobid, self._cur))
         self.root.after(1000, self.countdown)
         return
@@ -139,6 +139,7 @@ class ClusteringWindow:
         self.cancel_button.destroy()
         ok_button = tk.Button(master=self.root, text="OK", command=self.root.destroy, font=(font_name, 18))
         ok_button.grid(row=1, column=0)
+        self.master.event_generate("<<slurm_clustering_complete>>", when="tail")
         return
 
     def clustering_complete(self, e):
@@ -711,7 +712,7 @@ class PyFusionWindow:
         self.root.bind("<<clustering_complete>>", self.clustering_complete)
         self.root.bind("<<clustering_in_progress>>", self.clustering_in_progress)
         self.root.bind("<<clustering_restored>>", self.clustering_restored)
-
+        self.root.bind("<<slurm_clustering_complete>>", self.slurm_clustering_complete)
 
         # ====================================== #
         # ====================================== #
@@ -732,8 +733,13 @@ class PyFusionWindow:
         self.value_dict["cutoff_by"] = self.cutoff_var
         self.value_dict["cutoff_value"] = self.cutoff_val_var
         self.value_dict["filter_items"] = self.filter_item_var
-
         return
+
+    def slurm_clustering_complete(self):
+        self.using_analysis_var.set("Clustering on worker node\ncomplete. Please load an\nobject to continue.")
+        self.using_analysis_label.config(fg="DarkOrange1")
+        return
+
 
     def clustering_restored(self, e):
         win = ClusteringWindow(master=self.root, ANobj_restore=self.AN)
