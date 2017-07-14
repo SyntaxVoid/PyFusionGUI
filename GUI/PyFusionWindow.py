@@ -606,21 +606,16 @@ filter_items: EM_VMM_kappas'''
         # A window pops up asking the user to specify the path of a *.ANobj (Analysis Object) file
         # and attempts to restore it using the Analysis.restore classmethod. Then opens a ClusteringWindow
         # which gives the user the option to plot clusters, save the object, or close the window.
-        # TODO: Instead of having a separate class (ClusteringWindow), just have enabled and disabled buttons
-        # TODO: depending on whether or not an Analysis Object is loaded.
         fname = askopenfilename(initialdir=IRIS_CSCRATCH_DIR,
                                 filetypes=(("Analysis File Object", "*.ANobj"), ("All Files", "*.*")))
-        if fname == "" or fname == ():
-            return None
+        if fname == "" or fname == (): return None
         try:
             self.AN = analysis.Analysis.restore(fname)
             self._restore_settings_from_loaded_object()
             self.root.event_generate("<<clustering_restored>>", when="tail")
-            #self.using_analysis_var.set("Using analysis object from\n{}".format(jt.break_path(fname, 24)))
-            #self.using_analysis_label.config(fg="dark green")
-            #win = ClusteringWindow(master=self.root, ANobj_restore=self.AN)
-        except:
-            ErrorWindow(self.root, "Incorrect file format.")
+            self.using_analysis_var.set("Using analysis object from\n{}".format(jt.break_path(fname, 24)))
+            self.using_analysis_label.config(fg="dark green")
+        except: ErrorWindow(self.root, "Incorrect file format.")
         return None
 
     def return_restored_object_values(self):
@@ -705,6 +700,31 @@ echo "Starting job on worker node"
             jobid = jt.slurm_id_from_output(slurm_output)
             self.root.event_generate("<<clustering_in_progress>>", when="tail")
             win = ClusteringWindow(master=self.root, slurm_start_time=now, jobid=jobid)
+            win.start()
+            self.root.after(2000, self.check_and_load_analysis_object, jobid, IRIS_CSCRATCH_DIR + now + ".ANobj")
+            return
+
+    def check_and_load_analysis_object(self, jobid, ANobj_file):
+        # Checks SLURM to see if the analysis is done yet, and if it is, it will load it into
+        # working memory.
+        print("DEBUG::::: Checking for file...")
+        sjobexitmod_output = subprocess.check_output("sjobexitmod -l {}".format(jobid), shell=True)
+        exit_state = jt.get_slurm_exit_state(sjobexitmod_output)
+        if exit_state == "PENDING" or exit_state == "assigned" or exit_state == "RUNNING":
+            pass
+        elif exit_state == "COMPLETED":
+            try:
+                self.AN = analysis.Analysis.restore(ANobj_file)
+                self.root.event_generate("<<clustering_restored>>", when="tail")
+            except:
+                ErrorWindow(master=self.root, message="Unable to load recent Analysis object!\n"
+                                                      "File is corrupted or out of memory.")
+            return
+        elif exit_state == "FAILED" or exit_state == "CANCELLED+":
+            print("DEBUG::::: clustering FAILED.")
+            return
+        self.root.after(2000, self.check_and_load_analysis_object, jobid, ANobj_file)
+        return
 
     def clustering_in_progress(self, e):
         # Changes the status message and color.
