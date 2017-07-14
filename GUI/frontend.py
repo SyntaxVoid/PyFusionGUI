@@ -94,7 +94,7 @@ class ClusteringWindow:
         return
 
     def slurm_active(self):
-        squeue_output = subprocess.check_output("squeue -j {}".format(self.jobid))
+        squeue_output = subprocess.check_output("squeue -j {}".format(self.jobid), shell=True)
         return jt.check_slurm_for_id(squeue_output, self.jobid)
 
     def slurm_clustering_complete(self, e):
@@ -975,9 +975,8 @@ rm -f /home/%u/PyFusionGUI/PyFusionGUI/SLURM/errors.txt
 '''
                 with open(os.path.join(SLURM_DIR,"sbatch_clustering.sbatch"), "w") as sbatch:
                     sbatch.write(sbatchscript)
-                command = "sbatch {}".format(os.path.join(SLURM_DIR, "sbatch_clustering.sbatch"))
-                print(command)
-                slurm_output = subprocess.check_output(command, shell=True)
+                slurm_output = subprocess.check_output(
+                    "sbatch {}".format(os.path.join(SLURM_DIR, "sbatch_clustering.sbatch")), shell=True)
                 #os.system("sbatch {}".format(os.path.join(SLURM_DIR, "sbatch_clustering.sbatch")))
                 jobid = jt.slurm_id_from_output(slurm_output)
                 win = ClusteringWindow(master=self.root, slurm_start_time=now, jobid=jobid)
