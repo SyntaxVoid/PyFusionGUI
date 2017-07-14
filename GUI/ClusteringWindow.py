@@ -58,7 +58,6 @@ class ClusteringWindow:
 
     def yes_cancel(self):
         subprocess.check_output("scancel {}".format(self.jobid), shell=True)
-        self.master.event_generate("<<clustering_failed>>", when="tail")
         self.root.destroy()
         return
 

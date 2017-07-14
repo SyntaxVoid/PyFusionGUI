@@ -661,7 +661,6 @@ filter_items: EM_VMM_kappas'''
         # and opens a window  allowing the user to plot clusters, save the analysis object or close.
         self.plot_clusters_button.config(state="normal")
         self.save_object_button.config(state="normal")
-
         #win = ClusteringWindow(master=self.root, ANobj_restore=self.AN)
         return
 
@@ -714,13 +713,16 @@ echo "Starting job on worker node"
         elif exit_state == "COMPLETED":
             try:
                 self.AN = analysis.Analysis.restore(ANobj_file)
+                self.using_analysis_var.set("Clustering restored from\ncurrent settings using the\n"
+                                            "worker node.")
+                self.using_analysis_label.config(fg="green")
                 self.root.event_generate("<<clustering_restored>>", when="tail")
             except:
                 ErrorWindow(master=self.root, message="Unable to load recent Analysis object!\n"
                                                       "File is corrupted or out of memory.")
             return
         elif exit_state == "FAILED" or exit_state == "CANCELLED+":
-            print("DEBUG::::: clustering FAILED.")
+            self.root.event_generate("<<clustering_failed>>", when="tail")
             return
         self.root.after(2000, self.check_and_load_analysis_object, jobid, ANobj_file)
         return
