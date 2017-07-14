@@ -352,16 +352,14 @@ class PyFusionWindow:
         # ==         PLOTTING BUTTONS         ==
         # ======================================
         # ======================================
-        def tmp():
-            print(".")
         self.plotting_button_frame = tk.Frame(master=self.col_1_frame, bd=5, relief=tk.SUNKEN)
         self.plotting_button_frame.grid(row=1, column=0, sticky=tk.N)
         self.save_object_button = tk.Button(master=self.plotting_button_frame, text="Save Current\nAnalysis Object",
-                                            font=(font_name, 13), width=14, command=tmp)
+                                            font=(font_name, 13), width=14, command=self.save_analysis_object)
         self.save_object_button.grid(row=0, column=0, sticky=tk.N)
         self.save_object_button.config(state="disabled")
         self.plot_clusters_button = tk.Button(master=self.plotting_button_frame, text="Plot\nClusters",
-                                              font=(font_name, 13), width=14, command=tmp)
+                                              font=(font_name, 13), width=14, command=self.AN.show_plots)
         self.plot_clusters_button.grid(row=0, column=1, sticky=tk.N)
         self.plot_clusters_button.config(state="disabled")
 
@@ -602,6 +600,16 @@ filter_items: EM_VMM_kappas'''
             DMstr = self.settings_to_datamining_object_str()
             return self.datamining_str_to_analysis_object_str(DMstr)
 
+    def save_analysis_object(self):
+        fname = askopenfilename(initialdir=IRIS_CSCRATCH_DIR,
+                                filetypes=(("Analysis File Object", "*.ANobj"), ("All Files", "*.*")))
+        if fname == "" or fname == (): return None
+        try:
+            self.AN.save(fname)
+        except:
+            ErrorWindow(master=self.root, message="Unable to save file due to unknown error.")
+        return
+
     def restore_clustering(self):
         # A window pops up asking the user to specify the path of a *.ANobj (Analysis Object) file
         # and attempts to restore it using the Analysis.restore classmethod. Then opens a ClusteringWindow
@@ -715,7 +723,7 @@ echo "Starting job on worker node"
                 self.AN = analysis.Analysis.restore(ANobj_file)
                 self.using_analysis_var.set("Clustering restored from\ncurrent settings using the\n"
                                             "worker node.")
-                self.using_analysis_label.config(fg="green")
+                self.using_analysis_label.config(fg="dark green")
                 self.root.event_generate("<<clustering_restored>>", when="tail")
             except:
                 ErrorWindow(master=self.root, message="Unable to load recent Analysis object!\n"

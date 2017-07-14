@@ -324,6 +324,12 @@ class Analysis:
                                   "z": self.z}, "DM": self.DM.__dict__}, pick)
         return
 
+    def show_plots(self):
+        import matplotlib.pyplot as plt
+        plots = self.return_specgrams()
+        plt.show()
+        return
+
     def return_specgrams(self):
         import matplotlib.pyplot as plt  # These imports are here since this file will be imported into an
         import matplotlib as mpl         # environment where matplotib cannot be imported
