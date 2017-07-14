@@ -352,14 +352,18 @@ class PyFusionWindow:
         # ==         PLOTTING BUTTONS         ==
         # ======================================
         # ======================================
+        def temp():
+            # This function is used as a placeholder for the buttons below while the buttons are disabled.
+            # Once the buttons are enabled, their commands will be reconfigured to the correct functions.
+            return
         self.plotting_button_frame = tk.Frame(master=self.col_1_frame, bd=5, relief=tk.SUNKEN)
         self.plotting_button_frame.grid(row=1, column=0, sticky=tk.N)
         self.save_object_button = tk.Button(master=self.plotting_button_frame, text="Save Current\nAnalysis Object",
-                                            font=(font_name, 13), width=14, command=self.save_analysis_object)
+                                            font=(font_name, 13), width=14, command=temp)
         self.save_object_button.grid(row=0, column=0, sticky=tk.N)
         self.save_object_button.config(state="disabled")
         self.plot_clusters_button = tk.Button(master=self.plotting_button_frame, text="Plot\nClusters",
-                                              font=(font_name, 13), width=14, command=self.AN.show_plots)
+                                              font=(font_name, 13), width=14, command=temp)
         self.plot_clusters_button.grid(row=0, column=1, sticky=tk.N)
         self.plot_clusters_button.config(state="disabled")
 
@@ -667,9 +671,8 @@ filter_items: EM_VMM_kappas'''
     def clustering_restored(self, e):
         # This method is called when the root window receives the <<clustering_restored>> event
         # and opens a window  allowing the user to plot clusters, save the analysis object or close.
-        self.plot_clusters_button.config(state="normal")
-        self.save_object_button.config(state="normal")
-        #win = ClusteringWindow(master=self.root, ANobj_restore=self.AN)
+        self.plot_clusters_button.config(state="normal", command=self.AN.show_plots)
+        self.save_object_button.config(state="normal", command=self.save_analysis_object)
         return
 
     def run_clustering(self):
@@ -678,7 +681,6 @@ filter_items: EM_VMM_kappas'''
         # on IRIS.
         # TODO: Allow the user to specify the #SBATCH settings within the GUI
         if self.valid_values():
-            # Need to create a job script and a python script for SLURM.
             now = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
             pythonscript = '''from PyFusionGUI.Analysis.analysis import *
 from PyFusionGUI.Utilities.jtools import *
