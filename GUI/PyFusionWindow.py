@@ -680,6 +680,7 @@ filter_items: EM_VMM_kappas'''
         # and also a SLURM sbatch script which we will use to submit a job to the high CPU-power worker nodes
         # on IRIS.
         # TODO: Allow the user to specify the #SBATCH settings within the GUI
+        self.AN = None
         if self.valid_values():
             now = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
             self.AN = IRIS_CSCRATCH_DIR + now + ".ANobj"
