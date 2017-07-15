@@ -15,7 +15,7 @@ class ClusteringWindow:
         # using if/else statements instead.
         self.master = master
         self.root = tk.Toplevel(master=self.master)
-        self.root.geometry("220x200")
+        self.root.geometry("250x200")
         self.root.resizable(height=False, width=False)
         self.message_frame = tk.Frame(master=self.root)
         self.message_frame.grid(row=0, column=0, sticky=tk.N)
@@ -32,7 +32,6 @@ class ClusteringWindow:
         self.slurm_start_time = slurm_start_time
         self.jobid = jobid
         self.root.title("Clustering in Progress")
-        self.slurm_done_file = IRIS_CSCRATCH_DIR+self.slurm_start_time+".slurmdone"
         self.ANobj_file = IRIS_CSCRATCH_DIR+self.slurm_start_time+".ANobj"
         self.error_file = os.path.join(SLURM_DIR, "errors.txt")
         self._cur = self.default_wait_time
@@ -92,8 +91,8 @@ class ClusteringWindow:
     def slurm_clustering_complete(self, e):
         self.root.title("SLURM Clustering Complete!")
         self.root.wm_protocol("WM_DELETE_WINDOW", self.root.destroy)
-        self.root.geometry("330x350")
-        self.message.set("SLURM clustering complete!\nYou can now load your\nAnalysis object file from\n{}\n"
+        self.root.geometry("330x320")
+        self.message.set("SLURM clustering complete!\nYour Analysis object\nwas saved to:\n{}\n"
                          "Total time elapsed: {} seconds"
                          .format(jt.break_path(self.ANobj_file, 23), self.total_time))
         self.cancel_button.destroy()

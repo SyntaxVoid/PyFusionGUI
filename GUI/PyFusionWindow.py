@@ -682,12 +682,13 @@ filter_items: EM_VMM_kappas'''
         # TODO: Allow the user to specify the #SBATCH settings within the GUI
         if self.valid_values():
             now = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
+            self.AN = IRIS_CSCRATCH_DIR + now + ".ANobj"
             pythonscript = '''from PyFusionGUI.Analysis.analysis import *
 from PyFusionGUI.Utilities.jtools import *
 A1 = {ANALYSIS_OBJECT}
 A1.save(\"{ANOBJ_FILE}\")
 '''.format(ANALYSIS_OBJECT=self.settings_to_analysis_object_str(),
-           ANOBJ_FILE=IRIS_CSCRATCH_DIR + now + ".ANobj")
+           ANOBJ_FILE=self.AN)
             with open(os.path.join(SLURM_DIR, "temp.py"), "w") as test:
                 test.write(pythonscript)
             sbatchscript = '''#!/bin/bash
@@ -710,7 +711,7 @@ echo "Starting job on worker node"
             self.root.event_generate("<<clustering_in_progress>>", when="tail")
             win = ClusteringWindow(master=self.root, slurm_start_time=now, jobid=jobid)
             win.start()
-            self.root.after(10000, self.check_and_load_analysis_object, jobid, IRIS_CSCRATCH_DIR + now + ".ANobj")
+            #self.root.after(10000, self.check_and_load_analysis_object, jobid, IRIS_CSCRATCH_DIR + now + ".ANobj")
             return
 
     def check_and_load_analysis_object(self, jobid, ANobj_file):
@@ -743,9 +744,11 @@ echo "Starting job on worker node"
         self.using_analysis_label.config(fg="DarkOrange1")
 
     def slurm_clustering_complete(self, e):
-        # Changes the status message and color.
-        self.using_analysis_var.set("Clustering on worker node\ncomplete. Please load an\nobject to continue.")
-        self.using_analysis_label.config(fg="DarkOrange1")
+        # Changes the status message and color, and loads the Analysis object. Whenever this method is called,
+        # self.AN \\\SHOULD\\\ be a string of the file path to the recently clustered analysis object.
+        self.using_analysis_var.set("Clustering on worker node\ncomplete. Analysis object loaded.")
+        self.using_analysis_label.config(fg="dark green")
+        self.AN = analysis.Analysis.restore(filename=self.AN)
         return
 
     def clustering_failed(self, e):
