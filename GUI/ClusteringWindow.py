@@ -43,8 +43,8 @@ class ClusteringWindow:
         self.hint_label.grid(row=2, column=0, sticky=tk.N)
         self.total_time = 0
         self.message.set("Waiting for worker\nnode to complete\njob # {}.\n"
-                         "Checking again in\n{} seconds.\n"
-                         "Total time elapsed:\n{} seconds".format(self.jobid, self._cur, self.total_time))
+                         "Checking again in:\n{} seconds.\n"
+                         "Total time elapsed:\n{} seconds.".format(self.jobid, self._cur, self.total_time))
         return
 
     def start(self):
@@ -91,8 +91,8 @@ class ClusteringWindow:
             else:
                 print("UNKNOWN EXIT STATE: ({})".format(exit_state))
         self.message.set("Waiting for worker\nnode to complete\njob # {}.\n"
-                         "Checking again in\n{} seconds.\n"
-                         "Total time elapsed:\n{} seconds".format(self.jobid, self._cur, self.total_time))
+                         "Checking again in:\n{} seconds.\n"
+                         "Total time elapsed:\n{} seconds.".format(self.jobid, self._cur, self.total_time))
         self.root.after(1000, self.countdown)
         return
 

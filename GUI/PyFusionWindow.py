@@ -681,6 +681,8 @@ filter_items: EM_VMM_kappas'''
         # on IRIS.
         # TODO: Allow the user to specify the #SBATCH settings within the GUI
         self.AN = None
+        self.plot_clusters_button.config(state="disabled")
+        self.save_object_button.config(state="disabled")
         if self.valid_values():
             now = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
             self.AN = IRIS_CSCRATCH_DIR + now + ".ANobj"
@@ -694,10 +696,10 @@ A1.save(\"{ANOBJ_FILE}\")
                 test.write(pythonscript)
             sbatchscript = '''#!/bin/bash
 #SBATCH -p short
-#SBATCH -n 1
+#SBATCH -n 2
 #SBATCH -N 1
 #SBATCH -t 19
-#SBATCH --mem-per-cpu=100G
+#SBATCH --mem-per-cpu=50G
 #SBATCH -o /home/%u/PyFusionGUI/PyFusionGUI/SLURM/PyFusionGUI-%j.out
 #SBATCH --export=ALL
 set -e
