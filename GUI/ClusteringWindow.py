@@ -16,7 +16,6 @@ class ClusteringWindow:
         # using if/else statements instead.
         self.master = master
         self.root = tk.Toplevel(master=self.master)
-        # self.root.geometry("250x200")
         self.root.resizable(height=False, width=False)
         self.message_frame = tk.Frame(master=self.root)
         self.message_frame.grid(row=0, column=0, sticky=tk.N)
@@ -38,28 +37,18 @@ class ClusteringWindow:
         self._cur = self.default_wait_time
         self.cancel_button = tk.Button(master=self.message_frame, text="Cancel", command=self.verify_cancel)
         self.cancel_button.grid(row=1, column=0, sticky=tk.N)
+        self.hint_label = tk.Label(master=self.message_frame, text="If the window freezes, it is loading\n"
+                                                                   "the finished Analysis object.",
+                                   font=(font_name, 12))
+        self.hint_label.grid(row=2, column=0, sticky=tk.N)
         self.total_time = 0
-        self.set_label("Waiting for worker\nnode to complete\njob # {}.\n"
-                       "Checking again in\n{} seconds.\n"
-                       "Total time elapsed:\n{} seconds".format(self.jobid, self._cur, self.total_time))
+        self.message.set("Waiting for worker\nnode to complete\njob # {}.\n"
+                         "Checking again in\n{} seconds.\n"
+                         "Total time elapsed:\n{} seconds".format(self.jobid, self._cur, self.total_time))
         return
 
     def start(self):
         self.root.after(1000, self.countdown)
-        return
-
-    def resize(self):
-        # This method will be called whenever a widget value is changed. Will resize the window to fit widgets.
-        label_width = self.label.winfo_width()
-        label_height = self.label.winfo_height()
-        button_height = self.cancel_button.winfo_height()
-        self.root.after(1000, self.root.geometry, "{}x{}".format(label_width, label_height + button_height))
-        return
-
-    def set_label(self, val):
-        # This method will be called to change the value of self.message
-        self.message.set(val)
-        #self.resize()
         return
 
     def verify_cancel(self):
@@ -90,8 +79,8 @@ class ClusteringWindow:
             elif exit_state == "RUNNING":
                 self._cur = self.default_wait_time
             elif exit_state == "COMPLETED":
-                self.set_label("Clustering is complete!\nPlease wait while the\nthe object is loaded.\n"
-                               "Total time elapsed:\n{} seconds".format(self.total_time))
+                self.message.set("Clustering is complete!\nPlease wait while the\nthe object is loaded.\n"
+                                 "Total time elapsed:\n{} seconds".format(self.total_time))
                 self.root.event_generate("<<slurm_clustering_complete>>", when="tail")
                 return
             elif exit_state == "FAILED":
@@ -101,9 +90,9 @@ class ClusteringWindow:
                 self.root.event_generate("<<clustering_failed>>", when="tail")
             else:
                 print("UNKNOWN EXIT STATE: ({})".format(exit_state))
-        self.set_label("Waiting for worker\nnode to complete\njob # {}.\n"
-                       "Checking again in\n{} seconds.\n"
-                       "Total time elapsed:\n{} seconds".format(self.jobid, self._cur, self.total_time))
+        self.message.set("Waiting for worker\nnode to complete\njob # {}.\n"
+                         "Checking again in\n{} seconds.\n"
+                         "Total time elapsed:\n{} seconds".format(self.jobid, self._cur, self.total_time))
         self.root.after(1000, self.countdown)
         return
 
@@ -111,9 +100,9 @@ class ClusteringWindow:
         self.root.title("SLURM Clustering Complete!")
         self.root.wm_protocol("WM_DELETE_WINDOW", self.root.destroy)
         # self.root.geometry("330x320")
-        self.set_label("SLURM clustering complete!\nYour Analysis object\nwas saved to:\n{}\n"
-                       "Total time elapsed: {} seconds"
-                       .format(jt.break_path(self.ANobj_file, 23), self.total_time))
+        self.message.set("SLURM clustering complete!\nYour Analysis object\nwas saved to:\n{}\n"
+                         "Total time elapsed: {} seconds"
+                         .format(jt.break_path(self.ANobj_file, 23), self.total_time))
         self.cancel_button.destroy()
         ok_button = tk.Button(master=self.root, text="OK", command=self.root.destroy, font=(font_name, 18))
         ok_button.grid(row=1, column=0)
@@ -123,8 +112,8 @@ class ClusteringWindow:
     def clustering_failed(self, e):
         self.root.title("Clustering Failed!")
         self.root.wm_protocol("WM_DELETE_WINDOW", self.root.destroy)
-        self.set_label("Clustering Failed! Check\n{}\nfor more details."
-                       .format(jt.break_path(os.path.join(IRIS_CSCRATCH_DIR,
+        self.message.set("Clustering Failed! Check\n{}\nfor more details."
+                         .format(jt.break_path(os.path.join(IRIS_CSCRATCH_DIR,
                                                           "PyFusionGUI-{}.out".format(self.jobid)), 24)))
         self.label.config(fg="red")
         self.cancel_button.destroy()
