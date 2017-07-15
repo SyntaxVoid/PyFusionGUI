@@ -47,11 +47,12 @@ class ClusteringWindow:
 
     def resize(self):
         # This method will be called whenever a widget value is changed. Will resize the window to fit widgets.
-        message_frame_width = self.message_frame.winfo_width()
-        message_frame_height = self.message_frame.winfo_height()
-        print("DEBUG::::: ", "{}x{}".format(message_frame_width, message_frame_height))
+        label_width = self.label.winfo_width()
+        label_height = self.label.winfo_height()
+        button_height = self.cancel_button.winfo_height()
+        print("DEBUG::::: ", "{}x{}".format(label_width, label_height+button_height))
         print("DEBUG:::::", self.message.get())
-        self.root.geometry("{}x{}".format(message_frame_width, message_frame_height))
+        self.root.geometry("{}x{}".format(label_width, label_height + button_height))
         return
 
     def set_label(self, val):
