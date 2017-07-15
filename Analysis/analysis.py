@@ -159,7 +159,7 @@ class DataMining:
                               itertools.repeat(self.shot_info["probes"]))
         func_wrapper = mag_pickle_workaround
         if self.n_cpus > 1:
-            pool = Pool(processes=self.n_cpus)
+            pool = Pool(processes=self.n_cpus, maxtasksperchild=3)
             ans = pool.map(func_wrapper, iter)
             pool.close()
             pool.join()
