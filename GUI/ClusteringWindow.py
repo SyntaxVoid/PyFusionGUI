@@ -59,7 +59,7 @@ class ClusteringWindow:
     def set_label(self, val):
         # This method will be called to change the value of self.message
         self.message.set(val)
-        self.resize()
+        #self.resize()
         return
 
     def verify_cancel(self):
