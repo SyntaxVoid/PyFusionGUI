@@ -288,6 +288,7 @@ class Analysis:
                     misc_data_dict = copy.deepcopy(res[1])
                     start = False
                 else:
+                    print("DEBUG:::: IR: {} -- RES: {}".format(instance_array.shape, res[0].shape))
                     instance_array = np.append(instance_array, res[0], axis=0)
                     for i in misc_data_dict.keys():
                         misc_data_dict[i] = np.append(misc_data_dict[i], res[1][i], axis=0)

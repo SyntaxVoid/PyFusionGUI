@@ -47,8 +47,8 @@ class PyFusionWindow:
         # ==         SHOT INFORMATION         ==
         # ======================================
         # ======================================
-        self.big_frame = tk.Frame(master=self.root)
-        self.big_frame.grid(row=0, column=0, sticky=tk.N)
+        self.col_0_frame = tk.Frame(master=self.root)
+        self.col_0_frame.grid(row=0, column=0, sticky=tk.N)
         self.shot_frame = tk.Frame(master=self.big_frame, bd=5, relief=tk.SUNKEN)
         self.shot_frame.grid(padx=15, pady=15, row=0, column=0, sticky=tk.NW)
         self.shot_info = tk.Label(master=self.shot_frame,
@@ -386,7 +386,7 @@ class PyFusionWindow:
                                       command=self.root.destroy)
         self.close_button.grid(row=1, column=0, sticky=tk.N)
 
-        self.using_analysis_var = tk.StringVar(master=self.root, value="No analysis object loaded yet.\n"
+        self.using_analysis_var = tk.StringVar(master=self.big_frame, value="No analysis object loaded yet.\n"
                                                "Please perform clustering or\nrestore an anlysis object.")
         self.using_analysis_label = tk.Label(master=self.big_frame,
                                              textvariable=self.using_analysis_var,
