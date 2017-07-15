@@ -282,8 +282,8 @@ class Analysis:
         instance_array = {}
         misc_data_dict = {}
         for n, res in enumerate(results):
-            if res[0] is not None:
-                print("DEBUG:::::", res[0] is not None)
+            if res[0] != None:
+                print("DEBUG:::::", res[0] != None)
                 print("DEBUG::::: res[0] = {}".format(res[0]))
                 if start:
                     instance_array = copy.deepcopy(res[0])
