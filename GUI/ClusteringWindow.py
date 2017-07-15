@@ -25,6 +25,9 @@ class ClusteringWindow:
         self.message = tk.StringVar(master=self.message_frame)
         self.label = tk.Label(master=self.message_frame, textvariable=self.message, font=(font_name, 24))
         self.label.grid(row=0, column=0, sticky=tk.N)
+        self.set_label("Waiting for worker\nnode to complete\njob # {}.\n"
+                       "Checking again in\n{} seconds.\n"
+                       "Total time elapsed:\n{} seconds".format(self.jobid, self._cur, self.total_time))
         self.root.grab_set()
         self.root.wm_protocol("WM_DELETE_WINDOW", self.verify_cancel)
         self.root.bind("<<clustering_failed>>", self.clustering_failed)
@@ -87,6 +90,8 @@ class ClusteringWindow:
             elif exit_state == "RUNNING":
                 self._cur = self.default_wait_time
             elif exit_state == "COMPLETED":
+                self.set_label("Clustering is complete!\nPlease wait while the\nthe object is loaded.\n"
+                               "Total time elapsed:\n{} seconds".format(self.total_time))
                 self.root.event_generate("<<slurm_clustering_complete>>", when="tail")
                 return
             elif exit_state == "FAILED":
