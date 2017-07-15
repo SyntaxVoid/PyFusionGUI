@@ -32,7 +32,7 @@ def stft_pickle_workaround(input_data):
 
 def mag_pickle_workaround(input_data):
     # get_mag(dev, shot, time_window, probe):
-    return copy.deepcopy(input_data[0].get_mag(input_data[1], input_data[2], input_data[3], input_data[4]))
+    return copy.deepcopy(input_data[0].get_mag(input_data[1], input_data[2], input_data[3]))
 
 
 def stft_ece_pickle_workaround(input_data):
@@ -151,9 +151,7 @@ class DataMining:
         # Returns the magnitudes of every shot and time window in the form of a dictionary.
         # Output is formatted like: {"159243": magnitudes, "159244": magnitudes, ... }
         out = {}
-        dev = pf.getDevice(self.shot_info["device"])
         iter = itertools.izip(itertools.repeat(self),
-                              itertools.repeat(dev),
                               self.shot_info["shots"],
                               self.shot_info["time_windows"],
                               itertools.repeat(self.shot_info["probes"]))
@@ -173,8 +171,9 @@ class DataMining:
         #return out
 
     @staticmethod
-    def get_mag(dev2, shot, time_window, probe):
-        dev = pf.getDevice("DIIID")
+    def get_mag(shot, time_window, probe):
+        dev = pf.getDevice("DIIID") # We have to create a new device object for every shot otherwise MDSPlus
+                                    # will throw a fit about faulty connections.
         mag = dev.acq.getdata(shot, probe).reduce_time(time_window)
         return mag
 
