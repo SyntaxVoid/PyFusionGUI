@@ -358,8 +358,8 @@ class PyFusionWindow:
             # Once the buttons are enabled, their commands will be reconfigured to the correct functions.
             return
 
-        self.plotting_button_frame = tk.Frame(master=self.col_1_frame, bd=5, relief=tk.SUNKEN)
-        self.plotting_button_frame.grid(row=1, column=0, sticky=tk.N)
+        self.plotting_button_frame = tk.Frame(master=self.col_0_frame, bd=5, relief=tk.SUNKEN)
+        self.plotting_button_frame.grid(row=2, column=0, sticky=tk.N)
         self.save_object_button = tk.Button(master=self.plotting_button_frame, text="Save Current\nAnalysis Object",
                                             font=(font_name, 13), width=14, command=temp)
         self.save_object_button.grid(row=0, column=0, sticky=tk.N)
@@ -464,7 +464,7 @@ freq_range: 50-250
 seed: 743
 n_peaks: 20
 cutoff_by: sigma_eq
-cutoff_value: 25
+cutoff_value: 80
 filter_items: EM_VMM_kappas'''
         self.load_values_from_str(defaults)
         with open(os.path.join(GUI_DIR, ".guiconfig"), "w") as new_default:
@@ -749,6 +749,7 @@ echo "Starting job on worker node"
         self.using_analysis_var.set("Clustering on worker node\ncomplete. Analysis object loaded.")
         self.using_analysis_label.config(fg="dark green")
         self.AN = analysis.Analysis.restore(filename=self.AN)
+        self.root.event_generate("<<clustering_restored>>", when="tail")
         return
 
     def clustering_failed(self, e):
