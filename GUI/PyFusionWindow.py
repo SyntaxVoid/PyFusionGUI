@@ -48,7 +48,7 @@ class PyFusionWindow:
         # ======================================
         # ======================================
         self.big_frame = tk.Frame(master=self.root)
-        self.big_frame.grid(row=0,column=0, sticky=tk.N)
+        self.big_frame.grid(row=0, column=0, sticky=tk.N)
         self.shot_frame = tk.Frame(master=self.big_frame, bd=5, relief=tk.SUNKEN)
         self.shot_frame.grid(padx=15, pady=15, row=0, column=0, sticky=tk.NW)
         self.shot_info = tk.Label(master=self.shot_frame,
@@ -352,10 +352,12 @@ class PyFusionWindow:
         # ==         PLOTTING BUTTONS         ==
         # ======================================
         # ======================================
+
         def temp():
             # This function is used as a placeholder for the buttons below while the buttons are disabled.
             # Once the buttons are enabled, their commands will be reconfigured to the correct functions.
             return
+
         self.plotting_button_frame = tk.Frame(master=self.col_1_frame, bd=5, relief=tk.SUNKEN)
         self.plotting_button_frame.grid(row=1, column=0, sticky=tk.N)
         self.save_object_button = tk.Button(master=self.plotting_button_frame, text="Save Current\nAnalysis Object",
@@ -366,7 +368,6 @@ class PyFusionWindow:
                                               font=(font_name, 13), width=14, command=temp)
         self.plot_clusters_button.grid(row=0, column=1, sticky=tk.N)
         self.plot_clusters_button.config(state="disabled")
-
 
         # ======================================
         # ======================================
@@ -401,7 +402,6 @@ class PyFusionWindow:
         self.root.bind("<<slurm_clustering_complete>>", self.slurm_clustering_complete)
         self.root.bind("<<clustering_in_progress>>", self.clustering_in_progress)
         self.root.bind("<<clustering_failed>>", self.clustering_failed)
-
 
         # ====================================== #
         # ====================================== #
@@ -588,7 +588,7 @@ filter_items: EM_VMM_kappas'''
                "datamining_settings={datamining_settings}, fft_settings={fft_settings},"\
                "n_cpus={n_cpus})".format(shots=shots, time_windows=time_windows, probes=probes,
                                          datamining_settings=datamining_settings,
-                                         fft_settings=fft_settings,n_cpus=n_cpus)
+                                         fft_settings=fft_settings, n_cpus=n_cpus)
 
 
     @staticmethod
@@ -734,7 +734,7 @@ echo "Starting job on worker node"
         elif exit_state == "FAILED" or exit_state == "CANCELLED+":
             self.root.event_generate("<<clustering_failed>>", when="tail")
             return
-        self.root.after(2000, self.check_and_load_analysis_object, jobid, ANobj_file)
+        self.root.after(5000, self.check_and_load_analysis_object, jobid, ANobj_file)
         return
 
     def clustering_in_progress(self, e):

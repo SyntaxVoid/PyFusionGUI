@@ -38,6 +38,7 @@ class ClusteringWindow:
         self._cur = self.default_wait_time
         self.cancel_button = tk.Button(master=self.root, text="Cancel", command=self.verify_cancel)
         self.cancel_button.grid(row=1, column=0, sticky=tk.N)
+        self.total_time = 0
         return
 
     def start(self):
@@ -63,6 +64,7 @@ class ClusteringWindow:
 
     def countdown(self):
         self._cur -= 1
+        self.total_time += 1
         if self._cur <= 0:
             sjobexitmod_output = subprocess.check_output("sjobexitmod -l {}".format(self.jobid), shell=True)
             exit_state = jt.get_slurm_exit_state(sjobexitmod_output)
@@ -82,7 +84,8 @@ class ClusteringWindow:
             else:
                 print("UNKNOWN EXIT STATE: ({})".format(exit_state))
         self.message.set("Waiting for worker\nnode to complete\njob # {}.\n"
-                         "Checking again in\n{} seconds".format(self.jobid, self._cur))
+                         "Checking again in\n{} seconds.\n"
+                         "Total time elapsed:\n{} seconds".format(self.jobid, self._cur, self.total_time))
         self.root.after(1000, self.countdown)
         return
 
@@ -90,8 +93,9 @@ class ClusteringWindow:
         self.root.title("SLURM Clustering Complete!")
         self.root.wm_protocol("WM_DELETE_WINDOW", self.root.destroy)
         self.root.geometry("330x350")
-        self.message.set("SLURM clustering complete!\nYou can now load your\nAnalysis object file from\n{}"
-                         .format(jt.break_path(self.ANobj_file, 23)))
+        self.message.set("SLURM clustering complete!\nYou can now load your\nAnalysis object file from\n{}\n"
+                         "Total time elapsed: {} seconds"
+                         .format(jt.break_path(self.ANobj_file, 23), self.total_time))
         self.cancel_button.destroy()
         ok_button = tk.Button(master=self.root, text="OK", command=self.root.destroy, font=(font_name, 18))
         ok_button.grid(row=1, column=0)

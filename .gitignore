@@ -1,7 +1,6 @@
 .idea
 *.pyc
 *.py~
-GUI/temp/*
 ThrowAway.py
 *.DMObj
 *.ANobj
