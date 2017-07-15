@@ -693,10 +693,10 @@ A1.save(\"{ANOBJ_FILE}\")
                 test.write(pythonscript)
             sbatchscript = '''#!/bin/bash
 #SBATCH -p short
-#SBATCH -n 4
+#SBATCH -n 1
 #SBATCH -N 1
 #SBATCH -t 19
-#SBATCH --mem-per-cpu=25G
+#SBATCH --mem-per-cpu=100G
 #SBATCH -o /home/%u/PyFusionGUI/PyFusionGUI/SLURM/PyFusionGUI-%j.out
 #SBATCH --export=ALL
 set -e
