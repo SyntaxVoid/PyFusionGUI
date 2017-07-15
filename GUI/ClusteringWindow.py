@@ -49,6 +49,7 @@ class ClusteringWindow:
         # This method will be called whenever a widget value is changed. Will resize the window to fit widgets.
         message_frame_width = self.message_frame.winfo_width()
         message_frame_height = self.message_frame.winfo_height()
+        print("DEBUG::::: ", "{}x{}".format(message_frame_width, message_frame_height))
         self.root.geometry("{}x{}".format(message_frame_width, message_frame_height))
         return
 
