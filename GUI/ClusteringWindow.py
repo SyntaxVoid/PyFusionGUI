@@ -50,6 +50,7 @@ class ClusteringWindow:
         message_frame_width = self.message_frame.winfo_width()
         message_frame_height = self.message_frame.winfo_height()
         print("DEBUG::::: ", "{}x{}".format(message_frame_width, message_frame_height))
+        print("DEBUG:::::", self.message.get())
         self.root.geometry("{}x{}".format(message_frame_width, message_frame_height))
         return
 
