@@ -694,7 +694,7 @@ A1.save(\"{ANOBJ_FILE}\")
 #SBATCH -p short
 #SBATCH -n 4
 #SBATCH -N 1
-#SBATCH -t 5
+#SBATCH -t 19
 #SBATCH --mem-per-cpu=25G
 #SBATCH -o /home/%u/PyFusionGUI/PyFusionGUI/SLURM/PyFusionGUI-%j.out
 #SBATCH --export=ALL
