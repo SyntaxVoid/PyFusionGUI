@@ -25,9 +25,6 @@ class ClusteringWindow:
         self.message = tk.StringVar(master=self.message_frame)
         self.label = tk.Label(master=self.message_frame, textvariable=self.message, font=(font_name, 24))
         self.label.grid(row=0, column=0, sticky=tk.N)
-        self.set_label("Waiting for worker\nnode to complete\njob # {}.\n"
-                       "Checking again in\n{} seconds.\n"
-                       "Total time elapsed:\n{} seconds".format(self.jobid, self._cur, self.total_time))
         self.root.grab_set()
         self.root.wm_protocol("WM_DELETE_WINDOW", self.verify_cancel)
         self.root.bind("<<clustering_failed>>", self.clustering_failed)
@@ -42,6 +39,9 @@ class ClusteringWindow:
         self.cancel_button = tk.Button(master=self.message_frame, text="Cancel", command=self.verify_cancel)
         self.cancel_button.grid(row=1, column=0, sticky=tk.N)
         self.total_time = 0
+        self.set_label("Waiting for worker\nnode to complete\njob # {}.\n"
+                       "Checking again in\n{} seconds.\n"
+                       "Total time elapsed:\n{} seconds".format(self.jobid, self._cur, self.total_time))
         return
 
     def start(self):
