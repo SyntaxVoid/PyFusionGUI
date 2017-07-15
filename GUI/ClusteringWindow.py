@@ -52,7 +52,7 @@ class ClusteringWindow:
         button_height = self.cancel_button.winfo_height()
         print("DEBUG::::: ", "{}x{}".format(label_width, label_height+button_height))
         print("DEBUG:::::", self.message.get())
-        self.root.geometry("{}x{}".format(label_width, label_height + button_height))
+        #self.root.geometry("{}x{}".format(label_width, label_height + button_height))
         return
 
     def set_label(self, val):
