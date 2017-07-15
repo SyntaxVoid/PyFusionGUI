@@ -173,8 +173,10 @@ class DataMining:
         #return out
 
     @staticmethod
-    def get_mag(dev, shot, time_window, probe):
-        return dev.acq.getdata(shot, probe).reduce_time(time_window)
+    def get_mag(dev2, shot, time_window, probe):
+        dev = pf.getDevice("DIIID")
+        mag = dev.acq.getdata(shot, probe).reduce_time(time_window)
+        return mag
 
     def return_raw_ffts(self):
         # Returns the FFT's of every shot and in the form of a dictionary
