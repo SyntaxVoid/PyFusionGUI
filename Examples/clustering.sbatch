@@ -7,7 +7,7 @@
 #SBATCH -N 1
 ## Estimate how long it will take your script to run
 #SBATCH -t 8
-## Limit the amount of ram per CPU core
+## Limit the amount of ram
 #SBATCH --mem 115G
 ## Specify destinataion for program output (NOT THE SAVED ANALYSIS OBJECT)
 #SBATCH -o PyFusion-%j.out
