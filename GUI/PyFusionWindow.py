@@ -644,9 +644,9 @@ mem: 115G'''
         cutoff_by = self.value_dict["cutoff_by"].get()
         cutoff_value = int(self.value_dict["cutoff_value"].get())
         filter_items = self.value_dict["filter_items"].get()
-        if self.clustering_var.get() == 1:
+        if self.clustering_var.get() == 0:
             use_amp = False
-        elif self.clustering_var.get() == 2:
+        elif self.clustering_var.get() == 1:
             use_amp = True
         else:
             use_amp = None
