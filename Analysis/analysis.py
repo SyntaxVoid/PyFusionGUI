@@ -31,8 +31,16 @@ def stft_pickle_workaround(input_data):
     return copy.deepcopy(input_data[0].get_stft(input_data[1]))
 
 def mag_pickle_workaround(input_data):
-    # get_mag(dev, shot, time_window, probe):
     return copy.deepcopy(input_data[0].get_mag(input_data[1], input_data[2], input_data[3]))
+
+def fft_pickle_workaround(input_data):
+    return copy.deepcopy(input_data[0].get_raw_fft(input_data[1]))
+
+def mirnov_pickle_workaround(input_data):
+    return copy.deepcopy(input_data[0].get_raw_mirnov(input_data[1]))
+
+def times_pickle_workaround(input_data):
+    return copy.deepcopy(input_data[0].get_raw_time(input_data[1]))
 
 
 def stft_ece_pickle_workaround(input_data):
@@ -89,10 +97,25 @@ class DataMining:
                 {'n_clusters': 16, 'n_iterations': 20, 'start': 'k_means',
                  'verbose': 0, 'method': 'EM_VMM', "seeds": None}
             self.n_cpus = n_cpus
-            self.mags = self.return_mags()
-            self.raw_ffts = self.return_raw_ffts()
-            self.raw_mirnov_datas = self.return_raw_mirnov_datas()
-            self.raw_times = self.return_raw_times()
+
+            mag_iter = itertools.izip(itertools.repeat(self),
+                                      self.shot_info["shots"],
+                                      self.shot_info["time_windows"],
+                                      itertools.repeat(self.shot_info["probes"]))
+            fft_iter = itertools.izip(itertools.repeat(self),
+                                      self.mags)
+            raw_mirnov_iter = itertools.izip(itertools.repeat(self),
+                                             self.shot_info["shots"])  # Add shots to avoid endless loops
+            raw_times_iter = itertools.izip(itertools.repeat(self),
+                                            self.shot_info["shots"])
+            self.mags = self.mp_acquire(func=mag_pickle_workaround, iter=mag_iter)
+            self.raw_ffts = self.mp_acquire(func=fft_pickle_workaround, iter=fft_iter)
+            self.raw_mirnov_datas = self.mp_acquire(func=mirnov_pickle_workaround, iter=raw_mirnov_iter)
+            self.raw_times = self.mp_acquire(times_pickle_workaround, iter=raw_times_iter)
+            # self.mags = self.return_mags()
+            # self.raw_ffts = self.return_raw_ffts()
+            # self.raw_mirnov_datas = self.return_raw_mirnov_datas()
+            # self.raw_times = self.return_raw_times()
         else:
             # This executes the construction of an Analysis object from a previously saved
             # pickle file. That file must have been saved using the save method.
@@ -147,28 +170,28 @@ class DataMining:
             pickle.dump(self.__dict__, pick)
         return
 
-    def return_mags(self):
-        # Returns the magnitudes of every shot and time window in the form of a dictionary.
-        # Output is formatted like: {"159243": magnitudes, "159244": magnitudes, ... }
-        out = {}
-        iter = itertools.izip(itertools.repeat(self),
-                              self.shot_info["shots"],
-                              self.shot_info["time_windows"],
-                              itertools.repeat(self.shot_info["probes"]))
-        func_wrapper = mag_pickle_workaround
-        if self.n_cpus > 1:
-            pool = Pool(processes=self.n_cpus, maxtasksperchild=3)
-            ans = pool.map(func_wrapper, iter)
-            pool.close()
-            pool.join()
-        else:
-            ans = map(func_wrapper, iter)
-        for shot, result in zip(self.shot_info["shots"], ans):
-            out[str(shot)] = result
-        return out
-        #for sh, tw in zip(self.shot_info["shots"], self.shot_info["time_windows"]):
-        #    out[str(sh)] = dev.acq.getdata(sh, self.shot_info["probes"]).reduce_time(tw)
-        #return out
+    # def return_mags(self):
+    #     # Returns the magnitudes of every shot and time window in the form of a dictionary.
+    #     # Output is formatted like: {"159243": magnitudes, "159244": magnitudes, ... }
+    #     out = {}
+    #     iter = itertools.izip(itertools.repeat(self),
+    #                           self.shot_info["shots"],
+    #                           self.shot_info["time_windows"],
+    #                           itertools.repeat(self.shot_info["probes"]))
+    #     func_wrapper = mag_pickle_workaround
+    #     if self.n_cpus > 1:
+    #         pool = Pool(processes=self.n_cpus, maxtasksperchild=3)
+    #         ans = pool.map(func_wrapper, iter)
+    #         pool.close()
+    #         pool.join()
+    #     else:
+    #         ans = map(func_wrapper, iter)
+    #     for shot, result in zip(self.shot_info["shots"], ans):
+    #         out[str(shot)] = result
+    #     return out
+    #     #for sh, tw in zip(self.shot_info["shots"], self.shot_info["time_windows"]):
+    #     #    out[str(sh)] = dev.acq.getdata(sh, self.shot_info["probes"]).reduce_time(tw)
+    #     #return out
 
     @staticmethod
     def get_mag(shot, time_window, probe):
@@ -177,42 +200,79 @@ class DataMining:
         mag = dev.acq.getdata(shot, probe).reduce_time(time_window)
         return mag
 
-    def return_raw_ffts(self):
-        # Returns the FFT's of every shot and in the form of a dictionary
-        # Output is formatted like: {"159243": FFT, "159244": FFT, ... }
-        # Requires that magnitudes have already been stored within self.mags!!!!
-        if len(self.mags.keys()) == 0:
-            raise OutOfOrderError("Magnitudes must be calculated before FFTs!\n" +
-                                  "Run self.mags = self.return_mags().")
+    def get_raw_fft(self, shot):
+        return self.mags[str(shot)].generate_frequency_series(1024, 256)
+
+    def get_raw_mirnov(self, shot):
+        return self.raw_ffts[str(shot)].signal
+
+    def get_raw_time(self, shot):
+        return self.raw_ffts[str(shot)].timebase
+
+    def mp_acquire(self, func, iter):
         out = {}
-        for sh in self.shot_info["shots"]:
-            mag = self.mags[str(sh)]
-            out[str(sh)] = mag.generate_frequency_series(1024, 256)
+        if self.n_cpus > 1:
+            pool = Pool(processes=self.n_cpus, maxtasksperchild=3)
+            ans = pool.map(func, iter)
+            pool.close()
+            pool.join()
+        else:
+            ans = map(func, iter)
+        for shot, result in zip(self.shot_info["shots"], ans):
+            out[str(shot)] = result
         return out
 
-    def return_raw_mirnov_datas(self):
-        # Returns the raw mirnov data of every shot in the form of a dictionary
-        # Output is formatted like: {"159243": mirnov, "159244": mirnov, ... }
-        # Requires that FFTs have already been stored within self.raw_ffts!!!!
-        if len(self.raw_ffts.keys()) == 0:
-            raise OutOfOrderError("Raw FFTs must be calculated before raw mirnov data!\n" +
-                                  "Run self.raw_ffts = self.return_raw_ffts().")
-        out = {}
-        for sh in self.shot_info["shots"]:
-            out[str(sh)] = self.raw_ffts[str(sh)].signal
-        return out
+    # def return_raw_ffts(self):
+    #     # Returns the FFT's of every shot and in the form of a dictionary
+    #     # Output is formatted like: {"159243": FFT, "159244": FFT, ... }
+    #     # Requires that magnitudes have already been stored within self.mags!!!!
+    #     if len(self.mags.keys()) == 0:
+    #         raise OutOfOrderError("Magnitudes must be calculated before FFTs!\n" +
+    #                               "Run self.mags = self.return_mags().")
+    #     out = {}
+    #     iter = itertools.izip(itertools.repeat(self),
+    #                           self.mags)
+    #     func_wrapper = fft_pickle_workaround
+    #     if self.n_cpus > 1:
+    #         pool = Pool(processes=self.n_cpus, maxtasksperchild=3)
+    #         ans = pool.map(func_wrapper, iter)
+    #         pool.close()
+    #         pool.join()
+    #     else:
+    #         ans = map(func_wrapper, iter)
+    #     for shot, result in zip(self.shot_info["shots"], ans):
+    #         out[str(shot)] = result
+    #     # for sh in self.shot_info["shots"]:
+    #     #     mag = self.mags[str(sh)]
+    #     #     out[str(sh)] = mag.generate_frequency_series(1024, 256)
+    #     # return out
 
-    def return_raw_times(self):
-        # Returns the raw times of every shot in the form of a dictionary
-        # Output is formatted like: {"159243": mirnov, "159244": mirnov, ... }
-        # Requires that FFTs have already been stored within self.raw_ffts!!!!
-        if len(self.raw_ffts.keys()) == 0:
-            raise OutOfOrderError("Raw FFTs must be calculated before raw mirnov data!\n" +
-                                  "Run self.raw_ffts = self.return_raw_ffts().")
-        out = {}
-        for sh in self.shot_info["shots"]:
-            out[str(sh)] = self.raw_ffts[str(sh)].timebase
-        return out
+
+    # def return_raw_mirnov_datas(self):
+    #     # Returns the raw mirnov data of every shot in the form of a dictionary
+    #     # Output is formatted like: {"159243": mirnov, "159244": mirnov, ... }
+    #     # Requires that FFTs have already been stored within self.raw_ffts!!!!
+    #     if len(self.raw_ffts.keys()) == 0:
+    #         raise OutOfOrderError("Raw FFTs must be calculated before raw mirnov data!\n" +
+    #                               "Run self.raw_ffts = self.return_raw_ffts().")
+    #     out = {}
+    #     for sh in self.shot_info["shots"]:
+    #         out[str(sh)] = self.raw_ffts[str(sh)].signal
+    #     return out
+
+
+
+    # def return_raw_times(self):
+    #     # Returns the raw times of every shot in the form of a dictionary
+    #     # Output is formatted like: {"159243": mirnov, "159244": mirnov, ... }
+    #     # Requires that FFTs have already been stored within self.raw_ffts!!!!
+    #     if len(self.raw_ffts.keys()) == 0:
+    #         raise OutOfOrderError("Raw FFTs must be calculated before raw mirnov data!\n" +
+    #                               "Run self.raw_ffts = self.return_raw_ffts().")
+    #     out = {}
+    #     for sh in self.shot_info["shots"]:
+    #         out[str(sh)] = self.raw_ffts[str(sh)].timebase
+    #     return out
 
     def get_stft(self, shot):
         # Calculates the short time fourier transform (STFT) of a given shot in the current
