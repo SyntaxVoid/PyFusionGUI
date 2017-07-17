@@ -102,10 +102,12 @@ class PyFusionWindow:
 
         self.clustering_label = tk.Label(master=self.shot_frame, text="\nClustering Variable", font=font)
         self.clustering_label.grid(row=7, column=0, columnspan=2, sticky=tk.N)
-        self.clustering_var = tk.IntVar(master=self.shot_frame, value=1)
-        self.clustering_but_phase = tk.Radiobutton(master=self.shot_frame, text="Use Phases\n(magnetic probes)", variable=self.clustering_var, value=1)
+        self.clustering_var = tk.IntVar(master=self.shot_frame, value=0)
+        self.clustering_but_phase = tk.Radiobutton(master=self.shot_frame, text="Use Phases\n(magnetic probes)",
+                                                   variable=self.clustering_var, value=0)
         self.clustering_but_phase.grid(row=8, column=0, columnspan=2, sticky=tk.N)
-        self.clustering_but_amp = tk.Radiobutton(master=self.shot_frame, text="Use Amplitudes\n(ECE probes)", variable=self.clustering_var, value=2)
+        self.clustering_but_amp = tk.Radiobutton(master=self.shot_frame, text="Use Amplitudes\n(ECE probes)",
+                                                 variable=self.clustering_var, value=1)
         self.clustering_but_amp.grid(row=9, column=0, columnspan=2, sticky=tk.N)
         # ======================================
         # ======================================
@@ -736,6 +738,7 @@ mem: 115G'''
         self.value_dict["cutoff_by"].set(self.AN.DM.fft_settings["cutoff_by"])
         self.value_dict["cutoff_value"].set(str(self.AN.DM.fft_settings["ave_kappa_cutoff"]))
         self.value_dict["filter_items"].set(self.AN.DM.fft_settings["filter_item"])
+        self.value_dict["clustering_variable"].set(self.AN.DM.datamining_settings["amplitude"])
         return
 
     def clustering_restored(self, e):
