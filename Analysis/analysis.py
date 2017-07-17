@@ -28,25 +28,28 @@ PLOT_COLORS = jt.CycledList(["#ff0000", "#ff9400", "#ffe100", "#bfff00",
 def stft_pickle_workaround(input_data):
     # This looks a little funny. Because of how python treats multiprocessing, any function
     # using mp must be at the highest scope level (not inside a class) to operate correctly.
-    return copy.deepcopy(input_data[0].get_stft(input_data[1]))
-
+    #return copy.deepcopy(input_data[0].get_stft(input_data[1]))
+    return input_data[0].get_stft(input_data[1])
 def mag_pickle_workaround(input_data):
-    return copy.deepcopy(input_data[0].get_mag(input_data[1], input_data[2], input_data[3]))
+    #return copy.deepcopy(input_data[0].get_mag(input_data[1], input_data[2], input_data[3]))
+    return input_data[0].get_mag(input_data[1], input_data[2], input_data[3])
 
 def fft_pickle_workaround(input_data):
-    return copy.deepcopy(input_data[0].get_raw_fft(input_data[1]))
+    #return copy.deepcopy(input_data[0].get_raw_fft(input_data[1]))
+    return input_data[0].get_raw_fft(input_data[1])
 
 def mirnov_pickle_workaround(input_data):
-    return copy.deepcopy(input_data[0].get_raw_mirnov(input_data[1]))
-
+    #return copy.deepcopy(input_data[0].get_raw_mirnov(input_data[1]))
+    return input_data[0].get_raw_mirnov(input_data[1])
 def times_pickle_workaround(input_data):
-    return copy.deepcopy(input_data[0].get_raw_time(input_data[1]))
-
+    #return copy.deepcopy(input_data[0].get_raw_time(input_data[1]))
+    return input_data[0].get_raw_time(input_data[1])
 
 def stft_ece_pickle_workaround(input_data):
     # This looks a little funny. Because of how python treats multiprocessing, any function
     # using mp must be at the highest level (not within a class) to operate correctly.
-    return copy.deepcopy(input_data[0].get_stft_ece(input_data[1]))
+    #return copy.deepcopy(input_data[0].get_stft_ece(input_data[1]))
+    return input_data[0].get_stft_ece(input_data[1])
 
 
 def _big_axes(ax, xlabel="Time (ms)", ylabel="Freq (kHz)"):
