@@ -213,8 +213,8 @@ class DataMining:
         # if self.datamining_settings["amplitude"]:
         #     divisor = np.sum(np.abs(misc_data_dict['mirnov_data']),axis=1)
         #     misc_data_dict['mirnov_data'] = np.abs(misc_data_dict['mirnov_data'] / divisor[:, np.newaxis])
-        else:
-            pass
+        # else:
+        #     pass
         rel_data_angles = np.angle(rel_data)
         diff_angles = (np.diff(rel_data_angles)) % (2. * np.pi)
         diff_angles[diff_angles > np.pi] -= (2. * np.pi)
