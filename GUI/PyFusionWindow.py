@@ -39,7 +39,7 @@ class PyFusionWindow:
         self.root = tk.Tk()
         self.root.resizable(width=False, height=False)
         self.root.title("PyFusion GUI v. 0")
-        self.root.geometry("920x500")
+        #self.root.geometry("920x500")
         self.value_dict = OrderedDict()
 
         # ======================================
@@ -112,7 +112,7 @@ class PyFusionWindow:
         self.dms_info = tk.Label(master=self.dms_frame,
                                  text="Datamining Settings",
                                  font=(font_name, 20))
-        self.dms_info.grid(row=0, column=0, columnspan=4, sticky=tk.NSEW)
+        self.dms_info.grid(row=0, column=0, columnspan=5, sticky=tk.N)
         self.ncpus_label = tk.Label(master=self.dms_frame,
                                     text="n_cpus:",
                                     font=font)
@@ -371,6 +371,45 @@ class PyFusionWindow:
 
         # ======================================
         # ======================================
+        # ==          SLURM SETTINGS          ==
+        # ======================================
+        # ======================================
+        self.slurm_frame = tk.Frame(master=self.col_1_frame, bd=5, relief=tk.SUNKEN)
+        self.slurm_frame.grid(row=1, column=0, sticky=tk.N, pady=(0, 20))
+
+        self.slurm_info = tk.Label(master=self.slurm_frame, text="SLURM Settings", font=(font_name, 20))
+        self.slurm_info.grid(row=0, column=0, columnspan=2, sticky=tk.N)
+
+        self.partition_label = tk.Label(master=self.slurm_frame, text="Partition:", font=font)
+        self.partition_label.grid(row=1, column=0, sticky=tk.E)
+        self.partition_var = tk.StringVar(master=self.slurm_frame, value="short")
+        self.partition_entry = tk.Entry(master=self.slurm_frame, textvariable=self.partition_var, font=font)
+        self.partition_entry.grid(row=1, column=1, sticky=tk.W)
+        self.partition_help_label = tk.Label(master=self.slurm_frame,
+                                             text="Enter short, medium, or long.", font=(font_name, 9))
+        self.partition_help_label.grid(row=2, column=0, columnspan=2, sticky=tk.N)
+
+        self.running_time_label = tk.Label(master=self.slurm_frame, text="Est. Run Time:", font=font)
+        self.running_time_label.grid(row=3, column=0, sticky=tk.E)
+        self.running_time_var = tk.StringVar(master=self.slurm_frame, value="")
+        self.running_time_entry = tk.Entry(master=self.slurm_frame, textvariable=self.running_time_var, font=font)
+        self.running_time_entry.grid(row=3, column=1, sticky=tk.W)
+        self.running_time_help_label = tk.Label(master=self.slurm_frame,
+                                                text="Enter in the upper bound for running time in minutes.\n"
+                                                     "(Takes 1.5 minutes per shot average)", font=(font_name, 9))
+        self.running_time_help_label.grid(row=4, column=0, columnspan=2, sticky=tk.N)
+
+        self.mem_label = tk.Label(master=self.slurm_frame, text="Max Memory Usage:", font=font)
+        self.mem_label.grid(row=5, column=0, sticky=tk.E)
+        self.mem_var = tk.StringVar(master=self.slurm_frame, value="115G")
+        self.mem_entry = tk.Entry(master=self.slurm_frame, textvariable=self.mem_var, font=font)
+        self.mem_entry.grid(row=5, column=1, sticky=tk.W)
+        self.mem_help = tk.Label(master=self.slurm_frame, text="Enter in the maximum amount of memory and units.\n"
+                                                               "Recommended: 115G. Units: M (Mb) or G (Gb)")
+        self.mem_help.grid(row=6, column=0, columnspan=2, sticky=tk.N)
+
+        # ======================================
+        # ======================================
         # ==          MISC. WIDGETS           ==
         # ======================================
         # ======================================
@@ -422,6 +461,9 @@ class PyFusionWindow:
         self.value_dict["cutoff_by"] = self.cutoff_var
         self.value_dict["cutoff_value"] = self.cutoff_val_var
         self.value_dict["filter_items"] = self.filter_item_var
+        self.value_dict["partition"] = self.partition_var
+        self.value_dict["run_time"] = self.running_time_var
+        self.value_dict["mem"] = self.mem_var
         return
 
     def start(self):
@@ -465,7 +507,9 @@ seed: 743
 n_peaks: 20
 cutoff_by: sigma_eq
 cutoff_value: 80
-filter_items: EM_VMM_kappas'''
+filter_items: EM_VMM_kappas
+partition: short
+mem: 115G'''
         self.load_values_from_str(defaults)
         with open(os.path.join(GUI_DIR, ".guiconfig"), "w") as new_default:
             new_default.write(defaults)
@@ -500,6 +544,9 @@ filter_items: EM_VMM_kappas'''
             elif line.startswith("cutoff_by"): self.cutoff_var.set(val)
             elif line.startswith("cutoff_value"): self.cutoff_val_var.set(val)
             elif line.startswith("filter_item"): self.filter_item_var.set(val)
+            elif line.startswith("partition"): self.partition_var.set(val)
+            elif line.startswith("mem"): self.mem_var.set(val)
+            elif line.startswith("run_time"): self.running_time_var.set(val)
         return
 
     def load_values_from_file(self, f):
@@ -552,6 +599,17 @@ filter_items: EM_VMM_kappas'''
             valid = False
         # Not sure how to test filter_items... :(
         # Checks the contents of "every" cell to ensure the contents are valid.
+        if self.value_dict["partition"].get().lower().strip() not in ["short", "medium", "long"]:
+            ErrorWindow(self.root, "Partition must be short, medium, or long.")
+            valid = False
+        if not jt.valid_float_from_str(self.value_dict["run_time"].get()) or \
+                        float(self.value_dict["run_time"].get()) > 19:
+            ErrorWindow(self.root, "Estimated run time must be a float or integer!")
+            valid = False
+        if not jt.valid_float_from_str(self.value_dict["mem"].get()[:-1]) or \
+                        self.value_dict["mem"].get()[-1].lower().strip() not in ["g", "m"]:
+            ErrorWindow(self.root, "Max memory usage entry is not valid.")
+            valid = False
         return valid
 
     def random_seed(self):
@@ -686,26 +744,33 @@ filter_items: EM_VMM_kappas'''
         if self.valid_values():
             now = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
             self.AN = IRIS_CSCRATCH_DIR + now + ".ANobj"
+
             pythonscript = '''from PyFusionGUI.Analysis.analysis import *
-from PyFusionGUI.Utilities.jtools import *
 A1 = {ANALYSIS_OBJECT}
 A1.save(\"{ANOBJ_FILE}\")
 '''.format(ANALYSIS_OBJECT=self.settings_to_analysis_object_str(),
            ANOBJ_FILE=self.AN)
+
             with open(os.path.join(SLURM_DIR, "temp.py"), "w") as test:
                 test.write(pythonscript)
+
             sbatchscript = '''#!/bin/bash
-#SBATCH -p short
-#SBATCH -n 2
+#SBATCH -p {PARTITION}
+#SBATCH -n {N_CPUS}
 #SBATCH -N 1
-#SBATCH -t 19
-#SBATCH --mem-per-cpu=20G
+#SBATCH -t {RUN_TIME}
+#SBATCH --mem {MEM}
 #SBATCH -o /home/%u/PyFusionGUI/PyFusionGUI/SLURM/PyFusionGUI-%j.out
 #SBATCH --export=ALL
 set -e
 echo "Starting job on worker node"
 /fusion/usc/opt/python/2.7.11/bin/python2.7 {SCRIPT}
-'''.format(SCRIPT=os.path.join(SLURM_DIR, "temp.py"))
+'''.format(PARTITION=self.value_dict["partition"].get(),
+           N_CPUS=self.value_dict["n_cpus"].get(),
+           RUN_TIME=self.value_dict["run_time"].get(),
+           MEM=self.value_dict["mem"].get(),
+           SCRIPT=os.path.join(SLURM_DIR, "temp.py"))
+
             with open(os.path.join(SLURM_DIR, "sbatch_clustering.sbatch"), "w") as sbatch:
                 sbatch.write(sbatchscript)
             slurm_output = subprocess.check_output(
