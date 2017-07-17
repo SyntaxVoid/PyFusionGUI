@@ -868,7 +868,7 @@ echo "Starting job on worker node"
             win.grab_set()
             label = tk.Label(master=win, text="Do you really wish\nto close?", font=(font_name, 18))
             label.grid(row=0, column=0, columnspan=2, sticky=tk.N)
-            yes = tk.Button(master=win, text="Yes", font=(font_name, 18), command=self.root.destroy)
+            yes = tk.Button(master=win, text="Yes", font=(font_name, 18), command=root.destroy)
             yes.grid(row=1, column=0, sticky=tk.N)
             no = tk.Button(master=win, text="No", font=(font_name, 18), command=win.destroy)
             no.grid(row=1, column=1, sticky=tk.N)
