@@ -884,7 +884,8 @@ echo "Starting job on worker node"
             fig, \
             ax1,  \
             ax2,   \
-            ax3 = self.AN.return_pinpoint_plots(shot=shot_var.get(), t0=time_var.get(), f0=freq_var.get(),
+            ax3 = self.AN.return_pinpoint_plots(shot=shot_var.get(),
+                                                t0=float(time_var.get()), f0=float(freq_var.get()),
                                                 time_window=jt.time_window_parser(time_window_var.get()),
                                                frequency_window=jt.time_window_parser(freq_range_var.get()),
                                                 clusters="all")
