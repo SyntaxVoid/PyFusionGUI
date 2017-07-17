@@ -13,4 +13,5 @@ cutoff_by: sigma_eq
 cutoff_value: 70
 filter_items: EM_VMM_kappas
 partition: short
+run_time: 15
 mem: 115G

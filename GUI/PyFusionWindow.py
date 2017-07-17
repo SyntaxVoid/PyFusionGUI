@@ -511,6 +511,7 @@ cutoff_by: sigma_eq
 cutoff_value: 80
 filter_items: EM_VMM_kappas
 partition: short
+run_time: 15
 mem: 115G'''
         self.load_values_from_str(defaults)
         with open(os.path.join(GUI_DIR, ".guiconfig"), "w") as new_default:
