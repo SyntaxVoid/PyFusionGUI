@@ -387,7 +387,7 @@ class PyFusionWindow:
         self.partition_entry = tk.Entry(master=self.slurm_frame, textvariable=self.partition_var, font=font)
         self.partition_entry.grid(row=1, column=1, sticky=tk.W)
         self.partition_help_label = tk.Label(master=self.slurm_frame,
-                                             text="Enter short, medium, or long.", font=(font_name, 9))
+                                             text="Enter short (20min), medium (1day), or long(1wk).", font=(font_name, 9))
         self.partition_help_label.grid(row=2, column=0, columnspan=2, sticky=tk.N)
 
         self.running_time_label = tk.Label(master=self.slurm_frame, text="Est. Run Time:", font=font)
