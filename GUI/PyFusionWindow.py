@@ -640,8 +640,15 @@ mem: 115G'''
         cutoff_by = self.value_dict["cutoff_by"].get()
         cutoff_value = int(self.value_dict["cutoff_value"].get())
         filter_items = self.value_dict["filter_items"].get()
+        if self.clustering_var.get() == 1:
+            use_amp = False
+        elif self.clustering_var.get() == 2:
+            use_amp = True
+        else:
+            use_amp = None
         datamining_settings = {'n_clusters': n_clusters, 'n_iterations': n_iterations,
-                               'start': start, 'verbose': 0, 'method': method, "seeds": seeds}
+                               'start': start, 'verbose': 0, 'method': method, "seeds": seeds,
+                               "amplitude": use_amp}
         fft_settings = {"n_pts": n_peaks, "lower_freq": lower_freq, "upper_freq": upper_freq,
                         "cutoff_by": cutoff_by, "ave_kappa_cutoff": cutoff_value, "filter_item": filter_items}
         return "DataMining(shots={shots}, time_windows={time_windows}, probes=\"{probes}\","\

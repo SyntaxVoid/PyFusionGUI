@@ -159,43 +159,14 @@ class DataMining:
         # they will be compressed into a single dictionary object and then pickled. If
         # filename is None, will create a custom filename based off of the FIRST shot,
         # FIRST time window and probe name
+        from time import strftime
+        time_string = strftime("%d-%m-%Y--%H-%M-%S")
         if filename is None:
-            probes = self.shot_info["probes"]
-            if probes == "DIIID_toroidal_mag": pr = "TOR"
-            elif probes == "DIIID_poloidal322_mag": pr = "POL"
-            elif probes == "ECEF_array": pr = "ECE"
-            elif probes == "ECEF_array_red": pr = "ECE_REDUCED"
-            else: pr = probes
-            local_filename = str(self.shot_info["shots"][0]) + "_" + \
-                             jt.time_window_to_filelike_str(self.shot_info["time_windows"][0]) + "_" + \
-                             pr + ".DMobj"
+            local_filename = "PyFusionGUI_from_{}".format(time_string)
             filename = os.path.join(IRIS_CSCRATCH_DIR, local_filename)
         with open(filename, "wb") as pick:
             pickle.dump(self.__dict__, pick)
         return
-
-    # def return_mags(self):
-    #     # Returns the magnitudes of every shot and time window in the form of a dictionary.
-    #     # Output is formatted like: {"159243": magnitudes, "159244": magnitudes, ... }
-    #     out = {}
-    #     iter = itertools.izip(itertools.repeat(self),
-    #                           self.shot_info["shots"],
-    #                           self.shot_info["time_windows"],
-    #                           itertools.repeat(self.shot_info["probes"]))
-    #     func_wrapper = mag_pickle_workaround
-    #     if self.n_cpus > 1:
-    #         pool = Pool(processes=self.n_cpus, maxtasksperchild=3)
-    #         ans = pool.map(func_wrapper, iter)
-    #         pool.close()
-    #         pool.join()
-    #     else:
-    #         ans = map(func_wrapper, iter)
-    #     for shot, result in zip(self.shot_info["shots"], ans):
-    #         out[str(shot)] = result
-    #     return out
-    #     #for sh, tw in zip(self.shot_info["shots"], self.shot_info["time_windows"]):
-    #     #    out[str(sh)] = dev.acq.getdata(sh, self.shot_info["probes"]).reduce_time(tw)
-    #     #return out
 
     @staticmethod
     def get_mag(shot, time_window, probe):
@@ -225,59 +196,7 @@ class DataMining:
             out[str(shot)] = result
         return out
 
-    # def return_raw_ffts(self):
-    #     # Returns the FFT's of every shot and in the form of a dictionary
-    #     # Output is formatted like: {"159243": FFT, "159244": FFT, ... }
-    #     # Requires that magnitudes have already been stored within self.mags!!!!
-    #     if len(self.mags.keys()) == 0:
-    #         raise OutOfOrderError("Magnitudes must be calculated before FFTs!\n" +
-    #                               "Run self.mags = self.return_mags().")
-    #     out = {}
-    #     iter = itertools.izip(itertools.repeat(self),
-    #                           self.mags)
-    #     func_wrapper = fft_pickle_workaround
-    #     if self.n_cpus > 1:
-    #         pool = Pool(processes=self.n_cpus, maxtasksperchild=3)
-    #         ans = pool.map(func_wrapper, iter)
-    #         pool.close()
-    #         pool.join()
-    #     else:
-    #         ans = map(func_wrapper, iter)
-    #     for shot, result in zip(self.shot_info["shots"], ans):
-    #         out[str(shot)] = result
-    #     # for sh in self.shot_info["shots"]:
-    #     #     mag = self.mags[str(sh)]
-    #     #     out[str(sh)] = mag.generate_frequency_series(1024, 256)
-    #     # return out
-
-
-    # def return_raw_mirnov_datas(self):
-    #     # Returns the raw mirnov data of every shot in the form of a dictionary
-    #     # Output is formatted like: {"159243": mirnov, "159244": mirnov, ... }
-    #     # Requires that FFTs have already been stored within self.raw_ffts!!!!
-    #     if len(self.raw_ffts.keys()) == 0:
-    #         raise OutOfOrderError("Raw FFTs must be calculated before raw mirnov data!\n" +
-    #                               "Run self.raw_ffts = self.return_raw_ffts().")
-    #     out = {}
-    #     for sh in self.shot_info["shots"]:
-    #         out[str(sh)] = self.raw_ffts[str(sh)].signal
-    #     return out
-
-
-
-    # def return_raw_times(self):
-    #     # Returns the raw times of every shot in the form of a dictionary
-    #     # Output is formatted like: {"159243": mirnov, "159244": mirnov, ... }
-    #     # Requires that FFTs have already been stored within self.raw_ffts!!!!
-    #     if len(self.raw_ffts.keys()) == 0:
-    #         raise OutOfOrderError("Raw FFTs must be calculated before raw mirnov data!\n" +
-    #                               "Run self.raw_ffts = self.return_raw_ffts().")
-    #     out = {}
-    #     for sh in self.shot_info["shots"]:
-    #         out[str(sh)] = self.raw_ffts[str(sh)].timebase
-    #     return out
-
-    def get_stft(self, shot):
+    def get_stft(self, shot, clustering_parameter="phase"):
         # Calculates the short time fourier transform (STFT) of a given shot in the current
         # analysis object. This function must be dependent on shot since we use map and
         # multiprocessing at a later point in the script since each shot can be processed
@@ -291,13 +210,17 @@ class DataMining:
                           "freq": ext.return_non_freq_dependent(data_ffti.frequency_base, good_indices),
                           "shot": np.ones(n, dtype=int) * shot,
                           "mirnov_data": +rel_data}
+        if self.datamining_settings["amplitude"]:
+            divisor = np.sum(np.abs(misc_data_dict['mirnov_data']),axis=1)
+            misc_data_dict['mirnov_data'] = np.abs(misc_data_dict['mirnov_data'] / divisor[:, np.newaxis])
+        else:
+            pass
         rel_data_angles = np.angle(rel_data)
         diff_angles = (np.diff(rel_data_angles)) % (2. * np.pi)
         diff_angles[diff_angles > np.pi] -= (2. * np.pi)
         z = ext.perform_data_datamining(diff_angles, misc_data_dict, self.datamining_settings)
         instance_array_cur, misc_data_dict_cur = \
             ext.filter_by_kappa_cutoff(z, **self.fft_settings)
-
         instance_array = np.array(instance_array_cur)
         misc_data_dict = misc_data_dict_cur
         return instance_array, misc_data_dict, magi.signal, magi.timebase
@@ -361,7 +284,7 @@ class Analysis:
             return None, None, None
         feature_object = clust.feature_object(instance_array=instance_array, misc_data_dict=misc_data_dict,
                                               instance_array_amps=+misc_data_dict["mirnov_data"])
-        z = feature_object.cluster(**self.DM.datamining_settings)
+        z = feature_object.cluster(amplitude=True, **self.DM.datamining_settings)
         return results, feature_object, z
 
     @classmethod
@@ -379,7 +302,6 @@ class Analysis:
         from time import strftime
         time_string = strftime("%d-%m-%Y--%H-%M-%S")
         if filename is None:
-            probes = self.DM.shot_info["probes"]
             local_filename = "PyFusionGUI_from_{}".format(time_string)
             filename = os.path.join(IRIS_CSCRATCH_DIR, local_filename)
         with open(filename, "wb") as pick:
@@ -390,7 +312,7 @@ class Analysis:
 
     def show_plots(self):
         import matplotlib.pyplot as plt
-        plots = self.return_specgrams()
+        self.return_specgrams()
         plt.show()
         return
 
