@@ -843,18 +843,124 @@ echo "Starting job on worker node"
         # Verify both frequency and time are within our analysis windows.
         # Can only be done after the analysis has been performed. (Grey out button before that??)
         # but we'll ignore the latter for now.
-        if self.AN is None:
-            if self.valid_values():
-                defaults = [str(jt.shot_str_parser(self.value_dict["shots"].get())[0]),
-                            self.value_dict["times"].get(),
-                            self.value_dict["freq_range"].get()]
-            else:
+        def valid_values():
+            valid = True
+            if not jt.valid_int_from_str(shot_var.get()):
+                ErrorWindow(root, "Shot entry is invalid.")
+                valid = False
+            if not jt.valid_window(time_window_var.get()):
+                ErrorWindow(root, "Time window entry is invalid.")
+                valid = False
+            if not jt.valid_window(freq_range_var.get()):
+                ErrorWindow(root, "Frequency range entry is invalid.")
+                valid = False
+            if not jt.valid_float_from_str(time_var.get()) or not jt.t_in_window(time_var.get(), time_window_var.get()):
+                ErrorWindow(root, "Time entry is invalid.")
+                valid = False
+            if not jt.valid_float_from_str(freq_var.get()) or not jt.t_in_window(freq_var.get(), freq_range_var.get()):
+                ErrorWindow(root, "Frequency entry is invalid.")
+                valid = False
+            return valid
+
+        def verify_cancel():
+            win = tk.Toplevel(master=root)
+            win.resizable(width=False, height=False)
+            win.grab_set()
+            label = tk.Label(master=win, text="Do you really wish\nto close?", font=(font_name, 18))
+            label.grid(row=0, column=0, columnspan=2, sticky=tk.N)
+            yes = tk.Button(master=win, text="Yes", font=(font_name, 18), command=self.root.destroy)
+            yes.grid(row=1, column=0, sticky=tk.N)
+            no = tk.Button(master=win, text="No", font=(font_name, 18), command=win.destroy)
+            no.grid(row=1, column=1, sticky=tk.N)
+            return
+
+        def cont():
+            if not valid_values():
                 return
-        else:
-            object_settings = self.return_restored_object_values()
-            defaults = [object_settings["shots"].split(",")[0], object_settings["times"],
-                        object_settings["freq_range"]]
-        PinpointWindow(master=self.root, defaults=defaults, pf_window=self, previous_analysis=self.AN)
+            fig, \
+            ax1,  \
+            ax2,   \
+            ax3 = self.AN.return_pinpoint_plots(shot=shot_var.get(), t0=time_var.get(), f0=freq_var.get(),
+                                                time_window=jt.time_window_parser(time_window_var.get()),
+                                               frequency_window=jt.time_window_parser(freq_range_var.get()),
+                                                clusters="all")
+            plt.show()
+            return
+
+
+        root = tk.Toplevel(master=self.root)
+        root.wm_protocol("WM_DELETE_WINDOW", verify_cancel)
+        root.resizable(width=False, height=False)
+        heading_label = tk.Label(master=root, text="Pinpoint Analysis", font=(font_name, 24))
+        heading_label.grid(row=0, column=0, columnspan=2, sticky=tk.N)
+        shot_label = tk.Label(master=root, text="Shot:", font=font)
+        shot_label.grid(row=1, column=0, sticky=tk.NE)
+        shot_var = tk.StringVar(master=root)
+        shot_entry = tk.Entry(master=root, font=font, textvariable=shot_var)
+        shot_entry.grid(row=1, column=1, sticky=tk.N)
+        shot_help_label = tk.Label(master=root, text="Enter shot number", font=(font_name, 9))
+        shot_help_label.grid(row=2, column=0, columnspan=2, sticky=tk.N)
+        time_window_label = tk.Label(master=root, text="Time Window (ms):", font=font)
+        time_window_label.grid(row=3, column=0, sticky=tk.NE)
+        time_window_var = tk.StringVar(master=root)
+        time_window_entry = tk.Entry(master=root, font=font, textvariable=time_window_var)
+        time_window_entry.grid(row=3, column=1, sticky=tk.N)
+        time_window_help_label = tk.Label(master=root,
+                                          text="Enter time window (plotting purposes only). e.g. 300-500",
+                                          font=(font_name, 9))
+        time_window_help_label.grid(row=4, column=0, columnspan=2, sticky=tk.N)
+        freq_range_label = tk.Label(master=root, text="Freq. Range (kHz):", font=font)
+        freq_range_label.grid(row=5, column=0, sticky=tk.NE)
+        freq_range_var = tk.StringVar(master=root)
+        freq_range_entry = tk.Entry(master=root, font=font, textvariable=freq_range_var)
+        freq_range_entry.grid(row=5, column=1, sticky=tk.N)
+        freq_range_help_label = tk.Label(master=root,
+                                         text="Enter frequency range (plotting purposes only). e.g. 50-250",
+                                         font=(font_name, 9))
+        freq_range_help_label.grid(row=6, column=0, columnspan=2, sticky=tk.N)
+        time_label = tk.Label(master=root, text="Time (ms):", font=font)
+        time_label.grid(row=7, column=0, sticky=tk.NE)
+        time_var = tk.StringVar(master=root)
+        time_entry = tk.Entry(master=root, font=font, textvariable=time_var)
+        time_entry.grid(row=7, column=1, sticky=tk.N)
+        time_help_label = tk.Label(master=root,
+                                   text="Enter the time you would like to pinpoint. e.g. 534.23",
+                                   font=(font_name, 9))
+        time_help_label.grid(row=8, column=0, columnspan=2, sticky=tk.N)
+        freq_label = tk.Label(master=root, text="Freq. (kHz):", font=font)
+        freq_label.grid(row=9, column=0, sticky=tk.NE)
+        freq_var = tk.StringVar(master=root)
+        freq_entry = tk.Entry(master=root, font=font, textvariable=freq_var)
+        freq_entry.grid(row=9, column=1, sticky=tk.N)
+        freq_help_label = tk.Label(master=root,
+                                   text="Enter the freq you would like to pinpoint. e.g. 63.42",
+                                   font=(font_name, 9))
+        freq_help_label.grid(row=10, column=0, columnspan=2, sticky=tk.N)
+        button_frame = tk.Frame(master=root, bd=5, relief=tk.SUNKEN)
+        button_frame.grid(row=11, column=1, sticky=tk.E)
+        continue_button = tk.Button(master=button_frame, text="Continue", font=font, command=cont)
+        continue_button.grid(row=0, column=0, sticky=tk.E)
+        cancel_button = tk.Button(master=button_frame, text="Cancel", font=font, command=verify_cancel)
+        cancel_button.grid(row=0, column=1, sticky=tk.W)
+        root.grab_set()
+        defaults = [str(jt.shot_str_parser(self.value_dict["shots"].get())[0]),
+                    self.value_dict["times"].get(),
+                    self.value_dict["freq_range"].get()]
+        shot_var.set(defaults[0])
+        time_window_var.set(defaults[1])
+        freq_range_var.set(defaults[2])
+        # if self.AN is None:
+        #     if self.valid_values():
+        #         defaults = [str(jt.shot_str_parser(self.value_dict["shots"].get())[0]),
+        #                     self.value_dict["times"].get(),
+        #                     self.value_dict["freq_range"].get()]
+        #     else:
+        #         return
+        # else:
+        #     object_settings = self.return_restored_object_values()
+        #     defaults = [object_settings["shots"].split(",")[0], object_settings["times"],
+        #                 object_settings["freq_range"]]
+        # PinpointWindow(master=self.root, defaults=defaults, pf_window=self, previous_analysis=self.AN)
         return
 
 if __name__ == "__main__":
