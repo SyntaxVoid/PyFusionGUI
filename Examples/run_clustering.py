@@ -10,7 +10,7 @@ datamining_settings = {"verbose": 0, "n_clusters": 16, "start": "k_means",
 fft_settings = {"upper_freq": 250, "cutoff_by": "sigma_eq",
                 "ave_kappa_cutoff": 70, "filter_item": "EM_VMM_kappas",
                 "lower_freq": 50, "n_pts": 20}
-n_cpus = 1
+n_cpus = 4
 # Create the datamining object and run the datamining
 DM1 = DataMining(shots=shots, time_windows=time_windows, probes=probes,
                  datamining_settings=datamining_settings,

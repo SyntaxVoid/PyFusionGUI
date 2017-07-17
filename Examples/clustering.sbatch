@@ -2,7 +2,7 @@
 ## Specify the (p)artition or queue to be placed in.
 #SBATCH -p short
 ## Specify the number of CPUS to utilize
-#SBATCH -n 2
+#SBATCH -n 4
 ## Specify the number of nodes/CPUS to use. SET TO 1!
 #SBATCH -N 1
 ## Estimate how long it will take your script to run
