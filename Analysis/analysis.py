@@ -456,7 +456,7 @@ class Analysis:
         else:
             ax.set_xlabel("Probe Number", fontsize=16)
             ax.set_xticks(positions)
-            ax.set_xlim(positions)
+            ax.set_xlim(positions[0], positions[-1])
         return
 
 if __name__ == '__main__':

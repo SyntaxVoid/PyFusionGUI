@@ -237,8 +237,6 @@ def shot_str_parser(s):
                 out.append(int(temp))
             elif m2.match(temp):
                 out += range(int(temp.split("-")[0]), int(temp.split("-")[1])+1)
-            else:
-                print("???????")
         else:
             raise ValueError("Invalid string.")
     return out
@@ -263,7 +261,6 @@ def squareish_grid(n, swapxy=False):
 
 
 def find_closest(arr, x):
-    print("DEBUG:::: arr: {} x: {}".format(arr, x))
     m = abs(arr[0]-x)
     x0 = arr[0]
     n0 = 0
