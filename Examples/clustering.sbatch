@@ -2,13 +2,13 @@
 ## Specify the (p)artition or queue to be placed in.
 #SBATCH -p short
 ## Specify the number of CPUS to utilize
-#SBATCH -n 4
+#SBATCH -n 2
 ## Specify the number of nodes/CPUS to use. SET TO 1!
 #SBATCH -N 1
 ## Estimate how long it will take your script to run
 #SBATCH -t 8
 ## Limit the amount of ram per CPU core
-#SBATCH --mem-per-cpu=28G
+#SBATCH --mem-per-cpu=59G
 ## Specify destinataion for program output (NOT THE SAVED ANALYSIS OBJECT)
 #SBATCH -o PyFusion-%j.out
 ## Export your environment variables to the job
