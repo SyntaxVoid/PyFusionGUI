@@ -210,9 +210,9 @@ class DataMining:
                           "freq": ext.return_non_freq_dependent(data_ffti.frequency_base, good_indices),
                           "shot": np.ones(n, dtype=int) * shot,
                           "mirnov_data": +rel_data}
-        if self.datamining_settings["amplitude"]:
-            divisor = np.sum(np.abs(misc_data_dict['mirnov_data']),axis=1)
-            misc_data_dict['mirnov_data'] = np.abs(misc_data_dict['mirnov_data'] / divisor[:, np.newaxis])
+        # if self.datamining_settings["amplitude"]:
+        #     divisor = np.sum(np.abs(misc_data_dict['mirnov_data']),axis=1)
+        #     misc_data_dict['mirnov_data'] = np.abs(misc_data_dict['mirnov_data'] / divisor[:, np.newaxis])
         else:
             pass
         rel_data_angles = np.angle(rel_data)
