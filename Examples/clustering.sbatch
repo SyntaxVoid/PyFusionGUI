@@ -10,7 +10,7 @@
 ## Limit the amount of ram per CPU core
 #SBATCH --mem-per-cpu=28G
 ## Specify destinataion for program output (NOT THE SAVED ANALYSIS OBJECT)
-#SBATCH -o /cscratch/PyFusion-%j.out
+#SBATCH -o PyFusion-%j.out
 ## Export your environment variables to the job
 #SBATCH --export=ALL
 ## Set the script to FAILED status if there is any error
