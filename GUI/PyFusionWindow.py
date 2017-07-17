@@ -100,6 +100,13 @@ class PyFusionWindow:
                                textvariable=self.probe_var)
         self.probes.grid(row=5, column=1, padx=5)
 
+        self.clustering_label = tk.Label(master=self.shot_frame, text="\nClustering Variable", font=font)
+        self.clustering_label.grid(row=7, column=0, columnspan=2, sticky=tk.N)
+        self.clustering_var = tk.IntVar(master=self.shot_frame, value=1)
+        self.clustering_but_phase = tk.Radiobutton(master=self.shot_frame, text="Use Phases\n(magnetic probes)", variable=self.clustering_var, value=1)
+        self.clustering_but_phase.grid(row=8, column=0, columnspan=2, sticky=tk.N)
+        self.clustering_but_amp = tk.Radiobutton(master=self.shot_frame, text="Use Amplitudes\n(ECE probes)", variable=self.clustering_var, value=2)
+        self.clustering_but_amp.grid(row=9, column=0, columnspan=2, sticky=tk.N)
         # ======================================
         # ======================================
         # ==       DATAMINING SETTINGS        ==
@@ -276,12 +283,6 @@ class PyFusionWindow:
                                           textvariable=self.filter_item_var)
         self.filter_item_entry.grid(row=11, column=4, padx=5, sticky=tk.W)
 
-        # self.use_worker_node_val = tk.IntVar(master=self.root, value=1)
-        # self.use_worker_node_checkbox = tk.Checkbutton(master=self.col_1_frame,
-        #                                                text="Use Iris\nWorker Node", font=(font_name, 13),
-        #                                                variable=self.use_worker_node_val, bd=5, relief=tk.SUNKEN)
-        # self.use_worker_node_checkbox.config(state=tk.DISABLED)
-        # self.use_worker_node_checkbox.grid(row=1, column=0, sticky=tk.NE)
 
         # ======================================
         # ======================================
@@ -464,6 +465,7 @@ class PyFusionWindow:
         self.value_dict["partition"] = self.partition_var
         self.value_dict["run_time"] = self.running_time_var
         self.value_dict["mem"] = self.mem_var
+        self.value_dict["clustering_variable"] = self.clustering_var
         return
 
     def start(self):
