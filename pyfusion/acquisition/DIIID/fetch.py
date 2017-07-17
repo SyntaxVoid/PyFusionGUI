@@ -8,6 +8,7 @@ from pyfusion.data.base import Coords, Channel, ChannelList, \
     get_coords_for_channel
 import traceback
 import numpy as np
+from numpy.testing import assert_array_almost_equal
 from pyfusion.conf.utils import import_setting, kwarg_config_handler, \
      get_config_as_dict, import_from_str
 
@@ -102,18 +103,18 @@ class DIIIDMultiChannelFetcher(MultiChannelFetcher):
         channels = ChannelList()
         timebase = None
         meta_dict={}
-        from scipy.io import netcdf
-        home = os.environ['HOME']
-        os.system('mkdir -p {}/tmp_pyfusion/'.format(home))
-        fname = '{}/tmp_pyfusion/{}.nc'.format(home,self.shot)
-        if os.path.exists(fname):
-            NC = netcdf.netcdf_file(fname,'r',version=2)
-        else:
-            NC = netcdf.netcdf_file(fname,'w',version=2)
+        #from scipy.io import netcdf
+        #home = os.environ['HOME']
+        #os.system('mkdir -p {}/tmp_pyfusion/'.format(home))
+        #fname = '{}/tmp_pyfusion/{}.nc'.format(home,self.shot)
+        #if os.path.exists(fname):
+        #    NC = netcdf.netcdf_file(fname,'r',version=2)
+        #else:
+        #    NC = netcdf.netcdf_file(fname,'w',version=2)
         for chan in ordered_channel_names:
             fetcher_class = import_setting('Diagnostic', chan, 'data_fetcher')
             tmp_data = fetcher_class(self.acq, self.shot,
-                                     config_name=chan, NC=NC).fetch()
+                                     config_name=chan).fetch()
             channels.append(tmp_data.channels)
             meta_dict.update(tmp_data.meta)
             if timebase is None:
@@ -129,7 +130,7 @@ class DIIIDMultiChannelFetcher(MultiChannelFetcher):
                     else:
                         raise
         
-        NC.close()
+        #NC.close()
         signal=Signal(data_list)
         output_data = TimeseriesData(signal=signal, timebase=timebase,
                                      channels=channels)
