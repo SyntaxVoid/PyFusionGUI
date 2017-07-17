@@ -102,15 +102,16 @@ class DataMining:
                                       self.shot_info["shots"],
                                       self.shot_info["time_windows"],
                                       itertools.repeat(self.shot_info["probes"]))
+            self.mags = self.mp_acquire(func=mag_pickle_workaround, iter=mag_iter)
             fft_iter = itertools.izip(itertools.repeat(self),
-                                      self.mags)
+                                      self.shot_info["shots"])
+
+            self.raw_ffts = self.mp_acquire(func=fft_pickle_workaround, iter=fft_iter)
             raw_mirnov_iter = itertools.izip(itertools.repeat(self),
                                              self.shot_info["shots"])  # Add shots to avoid endless loops
+            self.raw_mirnov_datas = self.mp_acquire(func=mirnov_pickle_workaround, iter=raw_mirnov_iter)
             raw_times_iter = itertools.izip(itertools.repeat(self),
                                             self.shot_info["shots"])
-            self.mags = self.mp_acquire(func=mag_pickle_workaround, iter=mag_iter)
-            self.raw_ffts = self.mp_acquire(func=fft_pickle_workaround, iter=fft_iter)
-            self.raw_mirnov_datas = self.mp_acquire(func=mirnov_pickle_workaround, iter=raw_mirnov_iter)
             self.raw_times = self.mp_acquire(times_pickle_workaround, iter=raw_times_iter)
             # self.mags = self.return_mags()
             # self.raw_ffts = self.return_raw_ffts()
@@ -197,8 +198,7 @@ class DataMining:
     def get_mag(shot, time_window, probe):
         dev = pf.getDevice("DIIID") # We have to create a new device object for every shot otherwise MDSPlus
                                     # will throw a fit about faulty connections.
-        mag = dev.acq.getdata(shot, probe).reduce_time(time_window)
-        return mag
+        return dev.acq.getdata(shot, probe).reduce_time(time_window)
 
     def get_raw_fft(self, shot):
         return self.mags[str(shot)].generate_frequency_series(1024, 256)
