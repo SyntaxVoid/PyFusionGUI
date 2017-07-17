@@ -348,6 +348,7 @@ class PyFusionWindow:
                                                      "\ntime and frequency.",
                                                 font=(font_name, 9))
         self.run_point_analysis_help.grid(row=4, column=0, sticky=tk.N)
+        self.run_point_analysis_button.config(state="disabled")
         # ======================================
         # ======================================
         # ==         PLOTTING BUTTONS         ==
@@ -695,7 +696,8 @@ mem: 115G'''
             self.root.event_generate("<<clustering_restored>>", when="tail")
             self.using_analysis_var.set("Using analysis object from\n{}".format(jt.break_path(fname, 24)))
             self.using_analysis_label.config(fg="dark green")
-        except: ErrorWindow(self.root, "Incorrect file format.")
+        except:
+            ErrorWindow(self.root, "Incorrect file format.")
         return None
 
     def return_restored_object_values(self):
@@ -741,6 +743,7 @@ mem: 115G'''
         # and opens a window  allowing the user to plot clusters, save the analysis object or close.
         self.plot_clusters_button.config(state="normal", command=self.AN.show_plots)
         self.save_object_button.config(state="normal", command=self.save_analysis_object)
+        self.run_point_analysis_button.config(state="normal")
         return
 
     def run_clustering(self):
@@ -828,6 +831,7 @@ echo "Starting job on worker node"
         self.using_analysis_label.config(fg="dark green")
         self.AN = analysis.Analysis.restore(filename=self.AN)
         self.root.event_generate("<<clustering_restored>>", when="tail")
+        self.run_point_analysis_button.config(state="normal")
         return
 
     def clustering_failed(self, e):
